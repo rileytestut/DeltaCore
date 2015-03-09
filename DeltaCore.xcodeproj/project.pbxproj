@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF4689821AAD703500A2586D /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* Game.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BF46895D1AACF36800A2586D /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
+		BF4689811AAD703500A2586D /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +49,7 @@
 			isa = PBXGroup;
 			children = (
 				BF4689621AACF36800A2586D /* DeltaCore.h */,
+				BF4689801AAD702D00A2586D /* Model */,
 				BF4689601AACF36800A2586D /* Supporting Files */,
 			);
 			path = DeltaCore;
@@ -58,6 +61,14 @@
 				BF4689611AACF36800A2586D /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		BF4689801AAD702D00A2586D /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				BF4689811AAD703500A2586D /* Game.swift */,
+			);
+			name = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -138,6 +149,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF4689821AAD703500A2586D /* Game.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

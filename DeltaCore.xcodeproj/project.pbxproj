@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* Game.swift */; };
+		BFEC73221AAE9DBF00650035 /* DeltaCoreConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = BFEC73201AAE9DBF00650035 /* DeltaCoreConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BFEC73231AAE9DBF00650035 /* DeltaCoreConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = BFEC73211AAE9DBF00650035 /* DeltaCoreConstants.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,6 +18,8 @@
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
 		BF4689811AAD703500A2586D /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		BFEC73201AAE9DBF00650035 /* DeltaCoreConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeltaCoreConstants.h; sourceTree = "<group>"; };
+		BFEC73211AAE9DBF00650035 /* DeltaCoreConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCoreConstants.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +54,7 @@
 			children = (
 				BF4689621AACF36800A2586D /* DeltaCore.h */,
 				BF4689801AAD702D00A2586D /* Model */,
+				BFEC73281AAE9FFF00650035 /* Constants */,
 				BF4689601AACF36800A2586D /* Supporting Files */,
 			);
 			path = DeltaCore;
@@ -71,6 +76,15 @@
 			name = Model;
 			sourceTree = "<group>";
 		};
+		BFEC73281AAE9FFF00650035 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				BFEC73201AAE9DBF00650035 /* DeltaCoreConstants.h */,
+				BFEC73211AAE9DBF00650035 /* DeltaCoreConstants.m */,
+			);
+			name = Constants;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -78,6 +92,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFEC73221AAE9DBF00650035 /* DeltaCoreConstants.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -150,6 +165,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF4689821AAD703500A2586D /* Game.swift in Sources */,
+				BFEC73231AAE9DBF00650035 /* DeltaCoreConstants.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +313,7 @@
 				BF4689751AACF36800A2586D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

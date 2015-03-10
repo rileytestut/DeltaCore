@@ -7,21 +7,31 @@
 //
 
 import Foundation
+import MobileCoreServices
 
 public class Game: NSObject
 {
     public let name: String
     public let URL: NSURL
     
-    private static var registeredSubclasses: [String: Game.Type] = ["com.rileytestut.delta.game": Game.self]
+    private static var registeredSubclasses: [String: Game.Type] = [kUTTypeDeltaGame as String!: Game.self]
     
     public class func gameWithURL(URL: NSURL) -> Game?
     {
-        let identifier = "com.rileytestut.delta.game"
+        let identifier: String
+        
+        if let pathExtension = URL.pathExtension
+        {
+            identifier = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as! String
+        }
+        else
+        {
+            identifier = kUTTypeDeltaGame as String!
+        }
         
         let game: Game?
         
-        if let GameClass = self.registeredSubclasses[identifier]
+        if let GameClass = self.registeredSubclasses[identifier.lowercaseString]
         {
             game = GameClass(URL: URL)
         }

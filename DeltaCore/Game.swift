@@ -14,7 +14,7 @@ public class Game: NSObject
     public let name: String
     public let URL: NSURL
     
-    private static var registeredSubclasses: [String: Game.Type] = [kUTTypeDeltaGame as String!: Game.self]
+    private static var registeredSubclasses: [String: Game.Type] = [kUTTypeDeltaGame as String: Game.self]
     
     public class func gameWithURL(URL: NSURL) -> Game?
     {
@@ -22,11 +22,11 @@ public class Game: NSObject
         
         if let pathExtension = URL.pathExtension
         {
-            identifier = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as! String
+            identifier = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as String
         }
         else
         {
-            identifier = kUTTypeDeltaGame as String!
+            identifier = kUTTypeDeltaGame as String
         }
         
         let game: Game?
@@ -76,5 +76,16 @@ public class Game: NSObject
             return nil
         }
     }
-    
+}
+
+public func == (lhs: Game, rhs: Game) -> Bool
+{
+    return lhs.URL == rhs.URL
+}
+
+extension Game: Hashable
+{
+    public override var hashValue: Int {
+        return self.URL.hashValue
+    }
 }

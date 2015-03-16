@@ -8,9 +8,26 @@
 
 import UIKit
 
+public extension EmulatorCore
+{
+    func addGameView(gameView: GameView)
+    {
+        self.gameViews.append(gameView)
+    }
+    
+    func removeGameView(gameView: GameView)
+    {
+        if let index = find(self.gameViews, gameView)
+        {
+            self.gameViews.removeAtIndex(index);
+        }
+    }
+}
+
 public class EmulatorCore: NSObject
 {
     public let game: Game
+    public private(set) var gameViews: [GameView] = []
     
     private static var registeredSubclasses: [String: EmulatorCore.Type] = [NSStringFromClass(Game.self): EmulatorCore.self]
     

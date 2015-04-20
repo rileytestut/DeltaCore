@@ -24,39 +24,16 @@ public extension EmulatorCore
     }
 }
 
-public class EmulatorCore: NSObject
+public class EmulatorCore: DynamicObject
 {
     public let game: Game
     public private(set) var gameViews: [GameView] = []
-    
-    private static var registeredSubclasses: [String: EmulatorCore.Type] = [NSStringFromClass(Game.self): EmulatorCore.self]
-    
-    public class func registerSubclass(subclass: EmulatorCore.Type, forGameType gameType: Game.Type)
-    {
-        let className = NSStringFromClass(gameType)
-        self.registeredSubclasses[className] = subclass
-    }
-    
-    public class func emulatorCoreWithGame(game: Game) -> EmulatorCore
-    {
-        let emulatorCore: EmulatorCore
-        
-        if let EmulatorCoreClass = self.registeredSubclasses[NSStringFromClass(game.dynamicType)]
-        {
-            emulatorCore = EmulatorCoreClass(game: game)
-        }
-        else
-        {
-            emulatorCore = EmulatorCore(game: game)
-        }
-        
-        return emulatorCore
-    }
-    
+
     public required init(game: Game)
     {
         self.game = game
         
-        super.init()
+        super.init(dynamicIdentifier: self.game.UTI)
     }
 }
+

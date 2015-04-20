@@ -13,40 +13,7 @@ public class Game: NSObject
 {
     public let name: String
     public let URL: NSURL
-    
-    private static var registeredSubclasses: [String: Game.Type] = [kUTTypeDeltaGame as String: Game.self]
-    
-    public class func gameWithURL(URL: NSURL) -> Game?
-    {
-        let identifier: String
-        
-        if let pathExtension = URL.pathExtension
-        {
-            identifier = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as String
-        }
-        else
-        {
-            identifier = kUTTypeDeltaGame as String
-        }
-        
-        let game: Game?
-        
-        if let GameClass = self.registeredSubclasses[identifier.lowercaseString]
-        {
-            game = GameClass(URL: URL)
-        }
-        else
-        {
-            game = Game(URL: URL)
-        }
-        
-        return game
-    }
-    
-    public class func registerSubclass(subclass: Game.Type, forUTI UTI: String)
-    {
-        self.registeredSubclasses[UTI] = subclass
-    }
+    public let UTI: String
     
     public required init?(URL: NSURL)
     {
@@ -60,7 +27,25 @@ public class Game: NSObject
         {
             self.name = ""
         }
-        
+                
+        if let pathExtension = URL.pathExtension
+        {
+            let UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as String
+            
+            if UTI.hasPrefix("dyn.")
+            {
+                self.UTI = kUTTypeDeltaGame as String
+            }
+            else
+            {
+                self.UTI = UTI
+            }
+        }
+        else
+        {
+            self.UTI = kUTTypeDeltaGame as String
+        }
+                
         super.init()
         
         if URL.path == nil
@@ -78,14 +63,7 @@ public class Game: NSObject
     }
 }
 
-public func == (lhs: Game, rhs: Game) -> Bool
+public func ==(lhs: Game, rhs: Game) -> Bool
 {
     return lhs.URL == rhs.URL
-}
-
-extension Game: Hashable
-{
-    public override var hashValue: Int {
-        return self.URL.hashValue
-    }
 }

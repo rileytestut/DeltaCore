@@ -12,6 +12,8 @@
 		BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
 		BFEC73221AAE9DBF00650035 /* DeltaCoreConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = BFEC73201AAE9DBF00650035 /* DeltaCoreConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFEC73231AAE9DBF00650035 /* DeltaCoreConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = BFEC73211AAE9DBF00650035 /* DeltaCoreConstants.m */; };
+		BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = BFECA1D51AE3935700AF9144 /* DynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = BFECA1D61AE3935700AF9144 /* DynamicObject.m */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,8 @@
 		BF9873C01AB6C8BF0001D8C9 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		BFEC73201AAE9DBF00650035 /* DeltaCoreConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeltaCoreConstants.h; sourceTree = "<group>"; };
 		BFEC73211AAE9DBF00650035 /* DeltaCoreConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCoreConstants.m; sourceTree = "<group>"; };
+		BFECA1D51AE3935700AF9144 /* DynamicObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicObject.h; sourceTree = "<group>"; };
+		BFECA1D61AE3935700AF9144 /* DynamicObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DynamicObject.m; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmulatorCore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -57,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				BF4689621AACF36800A2586D /* DeltaCore.h */,
+				BFECA1CE1AE38A1A00AF9144 /* Dynamic */,
 				BF9873BF1AB6C8AE0001D8C9 /* UI */,
 				BF4689801AAD702D00A2586D /* Model */,
 				BFF912D11AB08E7400AC07A1 /* Core */,
@@ -99,6 +104,15 @@
 			name = Constants;
 			sourceTree = "<group>";
 		};
+		BFECA1CE1AE38A1A00AF9144 /* Dynamic */ = {
+			isa = PBXGroup;
+			children = (
+				BFECA1D51AE3935700AF9144 /* DynamicObject.h */,
+				BFECA1D61AE3935700AF9144 /* DynamicObject.m */,
+			);
+			name = Dynamic;
+			sourceTree = "<group>";
+		};
 		BFF912D11AB08E7400AC07A1 /* Core */ = {
 			isa = PBXGroup;
 			children = (
@@ -115,6 +129,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFEC73221AAE9DBF00650035 /* DeltaCoreConstants.h in Headers */,
+				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -187,6 +202,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF4689821AAD703500A2586D /* Game.swift in Sources */,
+				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,
 				BFEC73231AAE9DBF00650035 /* DeltaCoreConstants.m in Sources */,

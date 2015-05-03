@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)isDynamicSubclass;
 + (nullable NSString *)dynamicIdentifier;
 
-- (instancetype)initWithDynamicIdentifier:(NSString *)identifier NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithDynamicIdentifier:(NSString *)identifier initSelector:(SEL)initSelector initParameters:(NSArray *)initParameters NS_DESIGNATED_INITIALIZER;
 
 @end
 

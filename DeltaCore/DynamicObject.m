@@ -16,7 +16,7 @@ const void *DeltaDynamicSubclassesKey = &DeltaDynamicSubclassesKey;
 
 #pragma mark - Init -
 
-- (instancetype)initWithDynamicIdentifier:(NSString * __nonnull)identifier
+- (instancetype)initWithDynamicIdentifier:(NSString * __nonnull)identifier initSelector:(SEL __nonnull)initSelector initParameters:(NSArray * __nonnull)initParameters
 {
     if (![self.class isDynamicSubclass])
     {
@@ -26,10 +26,53 @@ const void *DeltaDynamicSubclassesKey = &DeltaDynamicSubclassesKey;
         if (dynamicSubclass)
         {
             object_setClass(self, dynamicSubclass);
+            
+            self = [dynamicSubclass alloc];
+            
+            NSMethodSignature *methodSignature = [dynamicSubclass instanceMethodSignatureForSelector:initSelector];
+            
+            NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+            [invocation setTarget:self];
+            [invocation setSelector:initSelector];
+            
+            [initParameters enumerateObjectsUsingBlock:^(id argument, NSUInteger index, BOOL *stop) {
+                
+                NSInteger argumentIndex = 2 + index;
+                
+                if (strcmp([methodSignature getArgumentTypeAtIndex:argumentIndex], @encode(id)) == 0)
+                {
+                    // Object
+                    
+                    [invocation setArgument:&argument atIndex:argumentIndex];
+                }
+                else
+                {
+                    // Primitive Value
+                    
+                    NSUInteger bufferSize = 0;
+                    NSGetSizeAndAlignment([argument objCType], &bufferSize, NULL);
+                    
+                    void *buffer = malloc(bufferSize);
+                    [argument getValue:buffer];
+                    
+                    [invocation setArgument:buffer atIndex:argumentIndex];
+                    
+                    free(buffer);
+                }
+            }];
+            
+            [invocation invoke];
+            [invocation getReturnValue:&self];
+        }
+        else
+        {
+            self = [super init];
         }
     }
-    
-    self = [super init];
+    else
+    {
+        self = [super init];
+    }    
     
     if (self)
     {

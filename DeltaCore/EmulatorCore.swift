@@ -33,7 +33,7 @@ public class EmulatorCore: DynamicObject
     {
         self.game = game
         
-        super.init(dynamicIdentifier: self.game.UTI)
+        super.init(dynamicIdentifier: game.UTI, initSelector: Selector("initWithGame:"), initParameters: [game])
     }
 }
 

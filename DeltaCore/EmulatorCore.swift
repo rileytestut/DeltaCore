@@ -67,6 +67,18 @@ public class EmulatorCore: DynamicObject, GameControllerReceiver
         super.init(dynamicIdentifier: game.UTI, initSelector: Selector("initWithGame:"), initParameters: [game])
     }
     
+    //MARK: Emulation
+    
+    public func startEmulation()
+    {
+        
+    }
+    
+    public func stopEmulation()
+    {
+        
+    }
+    
     //MARK: GameControllerReceiver
     
     public func gameController(gameController: GameController, didActivateInput input: GameInput)

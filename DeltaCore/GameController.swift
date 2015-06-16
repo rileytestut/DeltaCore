@@ -6,7 +6,11 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
-import Foundation
+public enum EmulatorInput: GameInput
+{
+    case Menu
+    case Sustain
+}
 
 public protocol GameControllerReceiver
 {

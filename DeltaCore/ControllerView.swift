@@ -19,7 +19,7 @@ public extension ControllerView
         
         let transitionImageView = UIImageView(image: self.imageView.image)
         transitionImageView.frame = self.imageView.frame
-        transitionImageView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        transitionImageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         transitionImageView.contentMode = .ScaleAspectFit
         transitionImageView.alpha = 1.0
         self.addSubview(transitionImageView)
@@ -99,7 +99,7 @@ public class ControllerView: UIView, GameController
         self.backgroundColor = UIColor.clearColor()
         
         self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-        self.imageView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        self.imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         self.imageView.contentMode = .ScaleAspectFit
         self.addSubview(self.imageView)
     }

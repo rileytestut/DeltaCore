@@ -28,17 +28,15 @@ public class Game: NSObject
             self.name = ""
         }
                 
-        if let pathExtension = URL.pathExtension
+        if let pathExtension = URL.pathExtension, UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil)?.takeRetainedValue()
         {
-            let UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil).takeRetainedValue() as String
-            
-            if UTI.hasPrefix("dyn.")
+            if (UTI as String).hasPrefix("dyn.")
             {
                 self.UTI = kUTTypeDeltaGame as String
             }
             else
             {
-                self.UTI = UTI
+                self.UTI = (UTI as String)
             }
         }
         else

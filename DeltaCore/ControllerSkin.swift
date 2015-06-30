@@ -18,8 +18,7 @@ public extension ControllerSkin
         let imagesDictionary = self.infoDictionary["images"] as! TraitCollectionDictionary
         let dictionary = self.filteredResultForDictionary(imagesDictionary, withTraitCollection: traitCollection)
         
-        if let deviceKey = self.deviceKeyForCurrentDevice(),
-            imageName = (dictionary?[deviceKey] as? String) ?? (dictionary?["resizable"] as? String)
+        if let deviceKey = self.deviceKeyForCurrentDevice() where (dictionary?[deviceKey] as? String) ?? (dictionary?["resizable"] as? String) != nil
         {
             return true
         }
@@ -31,7 +30,6 @@ public extension ControllerSkin
     {
         let imagesDictionary = self.infoDictionary["images"] as! TraitCollectionDictionary
         let dictionary = self.filteredResultForDictionary(imagesDictionary, withTraitCollection: traitCollection)
-        let deviceKey = self.deviceKeyForCurrentDevice()
         
         if let deviceKey = self.deviceKeyForCurrentDevice(),
             imageName = (dictionary?[deviceKey] as? String) ?? (dictionary?["resizable"] as? String),
@@ -53,7 +51,7 @@ public extension ControllerSkin
     }
 }
 
-public class ControllerSkin: DynamicObject, Printable
+public class ControllerSkin: DynamicObject
 {
     public let name: String
     public let identifier: String
@@ -75,10 +73,18 @@ public class ControllerSkin: DynamicObject, Printable
         self.URL = URL
         
         let infoDictionaryURL = self.URL.URLByAppendingPathComponent("info.json")
-        var data = NSData(contentsOfURL: infoDictionaryURL) ?? NSData()
+        let data = NSData(contentsOfURL: infoDictionaryURL) ?? NSData()
         
-        var error: NSError? = nil
-        self.infoDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: &error) as? [String: AnyObject] ?? [:]
+        do
+        {
+            self.infoDictionary = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String: AnyObject] ?? [:]
+        }
+        catch let error as NSError
+        {
+            self.infoDictionary = [:]
+            
+            print("\(error) \(error.userInfo)")
+        }
         
         self.name = self.infoDictionary["name"] as? String ?? ""
         self.identifier = self.infoDictionary["identifier"] as? String ?? ""
@@ -92,11 +98,6 @@ public class ControllerSkin: DynamicObject, Printable
         
         if self.infoDictionary.isEmpty || self.name == "" || self.identifier == "" || dynamicIdentifier == ""
         {
-            if let error = error
-            {
-                println("\(error) \(error.userInfo)")
-            }
-            
             return nil
         }
     }

@@ -22,7 +22,7 @@ public extension EmulatorCore
     
     func removeGameView(gameView: GameView)
     {
-        if let index = find(self.gameViews, gameView)
+        if let index = self.gameViews.indexOf(gameView)
         {
             self.gameViews.removeAtIndex(index);
         }

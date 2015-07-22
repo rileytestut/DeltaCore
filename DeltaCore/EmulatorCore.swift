@@ -6,15 +6,66 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
-public protocol GameInput
+public class EmulatorCore: DynamicObject, GameControllerReceiverType
 {
-    // Used by subclasses to declare appropriate form of representing game inputs
+    //MARK: - Properties -
+    /** Properties **/
+    public let game: Game
+    public private(set) var gameViews: [GameView] = []
+    public var gameControllers: [GameControllerType] {
+        get
+        {
+            return self.gameControllersDictionary.values.array
+        }
+    }
+    
+    //MARK: - Private Properties
+    private var gameControllersDictionary: [Int: GameControllerType] = [:]
+
+    //MARK: - Initializers -
+    /** Initializers **/
+    public required init(game: Game)
+    {
+        self.game = game
+        
+        super.init(dynamicIdentifier: game.UTI, initSelector: Selector("initWithGame:"), initParameters: [game])
+    }
+    
+    /** Subclass Methods **/
+    /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
+    
+    //MARK: - GameControllerReceiver -
+    /// GameControllerReceiver
+    public func gameController(gameController: GameControllerType, didActivateInput input: InputType)
+    {
+        // Implemented by subclasses
+    }
+    
+    public func gameController(gameController: GameControllerType, didDeactivateInput input: InputType)
+    {
+        // Implemented by subclasses
+    }
 }
 
+//MARK: - Emulation -
+/// Emulation
 public extension EmulatorCore
 {
-    //MARK: Game Views
+    func startEmulation()
+    {
+        
+    }
     
+    func stopEmulation()
+    {
+        
+    }
+}
+
+//MARK: - Game Views -
+/// Game Views
+public extension EmulatorCore
+{
     func addGameView(gameView: GameView)
     {
         self.gameViews.append(gameView)
@@ -27,68 +78,28 @@ public extension EmulatorCore
             self.gameViews.removeAtIndex(index);
         }
     }
-    
-    //MARK: Controllers
-    
-    func setGameController(gameController: GameController?, atIndex index: Int) -> GameController?
+}
+
+//MARK: - Controllers -
+/// Controllers
+public extension EmulatorCore
+{
+    func setGameController(gameController: GameControllerType?, atIndex index: Int) -> GameControllerType?
     {
         let previousGameController = self.gameControllerAtIndex(index)
         previousGameController?.playerIndex = nil
         
         gameController?.playerIndex = index
+        gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
         
         return previousGameController
     }
     
-    func gameControllerAtIndex(index: Int) -> GameController?
+    func gameControllerAtIndex(index: Int) -> GameControllerType?
     {
         return self.gameControllersDictionary[index]
     }
 }
 
-public class EmulatorCore: DynamicObject, GameControllerReceiver
-{
-    public let game: Game
-    public private(set) var gameViews: [GameView] = []
-    public var gameControllers: [GameController] {
-        get
-        {
-            return self.gameControllersDictionary.values.array
-        }
-    }
-    
-    private var gameControllersDictionary: [Int: GameController] = [:]
-
-    public required init(game: Game)
-    {
-        self.game = game
-        
-        super.init(dynamicIdentifier: game.UTI, initSelector: Selector("initWithGame:"), initParameters: [game])
-    }
-    
-    //MARK: Emulation
-    
-    public func startEmulation()
-    {
-        
-    }
-    
-    public func stopEmulation()
-    {
-        
-    }
-    
-    //MARK: GameControllerReceiver
-    
-    public func gameController(gameController: GameController, didActivateInput input: GameInput)
-    {
-        // Implemented by subclasses
-    }
-    
-    public func gameController(gameController: GameController, didDeactivateInput input: GameInput)
-    {
-        // Implemented by subclasses
-    }
-}
 

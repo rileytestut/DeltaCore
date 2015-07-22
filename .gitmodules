@@ -1,0 +1,3 @@
+[submodule "External/ZipZap"]
+	path = External/ZipZap
+	url = git@github.com:pixelglow/ZipZap.git

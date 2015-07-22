@@ -8,6 +8,129 @@
 
 import UIKit
 
+public class ControllerView: UIView
+{
+    //MARK: - Properties -
+    /** Properties **/
+    public var controllerSkin: ControllerSkin? {
+        didSet
+        {
+            self.updateControllerSkin()
+        }
+    }
+    
+    //MARK: - <GameController>
+    /// <GameController>
+    public var playerIndex: Int?
+    public private(set) var receivers: [GameControllerReceiverType] = []
+    
+    public var activatedInputs: [InputType]
+    {
+        return self.activatedInputBoxes.map({ (box) -> InputType in
+            return box.input
+        })
+    }
+    
+    //MARK: - Private Properties
+    private let imageView: UIImageView = UIImageView(frame: CGRectZero)
+    private var transitionImageView: UIImageView? = nil
+    
+    private var touchesInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
+    private var previousActivatedInputs: Set<InputTypeBox> = []
+    
+    private var activatedInputBoxes: Set<InputTypeBox> {
+        var activatedInputs: Set<InputTypeBox> = []
+        for inputs in self.touchesInputsMappingDictionary.values
+        {
+            activatedInputs.unionInPlace(inputs)
+        }
+        
+        return activatedInputs
+    }
+    
+    //MARK: - Initializers -
+    /** Initializers **/
+    public override init(frame: CGRect)
+    {
+        super.init(frame: frame)
+        
+        self.initialize()
+    }
+    
+    public required init?(coder aDecoder: NSCoder)
+    {
+        super.init(coder: aDecoder)
+        
+        self.initialize()
+    }
+    
+    private func initialize()
+    {
+        self.backgroundColor = UIColor.clearColor()
+        
+        self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
+        self.imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        self.imageView.contentMode = .ScaleAspectFit
+        self.addSubview(self.imageView)
+    }
+    
+    //MARK: - Overrides -
+    /** Overrides **/
+    
+    //MARK: - UIView
+    /// UIView
+    public override func intrinsicContentSize() -> CGSize
+    {
+        return self.imageView.intrinsicContentSize()
+    }
+    
+    //MARK: - UIResponder
+    /// UIResponder
+    public override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?)
+    {
+        for touch in touches
+        {
+            self.touchesInputsMappingDictionary[touch] = []
+        }
+        
+        self.updateInputsForTouches(touches)
+    }
+    
+    public override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?)
+    {
+        self.updateInputsForTouches(touches)
+    }
+    
+    public override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
+    {
+        for touch in touches
+        {
+            self.touchesInputsMappingDictionary[touch] = nil
+        }
+        
+        self.updateInputsForTouches(touches)
+    }
+    
+    public override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?)
+    {
+        if let touches = touches
+        {
+            return self.touchesEnded(touches, withEvent: event)
+        }
+    }
+    
+    //MARK: - <UITraitEnvironment>
+    /// <UITraitEnvironment>
+    public override func traitCollectionDidChange(previousTraitCollection: UITraitCollection?)
+    {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        self.updateControllerSkin()
+    }
+}
+
+//MARK: - Update Skins -
+/// Update Skins
 public extension ControllerView
 {
     func beginAnimatingUpdateControllerSkin()
@@ -65,58 +188,61 @@ public extension ControllerView
     }
 }
 
-public class ControllerView: UIView, GameController
+//MARK: - <GameController> -
+/// <GameController>
+extension ControllerView: GameControllerType
 {
-    public var playerIndex: Int?
-    public var receiver: GameControllerReceiver?
+    public func addReceiver(receiver: GameControllerReceiverType)
+    {
+        self.receivers.append(receiver)
+    }
     
-    public var controllerSkin: ControllerSkin? {
-        didSet
+    public func removeReceiver(receiver: GameControllerReceiverType)
+    {
+        if let index = self.receivers.indexOf({ $0 == receiver })
         {
-            self.updateControllerSkin()
+            self.receivers.removeAtIndex(index)
         }
     }
-    
-    private let imageView: UIImageView = UIImageView(frame: CGRectZero)
-    private var transitionImageView: UIImageView? = nil
-    
-    public override init(frame: CGRect)
+}
+
+//MARK: - Private Methods -
+private extension ControllerView
+{
+    //MARK: - Activating/Deactivating Inputs
+    func updateInputsForTouches(touches: Set<UITouch>)
     {
-        super.init(frame: frame)
+        guard let controllerSkin = self.controllerSkin else { return }
         
-        self.initialize()
-    }
-    
-    public required init(coder aDecoder: NSCoder)
-    {
-        super.init(coder: aDecoder)
+        // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
+        for touch in touches where self.touchesInputsMappingDictionary[touch] != nil
+        {
+            let point = touch.locationInView(self)
+            let inputs = controllerSkin.inputsForPoint(point, traitCollection: self.traitCollection).map({ InputTypeBox(input: $0) })
+            
+            self.touchesInputsMappingDictionary[touch] = Set(inputs)
+        }
         
-        self.initialize()
-    }
-    
-    private func initialize()
-    {
-        self.backgroundColor = UIColor.clearColor()
+        let currentActivatedInputs = self.activatedInputBoxes
         
-        self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-        self.imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-        self.imageView.contentMode = .ScaleAspectFit
-        self.addSubview(self.imageView)
-    }
-    
-    //MARK: UIView
-    
-    public override func intrinsicContentSize() -> CGSize
-    {
-        return self.imageView.intrinsicContentSize()
-    }
-    
-    //MARK: UITraitEnvironment
-    
-    public override func traitCollectionDidChange(previousTraitCollection: UITraitCollection?)
-    {
-        super.traitCollectionDidChange(previousTraitCollection)
+        let activatedInputs = currentActivatedInputs.subtract(self.previousActivatedInputs)
+        for inputBox in activatedInputs
+        {
+            for receiver in self.receivers
+            {
+                receiver.gameController(self, didActivateInput: inputBox.input)
+            }
+        }
         
-        self.updateControllerSkin()
+        let deactivatedInputs = self.previousActivatedInputs.subtract(currentActivatedInputs)
+        for inputBox in deactivatedInputs
+        {
+            for receiver in self.receivers
+            {
+                receiver.gameController(self, didDeactivateInput: inputBox.input)
+            }
+        }
+        
+        self.previousActivatedInputs = currentActivatedInputs
     }
 }

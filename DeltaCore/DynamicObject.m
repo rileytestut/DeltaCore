@@ -16,12 +16,17 @@ const void *DeltaDynamicSubclassesKey = &DeltaDynamicSubclassesKey;
 
 #pragma mark - Init -
 
+- (instancetype)init
+{
+    // Designated Initializer
+    return [self initWithDynamicIdentifier:@"" initSelector:@selector(init) initParameters:@[]];
+}
+
 - (instancetype)initWithDynamicIdentifier:(NSString * __nonnull)identifier initSelector:(SEL __nonnull)initSelector initParameters:(NSArray * __nonnull)initParameters
 {
     if (![self.class isDynamicSubclass])
     {
-        NSDictionary *dynamicSubclasses = objc_getAssociatedObject(self.class, DeltaDynamicSubclassesKey);
-        Class dynamicSubclass = dynamicSubclasses[identifier];
+        Class dynamicSubclass = [self.class subclassForDynamicIdentifier:identifier];
         
         if (dynamicSubclass)
         {
@@ -135,6 +140,14 @@ const void *DeltaDynamicSubclassesKey = &DeltaDynamicSubclassesKey;
 + (nullable NSString *)dynamicIdentifier
 {
     return nil;
+}
+
++ (Class)subclassForDynamicIdentifier:(nonnull NSString *)identifier
+{
+    NSDictionary *dynamicSubclasses = objc_getAssociatedObject(self.class, DeltaDynamicSubclassesKey);
+    Class subclass = dynamicSubclasses[identifier];
+    
+    return subclass;
 }
 
 @end

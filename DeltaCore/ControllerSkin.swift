@@ -7,76 +7,42 @@
 //
 
 import UIKit
-import MobileCoreServices
+import ZipZap
 
-typealias TraitCollectionDictionary = [String: [String: [String: AnyObject]]]
-
-public extension ControllerSkin
-{
-    public func supportsTraitCollection(traitCollection: UITraitCollection) -> Bool
-    {
-        let imagesDictionary = self.infoDictionary["images"] as! TraitCollectionDictionary
-        let dictionary = self.filteredResultForDictionary(imagesDictionary, withTraitCollection: traitCollection)
-        
-        if let deviceKey = self.deviceKeyForCurrentDevice() where (dictionary?[deviceKey] as? String) ?? (dictionary?["resizable"] as? String) != nil
-        {
-            return true
-        }
-        
-        return false
-    }
-    
-    public func imageForTraitCollection(traitCollection: UITraitCollection) -> UIImage?
-    {
-        let imagesDictionary = self.infoDictionary["images"] as! TraitCollectionDictionary
-        let dictionary = self.filteredResultForDictionary(imagesDictionary, withTraitCollection: traitCollection)
-        
-        if let deviceKey = self.deviceKeyForCurrentDevice(),
-            imageName = (dictionary?[deviceKey] as? String) ?? (dictionary?["resizable"] as? String),
-            path = self.URL.URLByAppendingPathComponent(imageName).path
-        {
-            if let image = self.imageCache.objectForKey(path) as? UIImage
-            {
-                return image
-            }
-            
-            if let data = NSData(contentsOfFile: path), image = UIImage(data: data, scale: UIScreen.mainScreen().scale)
-            {
-                self.imageCache.setObject(image, forKey: path)
-                return image
-            }
-        }
-        
-        return nil
-    }
-}
+typealias ImagesDictionaryType = [String: [String: [String: String]]]
+typealias MappingsDictionaryType = [String: [String: [String: AnyObject]]] // Cannot cast directly to [String: [String: [String: [String: [String: CGFloat]]]]] b/c of bug in compiler
 
 public class ControllerSkin: DynamicObject
 {
+    //MARK: - Properties -
+    /** Properties **/
     public let name: String
     public let identifier: String
     public let debug: Bool
     
     @NSCopying public var URL: NSURL
     
-    public var displaySize: CGSize = CGSizeZero
-    
+    /// <CustomStringConvertible>
     public override var description: String {
         return self.name + " (" + self.identifier + ")"
     }
     
+    //MARK: - Private Properties
     private let infoDictionary: [String: AnyObject]
     private let imageCache: NSCache
     
+    //MARK: - Initializers -
+    /** Initializers **/
     public required init?(URL: NSURL)
     {
         self.URL = URL
         
-        let infoDictionaryURL = self.URL.URLByAppendingPathComponent("info.json")
-        let data = NSData(contentsOfURL: infoDictionaryURL) ?? NSData()
-        
         do
         {
+            let archive = try ZZArchive(URL: self.URL)
+            let entry = (archive.entries as! [ZZArchiveEntry]).filter { $0.fileName == "info.json" }.first ?? ZZArchiveEntry()
+            let data = try entry.newData()
+            
             self.infoDictionary = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String: AnyObject] ?? [:]
         }
         catch let error as NSError
@@ -101,21 +67,114 @@ public class ControllerSkin: DynamicObject
             return nil
         }
     }
-        
-    //MARK: Inputs
     
-    public func inputForPoint(point: CGPoint) -> GameInput
+    /** Methods **/
+    
+    //MARK: - Convenience Methods -
+    /// Convenience Methods
+    public class func defaultControllerSkinForGameUTI(UTI: String) -> ControllerSkin?
     {
-        return EmulatorInput.Menu
+        guard self == ControllerSkin.self else { fatalError("ControllerSkin subclass must implement defaultControllerSkinForGameUTI:") }
+        
+        let subclass = ControllerSkin.self.subclassForDynamicIdentifier(UTI) as! ControllerSkin.Type
+        return subclass.defaultControllerSkinForGameUTI(UTI)
+    }
+    
+    //MARK: - Inputs
+    /// Inputs
+    public func inputsForPoint(point: CGPoint, traitCollection: UITraitCollection) -> [InputType]
+    {
+        let mappingsDictionary = self.infoDictionary["mappings"] as! MappingsDictionaryType
+        
+        guard let dictionary = self.filterDictionary(mappingsDictionary, forCurrentDeviceWithTraitCollection: traitCollection) as? [String: [String: CGFloat]] else { return []
+        }
+        
+        var inputs: [InputType] = []
+        for (key, mapping) in dictionary
+        {
+            let frame = CGRect(x: mapping["x"] ?? 0, y: mapping["y"] ?? 0, width: mapping["width"] ?? 0, height: mapping["height"] ?? 0)
+            if !CGRectContainsPoint(frame, point)
+            {
+                continue
+            }
+            
+            for input in self.inputsForPoint(point, inRect: frame, key: key)
+            {
+                inputs.append(input)
+            }
+        }
+        
+        return inputs
+    }
+    
+    //MARK: - Subclass Methods -
+    /** Subclass Methods **/
+    /** These methods should never be called directly **/
+    
+    //MARK: - Inputs
+    /// Inputs
+    public func inputsForPoint(point: CGPoint, inRect rect: CGRect, key: String) -> [InputType]
+    {
+        fatalError("ControllerSkin subclass must implement defaultControllerSkinForGameUTI:")
+    }
+}
+
+//MARK: - Trait Collections -
+/// Trait Collections
+public extension ControllerSkin
+{
+    public func supportsTraitCollection(traitCollection: UITraitCollection) -> Bool
+    {
+        let imagesDictionary = self.infoDictionary["images"] as! ImagesDictionaryType
+        let imageName = self.filterDictionary(imagesDictionary, forCurrentDeviceWithTraitCollection: traitCollection)
+        
+        return imageName != nil
+    }
+    
+    public func imageForTraitCollection(traitCollection: UITraitCollection) -> UIImage?
+    {
+        let imagesDictionary = self.infoDictionary["images"] as! ImagesDictionaryType
+        
+        guard let imageName = self.filterDictionary(imagesDictionary, forCurrentDeviceWithTraitCollection: traitCollection) else {
+            return nil
+        }
+        
+        guard let cacheKey = self.URL.URLByAppendingPathComponent(imageName).path else {
+            return nil
+        }
+        
+        if let image = self.imageCache.objectForKey(cacheKey) as? UIImage {
+            return image
+        }
+        
+        do
+        {
+            let archive = try ZZArchive(URL: self.URL)
+            let entry = (archive.entries as! [ZZArchiveEntry]).filter { $0.fileName == imageName }.first ?? ZZArchiveEntry()
+            let data = try entry.newData()
+            
+            if let image = UIImage(data: data, scale: UIScreen.mainScreen().scale)
+            {
+                self.imageCache.setObject(image, forKey: cacheKey)
+                return image
+            }
+        }
+        catch let error as NSError {
+            print("\(error) \(error.userInfo)")
+        }
+        
+        return nil
     }
 }
 
 private extension ControllerSkin
 {
-    func filteredResultForDictionary(dictionary: TraitCollectionDictionary, withTraitCollection traitCollection: UITraitCollection) -> [String: AnyObject]?
+    func filterDictionary<T>(dictionary: [String: [String: [String: T]]], forCurrentDeviceWithTraitCollection traitCollection: UITraitCollection) -> T?
     {
+        guard let deviceKey = self.deviceKeyForCurrentDevice() else { return nil }
+        
         let deviceIdiom: String
-
+        
         switch traitCollection.userInterfaceIdiom
         {
         case .Phone:
@@ -138,8 +197,10 @@ private extension ControllerSkin
             verticalSizeClass = ""
         }
         
-        let filteredResult = dictionary[deviceIdiom]?[verticalSizeClass]
-        return filteredResult
+        let filteredDictionary = dictionary[deviceIdiom]?[verticalSizeClass]
+        let result = filteredDictionary?[deviceKey] ?? filteredDictionary?["resizable"]
+        
+        return result
     }
     
     func deviceKeyForCurrentDevice() -> String?

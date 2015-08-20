@@ -19,7 +19,7 @@ public class Game: NSObject
     {
         self.URL = URL
         
-        if let name = URL.lastPathComponent?.stringByDeletingPathExtension
+        if let name = (URL.lastPathComponent as NSString?)?.stringByDeletingPathExtension
         {
             self.name = name
         }

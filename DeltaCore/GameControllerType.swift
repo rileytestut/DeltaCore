@@ -1,5 +1,5 @@
 //
-//  GameController.swift
+//  GameControllerType.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 5/3/15.
@@ -40,6 +40,8 @@ public protocol GameControllerType: class
 {
     var playerIndex: Int? { get set }
     var receivers: [GameControllerReceiverType] { get }
+    
+    var inputTransformationHandler: ((InputType) -> ([InputType]))? { get set }
     
     func addReceiver(receiver: GameControllerReceiverType)
     func removeReceiver(receiver: GameControllerReceiverType)

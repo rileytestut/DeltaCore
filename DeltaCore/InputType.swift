@@ -10,15 +10,15 @@
 public protocol InputType
 {
     /// Used internally to conform to Hashable
-    /// We cannot have EmulatorInput itself conform to Hashable due to the Self requirement of Equatable
-    /// Implemented by the EmulatorInput protocol extension. Should not need to be overriden by conforming types.
+    /// We cannot have InputType itself conform to Hashable due to the Self requirement of Equatable
+    /// Implemented by the InputType protocol extension. Should not need to be overriden by conforming types.
     var _hashValue: Int { get }
     
     /// Convenience method used for implementing Equatable. Default implementation via protocol extension
     func isEqual<T>(input: T) -> Bool
 }
 
-/// Provide default implementatation for EmulatorInput.isEqual()
+/// Provide default implementatation for InputType.isEqual()
 public extension InputType where Self: Hashable
 {
     var _hashValue: Int {

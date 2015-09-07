@@ -15,7 +15,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     public var gameControllers: [GameControllerType] {
         get
         {
-            return self.gameControllersDictionary.values.array
+            return Array(self.gameControllersDictionary.values)
         }
     }
     
@@ -94,6 +94,17 @@ public extension EmulatorCore
         self.gameControllersDictionary[index] = gameController
         
         return previousGameController
+    }
+    
+    func removeAllGameControllers()
+    {
+        for controller in self.gameControllers
+        {
+            if let index = controller.playerIndex
+            {
+                self.setGameController(nil, atIndex: index)
+            }
+        }
     }
     
     func gameControllerAtIndex(index: Int) -> GameControllerType?

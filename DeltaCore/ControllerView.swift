@@ -18,18 +18,15 @@ public class ControllerView: UIView
             self.updateControllerSkin()
         }
     }
+    public var activatedInputs: [InputType] {
+        return self.activatedInputBoxes.map({ $0.input })
+    }
     
-    //MARK: - <GameController>
-    /// <GameController>
+    //MARK: - <GameControllerType>
+    /// <GameControllerType>
     public var playerIndex: Int?
     public private(set) var receivers: [GameControllerReceiverType] = []
-    
-    public var activatedInputs: [InputType]
-    {
-        return self.activatedInputBoxes.map({ (box) -> InputType in
-            return box.input
-        })
-    }
+    public var inputTransformationHandler: ((InputType) -> ([InputType]))?
     
     //MARK: - Private Properties
     private let imageView: UIImageView = UIImageView(frame: CGRectZero)
@@ -218,9 +215,21 @@ private extension ControllerView
         for touch in touches where self.touchesInputsMappingDictionary[touch] != nil
         {
             let point = touch.locationInView(self)
-            let inputs = controllerSkin.inputsForPoint(point, traitCollection: self.traitCollection).map({ InputTypeBox(input: $0) })
+            let inputs = controllerSkin.inputsForPoint(point, traitCollection: self.traitCollection)
             
-            self.touchesInputsMappingDictionary[touch] = Set(inputs)
+            var boxedInputs: Set<InputTypeBox> = []
+            for input in inputs
+            {
+                let transformedInputs = self.inputTransformationHandler?(input) ?? [input]
+                
+                for transformedInput in transformedInputs
+                {
+                    let boxedInput = InputTypeBox(input: transformedInput)
+                    boxedInputs.insert(boxedInput)
+                }
+            }
+            
+            self.touchesInputsMappingDictionary[touch] = boxedInputs
         }
         
         let currentActivatedInputs = self.activatedInputBoxes

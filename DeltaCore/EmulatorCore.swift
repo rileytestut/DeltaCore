@@ -45,6 +45,13 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     {
         // Implemented by subclasses
     }
+    
+    //MARK: - Input Transformation -
+    /// Input Transformation
+    public func inputsForMFiExternalControllerInput(input: InputType) -> [InputType]
+    {
+        return []
+    }
 }
 
 //MARK: - Emulation -
@@ -92,6 +99,11 @@ public extension EmulatorCore
         gameController?.playerIndex = index
         gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
+        
+        if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
+        {
+            gameController.inputTransformationHandler = inputsForMFiExternalControllerInput
+        }
         
         return previousGameController
     }

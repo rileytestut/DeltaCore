@@ -43,32 +43,7 @@ public enum MFiExternalControllerInput: InputType, Hashable
 
 public func ==(lhs: MFiExternalControllerInput, rhs: MFiExternalControllerInput) -> Bool
 {
-    switch (lhs, rhs)
-    {
-    case let (.DPad(a1, b1), .DPad(a2, b2)) where a1 == a2 && b1 == b2: return true
-    case let (.LeftThumbstick(a1, b1), .LeftThumbstick(a2, b2)) where a1 == a2 && b1 == b2: return true
-    case let (.RightThumbstick(a1, b1), .RightThumbstick(a2, b2)) where a1 == a2 && b1 == b2: return true
-    case (.A, .A): return true
-    case (.B, .B): return true
-    case (.X, .X): return true
-    case (.Y, .Y): return true
-    case (.L, .L): return true
-    case (.R, .R): return true
-    case (.LeftTrigger, .LeftTrigger): return true
-    case (.RightTrigger, .RightTrigger): return true
-        
-    case (.DPad, _): return false
-    case (.LeftThumbstick, _): return false
-    case (.RightThumbstick, _): return false
-    case (.A, _): return false
-    case (.B, _): return false
-    case (.X, _): return false
-    case (.Y, _): return false
-    case (.L, _): return false
-    case (.R, _): return false
-    case (.LeftTrigger, _): return false
-    case (.RightTrigger, _): return false
-    }
+    return lhs.hashValue == rhs.hashValue
 }
 
 public class MFiExternalController: ExternalController
@@ -94,6 +69,10 @@ public class MFiExternalController: ExternalController
             }
         }
     }
+    
+    private var previousDPadInput: MFiExternalControllerInput? = nil
+    private var previousLeftThumbstickInput: MFiExternalControllerInput?
+    private var previousRightThumbstickInput: MFiExternalControllerInput?
     
     //MARK: - Initializers -
     /** Initializers **/
@@ -144,71 +123,75 @@ public class MFiExternalController: ExternalController
         gamepad?.rightShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.R, pressed: pressed) }
         
         gamepad?.dpad.valueChangedHandler = { (button, value, pressed) in
+            
             let input = MFiExternalControllerInput.DPad(xAxis: button.xAxis.value, yAxis: button.yAxis.value)
             
-            if button.xAxis.value != 0 || button.yAxis.value != 0
+            if let previousInput = self.previousDPadInput
             {
-                self.updateReceiversForActivatedInput(input)
-            }
-            else
-            {
-                self.updateReceiversForDeactivatedInput(input)
+                // Deactivate previous inputs that aren't activated any more
+                if case let MFiExternalControllerInput.DPad(xAxis: xAxis, yAxis: yAxis) = previousInput
+                {
+                    let invertedXAxis = (button.xAxis.value == 0) ? xAxis : 0
+                    let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
+                    
+                    let invertedDPad = MFiExternalControllerInput.DPad(xAxis: invertedXAxis, yAxis: invertedYAxis)
+                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                }
             }
             
+            self.updateReceiversForActivatedInput(input)
+            
+            self.previousDPadInput = input
         }
         
         let extendedGamepad = self.controller.extendedGamepad
         
-        extendedGamepad?.leftShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.LeftTrigger, pressed: pressed) }
-        extendedGamepad?.rightShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.RightTrigger, pressed: pressed) }
+        extendedGamepad?.leftTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.LeftTrigger, pressed: pressed) }
+        extendedGamepad?.rightTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.RightTrigger, pressed: pressed) }
         
         extendedGamepad?.leftThumbstick.valueChangedHandler = { (button, value, pressed) in
+            
             let input = MFiExternalControllerInput.LeftThumbstick(xAxis: button.xAxis.value, yAxis: button.yAxis.value)
             
-            if button.xAxis.value != 0 || button.yAxis.value != 0
+            if let previousInput = self.previousLeftThumbstickInput
             {
-                self.updateReceiversForActivatedInput(input)
-            }
-            else
-            {
-                self.updateReceiversForDeactivatedInput(input)
+                // Deactivate previous inputs that aren't activated any more
+                if case let MFiExternalControllerInput.LeftThumbstick(xAxis: xAxis, yAxis: yAxis) = previousInput
+                {
+                    let invertedXAxis = (button.xAxis.value == 0) ? xAxis : 0
+                    let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
+                    
+                    let invertedDPad = MFiExternalControllerInput.LeftThumbstick(xAxis: invertedXAxis, yAxis: invertedYAxis)
+                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                }
             }
             
+            self.updateReceiversForActivatedInput(input)
+            
+            self.previousLeftThumbstickInput = input
         }
         
         extendedGamepad?.rightThumbstick.valueChangedHandler = { (button, value, pressed) in
+            
             let input = MFiExternalControllerInput.RightThumbstick(xAxis: button.xAxis.value, yAxis: button.yAxis.value)
             
-            if button.xAxis.value != 0 || button.yAxis.value != 0
+            if let previousInput = self.previousRightThumbstickInput
             {
-                self.updateReceiversForActivatedInput(input)
-            }
-            else
-            {
-                self.updateReceiversForDeactivatedInput(input)
+                // Deactivate previous inputs that aren't activated any more
+                if case let MFiExternalControllerInput.RightThumbstick(xAxis: xAxis, yAxis: yAxis) = previousInput
+                {
+                    let invertedXAxis = (button.xAxis.value == 0) ? xAxis : 0
+                    let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
+                    
+                    let invertedDPad = MFiExternalControllerInput.RightThumbstick(xAxis: invertedXAxis, yAxis: invertedYAxis)
+                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                }
             }
             
+            self.updateReceiversForActivatedInput(input)
+            
+            self.previousRightThumbstickInput = input
         }
 
-    }
-}
-
-//MARK: - Private Methods -
-private extension MFiExternalController
-{
-    func updateReceiversForActivatedInput(input: InputType)
-    {
-        for receiver in self.receivers
-        {
-            receiver.gameController(self, didActivateInput: input)
-        }
-    }
-    
-    func updateReceiversForDeactivatedInput(input: InputType)
-    {
-        for receiver in self.receivers
-        {
-            receiver.gameController(self, didDeactivateInput: input)
-        }
     }
 }

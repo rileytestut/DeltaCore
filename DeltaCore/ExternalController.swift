@@ -30,6 +30,8 @@ public class ExternalController: GameControllerType, Hashable
         return ObjectIdentifier(self).hashValue
     }
     
+    private var previousActivatedInputs: Set<InputTypeBox> = []
+    
     public init()
     {
         
@@ -55,6 +57,57 @@ extension ExternalController
         if let index = self.receivers.indexOf({ $0 == receiver })
         {
             self.receivers.removeAtIndex(index)
+        }
+    }
+}
+
+//MARK: - Private Methods -
+internal extension ExternalController
+{
+    func updateReceiversForActivatedInput(input: InputType)
+    {
+        var activatedInputs = [input]
+        
+        if let inputs = self.inputTransformationHandler?(input)
+        {
+            activatedInputs = inputs
+        }
+        
+        for receiver in self.receivers
+        {
+            for input in activatedInputs
+            {
+                let inputBox = InputTypeBox(input: input)
+                if self.previousActivatedInputs.contains(inputBox)
+                {
+                    continue
+                }
+                
+                receiver.gameController(self, didActivateInput: input)
+                
+                self.previousActivatedInputs.insert(inputBox)
+            }
+        }
+    }
+    
+    func updateReceiversForDeactivatedInput(input: InputType)
+    {
+        var deactivatedInputs = [input]
+        
+        if let inputs = self.inputTransformationHandler?(input)
+        {
+            deactivatedInputs = inputs
+        }
+        
+        for receiver in self.receivers
+        {
+            for input in deactivatedInputs
+            {
+                receiver.gameController(self, didDeactivateInput: input)
+                
+                let inputBox = InputTypeBox(input: input)
+                self.previousActivatedInputs.remove(inputBox)
+            }
         }
     }
 }

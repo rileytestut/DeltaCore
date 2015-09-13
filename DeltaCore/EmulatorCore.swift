@@ -52,6 +52,19 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     {
         return []
     }
+    
+    public func addGameView(gameView: GameView)
+    {
+        self.gameViews.append(gameView)
+    }
+    
+    public func removeGameView(gameView: GameView)
+    {
+        if let index = self.gameViews.indexOf(gameView)
+        {
+            self.gameViews.removeAtIndex(index);
+        }
+    }
 }
 
 //MARK: - Emulation -
@@ -73,18 +86,7 @@ public extension EmulatorCore
 /// Game Views
 public extension EmulatorCore
 {
-    func addGameView(gameView: GameView)
-    {
-        self.gameViews.append(gameView)
-    }
     
-    func removeGameView(gameView: GameView)
-    {
-        if let index = self.gameViews.indexOf(gameView)
-        {
-            self.gameViews.removeAtIndex(index);
-        }
-    }
 }
 
 //MARK: - Controllers -

@@ -10,7 +10,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
 {
     //MARK: - Properties -
     /** Properties **/
-    public let game: Game
+    public let game: GameType
     public private(set) var gameViews: [GameView] = []
     public var gameControllers: [GameControllerType] {
         get
@@ -24,11 +24,11 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
 
     //MARK: - Initializers -
     /** Initializers **/
-    public required init(game: Game)
+    public required init(game: GameType)
     {
         self.game = game
         
-        super.init(dynamicIdentifier: game.UTI, initSelector: Selector("initWithGame:"), initParameters: [game])
+        super.init(dynamicIdentifier: game.typeIdentifier, initSelector: Selector("initWithGame:"), initParameters: [game])
     }
     
     /** Subclass Methods **/

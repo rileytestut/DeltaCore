@@ -181,6 +181,8 @@ private extension ControllerSkin
             deviceIdiom = "phone"
         case .Pad:
             deviceIdiom = "pad"
+            
+        case .TV: fallthrough
         case .Unspecified:
             deviceIdiom = ""
         }

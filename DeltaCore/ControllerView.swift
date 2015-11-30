@@ -8,25 +8,6 @@
 
 import UIKit
 
-// Normally we'd make a WeakBox a generic class, but unfortunately Swift's generics system breaks all over when using protocols... :(
-private final class WeakReceiverBox: Hashable
-{
-    weak var value: GameControllerReceiverType?
-
-    let hashValue: Int
-    
-    init(value: GameControllerReceiverType)
-    {
-        self.value = value
-        self.hashValue = ObjectIdentifier(value as AnyObject).hashValue
-    }
-}
-
-private func ==(lhs: WeakReceiverBox, rhs: WeakReceiverBox) -> Bool
-{
-    return lhs.hashValue == rhs.hashValue
-}
-
 public class ControllerView: UIView
 {
     //MARK: - Properties -
@@ -47,25 +28,7 @@ public class ControllerView: UIView
     public var inputTransformationHandler: (InputType -> [InputType])?
     
     public var receivers: [GameControllerReceiverType] {
-        
-        var receivers: [GameControllerReceiverType] = []
-        
-        for box in self.privateReceivers
-        {
-            if let value = box.value
-            {
-                receivers.append(value)
-            }
-            else
-            {
-                self.privateReceivers.remove(box)
-            }
-        }
-        
-        return receivers
-        
-        // Normally we'd just use flatMap, but we need to also remove any Boxes whose values are nil
-        // return self.privateReceivers.flatMap({ $0.value })
+        return self.privateReceivers.allObjects.map({ $0 as! GameControllerReceiverType })
     }
     
     //MARK: - Private Properties
@@ -76,7 +39,7 @@ public class ControllerView: UIView
     private var previousActivatedInputs: Set<InputTypeBox> = []
     
     // Should only be used for modifying receivers. Otherwise, use `receivers`
-    private var privateReceivers: Set<WeakReceiverBox> = []
+    private let privateReceivers = NSHashTable.weakObjectsHashTable()
     
     private var activatedInputBoxes: Set<InputTypeBox> {
         var activatedInputs: Set<InputTypeBox> = []
@@ -234,14 +197,12 @@ extension ControllerView: GameControllerType
 {
     public func addReceiver(receiver: GameControllerReceiverType)
     {
-        let box = WeakReceiverBox(value: receiver)
-        self.privateReceivers.insert(box)
+        self.privateReceivers.addObject(receiver)
     }
     
     public func removeReceiver(receiver: GameControllerReceiverType)
     {
-        let box = WeakReceiverBox(value: receiver)
-        self.privateReceivers.remove(box)
+        self.privateReceivers.removeObject(receiver)
     }
 }
 

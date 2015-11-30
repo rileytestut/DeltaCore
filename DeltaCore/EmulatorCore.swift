@@ -73,20 +73,20 @@ public extension EmulatorCore
 {
     func startEmulation()
     {
-        
     }
     
     func stopEmulation()
     {
-        
     }
 }
 
-//MARK: - Game Views -
-/// Game Views
+//MARK: - System Information -
+/// System Information
 public extension EmulatorCore
 {
-    
+    var preferredRenderingSize: CGSize {
+        return CGSizeMake(0, 0)
+    }
 }
 
 //MARK: - Controllers -

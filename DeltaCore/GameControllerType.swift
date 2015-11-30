@@ -12,7 +12,7 @@ public enum ControllerInput: InputType
 }
 
 //MARK: - GameControllerReceiverType
-public protocol GameControllerReceiverType
+public protocol GameControllerReceiverType: AnyObject
 {
     /// Equivalent to pressing a button, or moving an analog stick
     func gameController(gameController: GameControllerType, didActivateInput input: InputType)
@@ -27,12 +27,7 @@ public protocol GameControllerReceiverType
 
 public func ==(x: GameControllerReceiverType, y: GameControllerReceiverType) -> Bool
 {
-    if let y = y as? AnyObject
-    {
-        return x.isEqual(y)
-    }
-    
-    return false
+    return x.isEqual(y)
 }
 
 //MARK: - GameControllerType -

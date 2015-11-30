@@ -8,6 +8,25 @@
 
 import UIKit
 
+// Normally we'd make a WeakBox a generic class, but unfortunately Swift's generics system breaks all over when using protocols... :(
+private final class WeakReceiverBox: Hashable
+{
+    weak var value: GameControllerReceiverType?
+
+    let hashValue: Int
+    
+    init(value: GameControllerReceiverType)
+    {
+        self.value = value
+        self.hashValue = ObjectIdentifier(value as AnyObject).hashValue
+    }
+}
+
+private func ==(lhs: WeakReceiverBox, rhs: WeakReceiverBox) -> Bool
+{
+    return lhs.hashValue == rhs.hashValue
+}
+
 public class ControllerView: UIView
 {
     //MARK: - Properties -
@@ -25,8 +44,29 @@ public class ControllerView: UIView
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public private(set) var receivers: [GameControllerReceiverType] = []
-    public var inputTransformationHandler: ((InputType) -> ([InputType]))?
+    public var inputTransformationHandler: (InputType -> [InputType])?
+    
+    public var receivers: [GameControllerReceiverType] {
+        
+        var receivers: [GameControllerReceiverType] = []
+        
+        for box in self.privateReceivers
+        {
+            if let value = box.value
+            {
+                receivers.append(value)
+            }
+            else
+            {
+                self.privateReceivers.remove(box)
+            }
+        }
+        
+        return receivers
+        
+        // Normally we'd just use flatMap, but we need to also remove any Boxes whose values are nil
+        // return self.privateReceivers.flatMap({ $0.value })
+    }
     
     //MARK: - Private Properties
     private let imageView: UIImageView = UIImageView(frame: CGRectZero)
@@ -34,6 +74,9 @@ public class ControllerView: UIView
     
     private var touchesInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
     private var previousActivatedInputs: Set<InputTypeBox> = []
+    
+    // Should only be used for modifying receivers. Otherwise, use `receivers`
+    private var privateReceivers: Set<WeakReceiverBox> = []
     
     private var activatedInputBoxes: Set<InputTypeBox> {
         var activatedInputs: Set<InputTypeBox> = []
@@ -191,15 +234,14 @@ extension ControllerView: GameControllerType
 {
     public func addReceiver(receiver: GameControllerReceiverType)
     {
-        self.receivers.append(receiver)
+        let box = WeakReceiverBox(value: receiver)
+        self.privateReceivers.insert(box)
     }
     
     public func removeReceiver(receiver: GameControllerReceiverType)
     {
-        if let index = self.receivers.indexOf({ $0 == receiver })
-        {
-            self.receivers.removeAtIndex(index)
-        }
+        let box = WeakReceiverBox(value: receiver)
+        self.privateReceivers.remove(box)
     }
 }
 
@@ -234,10 +276,12 @@ private extension ControllerView
         
         let currentActivatedInputs = self.activatedInputBoxes
         
+        let receivers = self.receivers
+        
         let activatedInputs = currentActivatedInputs.subtract(self.previousActivatedInputs)
         for inputBox in activatedInputs
         {
-            for receiver in self.receivers
+            for receiver in receivers
             {
                 receiver.gameController(self, didActivateInput: inputBox.input)
             }
@@ -246,7 +290,7 @@ private extension ControllerView
         let deactivatedInputs = self.previousActivatedInputs.subtract(currentActivatedInputs)
         for inputBox in deactivatedInputs
         {
-            for receiver in self.receivers
+            for receiver in receivers
             {
                 receiver.gameController(self, didDeactivateInput: inputBox.input)
             }

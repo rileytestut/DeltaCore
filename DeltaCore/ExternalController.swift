@@ -21,8 +21,10 @@ public class ExternalController: GameControllerType, Hashable
     //MARK: <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public private(set) var receivers: [GameControllerReceiverType] = []
-    public var inputTransformationHandler: ((InputType) -> ([InputType]))?
+    public var inputTransformationHandler: (InputType -> [InputType])?
+    public var receivers: [GameControllerReceiverType] {
+        return self.privateReceivers.allObjects.map({ $0 as! GameControllerReceiverType })
+    }
     
     //MARK: <Hashable>
     /// <Hashable>
@@ -31,6 +33,9 @@ public class ExternalController: GameControllerType, Hashable
     }
     
     private var previousActivatedInputs: Set<InputTypeBox> = []
+    
+    // Should only be used for modifying receivers. Otherwise, use `receivers`
+    private let privateReceivers = NSHashTable.weakObjectsHashTable()
     
     public init()
     {
@@ -49,15 +54,12 @@ extension ExternalController
 {
     public func addReceiver(receiver: GameControllerReceiverType)
     {
-        self.receivers.append(receiver)
+        self.privateReceivers.addObject(receiver)
     }
     
     public func removeReceiver(receiver: GameControllerReceiverType)
     {
-        if let index = self.receivers.indexOf({ $0 == receiver })
-        {
-            self.receivers.removeAtIndex(index)
-        }
+        self.privateReceivers.removeObject(receiver)
     }
 }
 

@@ -78,6 +78,16 @@ public extension EmulatorCore
     func stopEmulation()
     {
     }
+    
+    func pauseEmulation()
+    {
+        
+    }
+    
+    func resumeEmulation()
+    {
+        
+    }
 }
 
 //MARK: - System Information -

@@ -21,6 +21,11 @@ public class ControllerView: UIView
     public var activatedInputs: [InputType] {
         return self.activatedInputBoxes.map({ $0.input })
     }
+    public var currentConfiguration: ControllerSkinConfiguration {
+        return ControllerSkinConfiguration(traitCollection: self.traitCollection, containerSize: self.containerView?.bounds.size ?? self.superview?.bounds.size ?? CGSizeZero)
+    }
+    
+    public var containerView: UIView?
     
     //MARK: - <GameControllerType>
     /// <GameControllerType>
@@ -34,6 +39,7 @@ public class ControllerView: UIView
     //MARK: - Private Properties
     private let imageView: UIImageView = UIImageView(frame: CGRectZero)
     private var transitionImageView: UIImageView? = nil
+    private let controllerDebugView = ControllerDebugView()
     
     private var touchesInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
     private var previousActivatedInputs: Set<InputTypeBox> = []
@@ -75,6 +81,12 @@ public class ControllerView: UIView
         self.imageView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         self.imageView.contentMode = .ScaleAspectFit
         self.addSubview(self.imageView)
+        
+        self.controllerDebugView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
+        self.controllerDebugView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        self.addSubview(self.controllerDebugView)
+        
+        self.multipleTouchEnabled = true
     }
     
     //MARK: - Overrides -
@@ -157,7 +169,14 @@ public extension ControllerView
     
     func updateControllerSkin()
     {
-        let image = self.controllerSkin?.imageForTraitCollection(self.traitCollection)
+        if let debugModeEnabled = self.controllerSkin?.debugModeEnabled
+        {
+            self.controllerDebugView.hidden = !debugModeEnabled
+        }
+        
+        self.controllerDebugView.items = self.controllerSkin?.itemsForConfiguration(self.currentConfiguration)
+        
+        let image = self.controllerSkin?.imageForConfiguration(self.currentConfiguration)
         self.imageView.image = image
         
         self.invalidateIntrinsicContentSize()
@@ -217,8 +236,11 @@ private extension ControllerView
         // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
         for touch in touches where self.touchesInputsMappingDictionary[touch] != nil
         {
-            let point = touch.locationInView(self)
-            let inputs = controllerSkin.inputsForPoint(point, traitCollection: self.traitCollection)
+            var point = touch.locationInView(self)
+            point.x /= self.bounds.width
+            point.y /= self.bounds.height
+            
+            let inputs = controllerSkin.inputsForPoint(point, configuration: self.currentConfiguration) ?? []
             
             var boxedInputs: Set<InputTypeBox> = []
             for input in inputs

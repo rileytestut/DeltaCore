@@ -64,10 +64,18 @@ public class ControllerSkin: DynamicObject
         do
         {
             let archive = try ZZArchive(URL: self.URL)
-            let entry = (archive.entries as! [ZZArchiveEntry]).filter { $0.fileName == "info.json" }.first ?? ZZArchiveEntry()
-            let data = try entry.newData()
             
-            info = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String: AnyObject] ?? [:]
+            if let index = archive.entries.indexOf({ $0.fileName == "info.json" })
+            {
+                let entry = archive.entries[index]
+                let data = try entry.newData()
+                
+                info = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String: AnyObject] ?? [:]
+            }
+            else
+            {
+                info = [:]
+            }
         }
         catch let error as NSError
         {
@@ -413,10 +421,9 @@ private extension ControllerSkin
         // Would be strange if this fails since it had to work to init ControllerSkin in the first place...
         if let archive = try? ZZArchive(URL: self.URL)
         {
-            let entries = archive.entries as! [ZZArchiveEntry]
-            if let index = entries.indexOf({ $0.fileName == filename })
+            if let index = archive.entries.indexOf({ $0.fileName == filename })
             {
-                return entries[index]
+                return archive.entries[index]
             }
         }
         

@@ -19,15 +19,17 @@ public struct ControllerSkinConfiguration
     
     // Misc.
     public var containerSize: CGSize
+    public var targetWidth: CGFloat
     public var splitViewActivated = false
     
-    public init(traitCollection: UITraitCollection, containerSize: CGSize)
+    public init(traitCollection: UITraitCollection, containerSize: CGSize, targetWidth: CGFloat)
     {
         self.horizontalSizeClass = (traitCollection.horizontalSizeClass != .Unspecified) ? traitCollection.horizontalSizeClass : .Compact
         self.verticalSizeClass = (traitCollection.verticalSizeClass != .Unspecified) ? traitCollection.verticalSizeClass : .Compact
         self.displayScale = traitCollection.displayScale
         
         self.containerSize = containerSize
+        self.targetWidth = targetWidth
     }
 }
 
@@ -171,14 +173,32 @@ public extension ControllerSkin
         guard configuration.displayScale > 0.0 else { return nil }
         guard let representation = self.representationForConfiguration(configuration) else { return nil }
 
-        let cacheKey = representation.assetFilename + "_" + String(configuration.containerSize)
+        let cacheKey = representation.assetFilename + "_" + String(configuration.targetWidth)
         
-        if let image = self.imageCache.objectForKey(cacheKey) as? UIImage { return image }
+        var image: UIImage? = self.imageCache.objectForKey(cacheKey) as? UIImage
+        if image != nil
+        {
+            return image
+        }
+        
+        defer { if let image = image { self.imageCache.setObject(image, forKey: cacheKey) } }
         
         if representation.assetFilename.lowercaseString.hasSuffix(".pdf")
         {
             // PDF
-            //TODO: Implement PDF Rendering
+            
+            if let archiveEntry = self.archiveEntryForRepresentation(representation)
+            {
+                do
+                {
+                    let data = try archiveEntry.newData()
+                    image = UIImage.imageWithPDFData(data, targetWidth: configuration.targetWidth)
+                }
+                catch let error as NSError
+                {
+                    print("\(error) \(error.userInfo)")
+                }
+            }
         }
         else
         {
@@ -190,23 +210,23 @@ public extension ControllerSkin
             {
                 // >= 3.0 (iPhone 6 Plus)
             case 3.0...CGFloat.infinity:
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation, suffix: "@3x")
+                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@3x")
                 
                 // iPads
             case 2.0 where (configuration.horizontalSizeClass == .Regular && configuration.verticalSizeClass == .Regular):
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation, suffix: "@2x")
+                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@2x")
                 
                 // iPhone 6
             case 2.0 where (configuration.containerSize.height > 626 || configuration.containerSize.width > 626):
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation, suffix: "@2x")
+                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@2x")
                 
                 // iPhone 5
             case 2.0 where (configuration.containerSize.height > 520 || configuration.containerSize.width > 520):
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation, suffix: "@568h")
+                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@568h")
                 
                 // iPhone 4
             case 2.0:
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation, suffix: "@480h")
+                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@480h")
                 
             default: break
                 
@@ -214,16 +234,14 @@ public extension ControllerSkin
             
             if archiveEntry == nil
             {
-                archiveEntry = self.imageArchiveEntryForRepresentation(representation)
+                archiveEntry = self.archiveEntryForRepresentation(representation)
             }
             
             do
             {
-                if let data = try archiveEntry?.newData(), let image = UIImage(data: data, scale: configuration.displayScale)
+                if let data = try archiveEntry?.newData()
                 {
-                    self.imageCache.setObject(image, forKey: cacheKey)
-                    
-                    return image
+                    image = UIImage(data: data, scale: configuration.displayScale)
                 }
             }
             catch let error as NSError {
@@ -231,8 +249,7 @@ public extension ControllerSkin
             }
         }
         
-        return nil
-        
+        return image
     }
     
     func itemsForConfiguration(configuration: ControllerSkinConfiguration) -> [ControllerSkin.Item]?
@@ -411,7 +428,7 @@ private extension ControllerSkin
         }
     }
     
-    func imageArchiveEntryForRepresentation(representation: Representation, suffix: String = "") -> ZZArchiveEntry?
+    func archiveEntryForRepresentation(representation: Representation, suffix: String = "") -> ZZArchiveEntry?
     {
         guard let insertionIndex = representation.assetFilename.characters.indexOf(".") else { return nil }
         

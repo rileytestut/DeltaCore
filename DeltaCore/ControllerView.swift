@@ -15,14 +15,14 @@ public class ControllerView: UIView
     public var controllerSkin: ControllerSkin? {
         didSet
         {
-            self.updateControllerSkin()
+            self.setNeedsLayout()
         }
     }
     public var activatedInputs: [InputType] {
         return self.activatedInputBoxes.map({ $0.input })
     }
     public var currentConfiguration: ControllerSkinConfiguration {
-        return ControllerSkinConfiguration(traitCollection: self.traitCollection, containerSize: self.containerView?.bounds.size ?? self.superview?.bounds.size ?? CGSizeZero)
+        return ControllerSkinConfiguration(traitCollection: self.traitCollection, containerSize: self.containerView?.bounds.size ?? self.superview?.bounds.size ?? CGSizeZero, targetWidth: self.bounds.width)
     }
     
     public var containerView: UIView?
@@ -43,6 +43,8 @@ public class ControllerView: UIView
     
     private var touchesInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
     private var previousActivatedInputs: Set<InputTypeBox> = []
+    
+    private var _performedInitialLayout = false
     
     // Should only be used for modifying receivers. Otherwise, use `receivers`
     private let privateReceivers = NSHashTable.weakObjectsHashTable()
@@ -99,6 +101,15 @@ public class ControllerView: UIView
         return self.imageView.intrinsicContentSize()
     }
     
+    public override func layoutSubviews()
+    {
+        super.layoutSubviews()
+        
+        self._performedInitialLayout = true
+        
+        self.updateControllerSkin()
+    }
+    
     //MARK: - UIResponder
     /// UIResponder
     public override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?)
@@ -140,7 +151,7 @@ public class ControllerView: UIView
     {
         super.traitCollectionDidChange(previousTraitCollection)
         
-        self.updateControllerSkin()
+        self.setNeedsLayout()
     }
 }
 
@@ -169,6 +180,8 @@ public extension ControllerView
     
     func updateControllerSkin()
     {
+        guard self._performedInitialLayout else { return }
+        
         if let debugModeEnabled = self.controllerSkin?.debugModeEnabled
         {
             self.controllerDebugView.hidden = !debugModeEnabled

@@ -29,7 +29,10 @@ public class GameView: UIView
         }
     }
     
-    public private(set) var outputImage: CIImage?
+    public var outputImage: CIImage? {
+        let outputImage = self.filter?.outputImage ?? self.inputImage
+        return outputImage
+    }
     
     private let glkView: GLKView
     
@@ -89,7 +92,7 @@ extension GameView: GLKViewDelegate
     {
         guard let window = self.window where !CGRectIsEmpty(self.bounds) else { return }
         
-        if let outputImage = self.filter?.outputImage ?? self.inputImage
+        if let outputImage = self.outputImage
         {
             let bounds = CGRect(x: 0, y: 0, width: self.bounds.width * window.screen.scale, height: self.bounds.height * window.screen.scale)
             

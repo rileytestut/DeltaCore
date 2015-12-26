@@ -89,9 +89,6 @@ extension GameView: GLKViewDelegate
     {
         guard let window = self.window where !CGRectIsEmpty(self.bounds) else { return }
         
-        glClearColor(0, 0, 0, 0)
-        glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
-        
         if let outputImage = self.filter?.outputImage ?? self.inputImage
         {
             let bounds = CGRect(x: 0, y: 0, width: self.bounds.width * window.screen.scale, height: self.bounds.height * window.screen.scale)

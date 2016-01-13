@@ -10,7 +10,17 @@
 		BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameType.swift */; };
+		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
+		BF6834031C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
+		BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF68340D1C45A1FE0052249F /* DLTARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF68340E1C45A1FE0052249F /* DLTARingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */; };
+		BF68340F1C45A1FE0052249F /* DLTARingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */; };
 		BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFEE12D11B602CCA00156A2C /* ZipZap.framework */; };
+		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
+		BF784EC01C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
+		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
+		BF784EC21C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
 		BF785C9D1B603C1800189DB8 /* DeltaCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* DeltaCore.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
@@ -99,6 +109,11 @@
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
 		BF4689811AAD703500A2586D /* GameType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
+		BF6834011C459C250052249F /* AudioManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTARingBuffer.h; sourceTree = "<group>"; };
+		BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DLTARingBuffer.m; sourceTree = "<group>"; };
+		BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TPCircularBuffer.c; path = External/TPCircularBuffer/TPCircularBuffer.c; sourceTree = SOURCE_ROOT; };
+		BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TPCircularBuffer.h; path = External/TPCircularBuffer/TPCircularBuffer.h; sourceTree = SOURCE_ROOT; };
 		BF785C9C1B603C1800189DB8 /* DeltaCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaCore.swift; sourceTree = "<group>"; };
 		BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiExternalController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
@@ -198,6 +213,25 @@
 			name = Model;
 			sourceTree = "<group>";
 		};
+		BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */ = {
+			isa = PBXGroup;
+			children = (
+				BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */,
+				BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */,
+			);
+			name = TPCircularBuffer;
+			sourceTree = "<group>";
+		};
+		BF9437FE1C46F42400E527B2 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				BF6834011C459C250052249F /* AudioManager.swift */,
+				BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */,
+				BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */,
+			);
+			name = Audio;
+			sourceTree = "<group>";
+		};
 		BF9873BF1AB6C8AE0001D8C9 /* UI */ = {
 			isa = PBXGroup;
 			children = (
@@ -248,6 +282,7 @@
 			isa = PBXGroup;
 			children = (
 				BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */,
+				BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */,
 			);
 			name = External;
 			sourceTree = "<group>";
@@ -270,6 +305,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */,
+				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
 			name = Core;
 			sourceTree = "<group>";
@@ -283,6 +319,8 @@
 			files = (
 				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
+				BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
+				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,6 +330,8 @@
 			files = (
 				BF86249C1BB745B500C12EEE /* DynamicObject.h in Headers */,
 				BF86249D1BB745B500C12EEE /* DeltaCore.h in Headers */,
+				BF68340D1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
+				BF784EC21C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -453,10 +493,13 @@
 				BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */,
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameType.swift in Sources */,
+				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
+				BF68340E1C45A1FE0052249F /* DLTARingBuffer.m in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */,
+				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,
 				BFE438101AF606980095A5F1 /* GameControllerType.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */,
@@ -469,12 +512,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF784EC01C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BF86248D1BB745B500C12EEE /* InputType.swift in Sources */,
 				BF86248E1BB745B500C12EEE /* DeltaCore.swift in Sources */,
 				BF8624901BB745B500C12EEE /* ExternalController.swift in Sources */,
 				BF8624921BB745B500C12EEE /* GameType.swift in Sources */,
 				BF8624931BB745B500C12EEE /* DynamicObject.m in Sources */,
+				BF68340F1C45A1FE0052249F /* DLTARingBuffer.m in Sources */,
 				BF8624941BB745B500C12EEE /* EmulatorCore.swift in Sources */,
+				BF6834031C459C250052249F /* AudioManager.swift in Sources */,
 				BF8624951BB745B500C12EEE /* MFiExternalController.swift in Sources */,
 				BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BF8624961BB745B500C12EEE /* GameControllerType.swift in Sources */,

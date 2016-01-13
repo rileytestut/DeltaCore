@@ -6,6 +6,8 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
+import AVFoundation
+
 public class EmulatorCore: DynamicObject, GameControllerReceiverType
 {
     //MARK: - Properties -
@@ -16,6 +18,16 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         get
         {
             return Array(self.gameControllersDictionary.values)
+        }
+    }
+    
+    public lazy var audioManager: AudioManager = AudioManager(preferredBufferSize: self.preferredBufferSize, audioFormat: self.audioFormat)
+    
+    public var running = false
+    
+    public var fastForwarding = false {
+        didSet {
+            self.audioManager.rate = self.fastForwarding ? self.fastForwardRate : 1.0
         }
     }
     
@@ -73,20 +85,26 @@ public extension EmulatorCore
 {
     func startEmulation()
     {
+        self.running = true
+        self.audioManager.start()
     }
     
     func stopEmulation()
     {
+        self.running = false
+        self.audioManager.stop()
     }
     
     func pauseEmulation()
     {
-        
+        self.running = false
+        self.audioManager.paused = true
     }
     
     func resumeEmulation()
     {
-        
+        self.running = true
+        self.audioManager.paused = false
     }
 }
 
@@ -96,6 +114,18 @@ public extension EmulatorCore
 {
     var preferredRenderingSize: CGSize {
         return CGSizeMake(0, 0)
+    }
+    
+    var preferredBufferSize: Int {
+        return 4096
+    }
+    
+    var audioFormat: AVAudioFormat {
+        return AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)
+    }
+    
+    var fastForwardRate: Float {
+        return 2.0
     }
 }
 

@@ -17,21 +17,25 @@ public class AudioManager
     public var paused = false {
         didSet {
             
-            if self.paused
+            do
             {
-                self.audioEngine.pause()
-            }
-            else
-            {
-                do
+                if self.paused
+                {
+                    self.audioEngine.pause()
+                }
+                else
                 {
                     try self.audioEngine.start()
                 }
-                catch let error as NSError
-                {
-                    print(error, error.userInfo)
-                }
             }
+            catch let error as NSError
+            {
+                print(error)
+            }
+            
+            self.updateAudioBufferFrameLengths()
+            
+            self.resetRingBuffer()
         }
     }
     
@@ -143,6 +147,13 @@ private extension AudioManager
         {
             buffer.frameLength = AVAudioFrameCount(frameLength)
         }
+    }
+    
+    func resetRingBuffer()
+    {
+        let bufferSize = Int(self.ringBuffer.availableBytesForReading) / sizeof(Int32)
+        let buffer = UnsafeMutablePointer<Int32>.alloc(bufferSize)
+        self.ringBuffer.readIntoBuffer(buffer, preferredSize: self.ringBuffer.availableBytesForReading)
     }
 }
 

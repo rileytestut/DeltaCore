@@ -23,6 +23,10 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     public lazy var audioManager: AudioManager = AudioManager(preferredBufferSize: self.preferredBufferSize, audioFormat: self.audioFormat)
     
+    /// Used for converting timestamps to human-readable strings (such as for names of Save States)
+    /// Can be customized to provide different default formatting
+    public let timestampDateFormatter: NSDateFormatter
+    
     public var running = false
     
     public var fastForwarding = false {
@@ -39,6 +43,10 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     public required init(game: GameType)
     {
         self.game = game
+        
+        self.timestampDateFormatter = NSDateFormatter()
+        self.timestampDateFormatter.timeStyle = .ShortStyle
+        self.timestampDateFormatter.dateStyle = .LongStyle
         
         super.init(dynamicIdentifier: game.typeIdentifier, initSelector: Selector("initWithGame:"), initParameters: [game])
     }
@@ -65,6 +73,20 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         return []
     }
     
+    //MARK: - Save States -
+    /// Save States
+    public func saveSaveState(completion: (SaveStateType -> Void))
+    {
+        fatalError("saveStateState() must be implemented by a subclass of EmulatorCore.")
+    }
+    
+    public func loadSaveState(saveState: SaveStateType)
+    {
+        // Implemented by subclasses
+    }
+    
+    //MARK: - Game Views -
+    /// Game Views
     public func addGameView(gameView: GameView)
     {
         self.gameViews.append(gameView)

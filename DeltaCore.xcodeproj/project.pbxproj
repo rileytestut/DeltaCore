@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF1FB1791C5EE4B7007E2494 /* SaveStateType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateType.swift */; };
+		BF1FB17A1C5EE4B7007E2494 /* SaveStateType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateType.swift */; };
+		BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1881C5EEC14007E2494 /* SaveState.swift */; };
+		BF1FB18A1C5EEC14007E2494 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1881C5EEC14007E2494 /* SaveState.swift */; };
 		BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameType.swift */; };
@@ -104,6 +108,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BF1FB1781C5EE4B7007E2494 /* SaveStateType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SaveStateType.swift; sourceTree = "<group>"; };
+		BF1FB1881C5EEC14007E2494 /* SaveState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SaveState.swift; sourceTree = "<group>"; };
 		BF3273D41B86428200494CFC /* ExternalControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalControllerManager.swift; sourceTree = "<group>"; };
 		BF46895D1AACF36800A2586D /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -209,6 +215,7 @@
 			children = (
 				BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */,
 				BFAA1FE91B8A971000495943 /* ExternalController.swift */,
+				BF1FB1881C5EEC14007E2494 /* SaveState.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -265,6 +272,7 @@
 				BF4689811AAD703500A2586D /* GameType.swift */,
 				BFE4380F1AF606980095A5F1 /* GameControllerType.swift */,
 				BFF703D31B4888100098561C /* InputType.swift */,
+				BF1FB1781C5EE4B7007E2494 /* SaveStateType.swift */,
 			);
 			name = Protocols;
 			sourceTree = "<group>";
@@ -489,9 +497,11 @@
 			files = (
 				BFF703D41B4888100098561C /* InputType.swift in Sources */,
 				BF785C9D1B603C1800189DB8 /* DeltaCore.swift in Sources */,
+				BF1FB1791C5EE4B7007E2494 /* SaveStateType.swift in Sources */,
 				BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */,
 				BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */,
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
+				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameType.swift in Sources */,
 				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
@@ -522,8 +532,10 @@
 				BF8624941BB745B500C12EEE /* EmulatorCore.swift in Sources */,
 				BF6834031C459C250052249F /* AudioManager.swift in Sources */,
 				BF8624951BB745B500C12EEE /* MFiExternalController.swift in Sources */,
+				BF1FB18A1C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BF8624961BB745B500C12EEE /* GameControllerType.swift in Sources */,
+				BF1FB17A1C5EE4B7007E2494 /* SaveStateType.swift in Sources */,
 				BF8624971BB745B500C12EEE /* ExternalControllerManager.swift in Sources */,
 				BF8624981BB745B500C12EEE /* GameView.swift in Sources */,
 			);

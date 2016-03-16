@@ -46,6 +46,8 @@
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
 		BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
 		BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
+		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
+		BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD78F651C995799000441FC /* DLTAVideoRendering.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */; };
 		BFE438101AF606980095A5F1 /* GameControllerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameControllerType.swift */; };
 		BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE438111AF60CDA0095A5F1 /* ControllerView.swift */; };
@@ -128,6 +130,8 @@
 		BFAA1FE91B8A971000495943 /* ExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalController.swift; sourceTree = "<group>"; };
 		BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerDebugView.swift; sourceTree = "<group>"; };
 		BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGGeometry+Dictionary.swift"; sourceTree = "<group>"; };
+		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
+		BFD78F651C995799000441FC /* DLTAVideoRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAVideoRendering.h; sourceTree = "<group>"; };
 		BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
 		BFE4380F1AF606980095A5F1 /* GameControllerType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameControllerType.swift; sourceTree = "<group>"; };
 		BFE438111AF60CDA0095A5F1 /* ControllerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerView.swift; sourceTree = "<group>"; };
@@ -266,6 +270,15 @@
 			name = Extensions;
 			sourceTree = "<group>";
 		};
+		BFD78F591C994587000441FC /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				BFD78F611C994596000441FC /* VideoManager.swift */,
+				BFD78F651C995799000441FC /* DLTAVideoRendering.h */,
+			);
+			name = Video;
+			sourceTree = "<group>";
+		};
 		BFE4380E1AF606660095A5F1 /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
@@ -313,6 +326,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */,
+				BFD78F591C994587000441FC /* Video */,
 				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
 			name = Core;
@@ -326,6 +340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
+				BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
 				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
@@ -512,6 +527,7 @@
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,
 				BFE438101AF606980095A5F1 /* GameControllerType.swift in Sources */,
+				BFD78F621C994596000441FC /* VideoManager.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */,
 				BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,

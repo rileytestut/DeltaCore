@@ -11,6 +11,8 @@ import CoreImage
 import GLKit
 import AVFoundation
 
+import Roxas
+
 public class GameView: UIView
 {
     @NSCopying public var filter: CIFilter? {
@@ -65,7 +67,7 @@ public class GameView: UIView
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         self.glkView.delegate = self
-        self.glkView.enableSetNeedsDisplay = false
+        self.glkView.enableSetNeedsDisplay = true
         self.addSubview(self.glkView)
     }
     
@@ -82,14 +84,16 @@ private extension GameView
 {
     func update()
     {
-        self.glkView.display()
+        rst_dispatch_sync_on_main_thread() {
+            self.glkView.setNeedsDisplay()
+        }
     }
 }
 
 extension GameView: GLKViewDelegate
 {
     public func glkView(view: GLKView, drawInRect rect: CGRect)
-    {
+    {        
         guard let window = self.window where !CGRectIsEmpty(self.bounds) else { return }
         
         if let outputImage = self.outputImage

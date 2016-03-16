@@ -22,6 +22,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     }
     
     public lazy var audioManager: AudioManager = AudioManager(preferredBufferSize: self.preferredBufferSize, audioFormat: self.audioFormat)
+    public lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
     /// Can be customized to provide different default formatting
@@ -53,6 +54,10 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     /** Subclass Methods **/
     /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
+     
+    public var videoBufferInfo: VideoManager.BufferInfo {
+        fatalError("To be implemented by subclasses.")
+    }
     
     //MARK: - GameControllerReceiver -
     /// GameControllerReceiver
@@ -90,14 +95,18 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     public func addGameView(gameView: GameView)
     {
         self.gameViews.append(gameView)
+        
+        self.videoManager.addGameView(gameView)
     }
     
     public func removeGameView(gameView: GameView)
     {
         if let index = self.gameViews.indexOf(gameView)
         {
-            self.gameViews.removeAtIndex(index);
+            self.gameViews.removeAtIndex(index)
         }
+        
+        self.videoManager.removeGameView(gameView)
     }
 }
 

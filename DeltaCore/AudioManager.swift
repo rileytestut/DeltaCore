@@ -10,9 +10,24 @@ import AVFoundation
 
 private let AudioBufferCount = 3
 
-public class AudioManager
+public extension AudioManager
 {
-    public let preferredBufferSize: Int
+    public struct BufferInfo
+    {
+        public let inputFormat: AVAudioFormat
+        public let preferredSize: Int
+        
+        public init(inputFormat: AVAudioFormat, preferredSize: Int)
+        {
+            self.inputFormat = inputFormat
+            self.preferredSize = preferredSize
+        }
+    }
+}
+
+public class AudioManager: NSObject, DLTAAudioRendering
+{
+    public let bufferInfo: BufferInfo
     
     public var paused = false {
         didSet {
@@ -55,11 +70,11 @@ public class AudioManager
     
     private var audioBuffers = [AVAudioPCMBuffer]()
     
-    public init(preferredBufferSize: Int, audioFormat inputFormat: AVAudioFormat)
+    public init(bufferInfo: BufferInfo)
     {
-        self.preferredBufferSize = preferredBufferSize
+        self.bufferInfo = bufferInfo
         
-        self.ringBuffer = DLTARingBuffer(preferredBufferSize: Int32(preferredBufferSize * AudioBufferCount))
+        self.ringBuffer = DLTARingBuffer(preferredBufferSize: Int32(self.bufferInfo.preferredSize * AudioBufferCount))
         
         // Audio Engine
         self.audioEngine = AVAudioEngine()
@@ -67,8 +82,8 @@ public class AudioManager
         self.audioPlayerNode = AVAudioPlayerNode()
         self.audioEngine.attachNode(self.audioPlayerNode)
         
-        let outputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 2)
-        self.audioConverter = AVAudioConverter(fromFormat: inputFormat, toFormat: outputFormat)
+        let outputFormat = AVAudioFormat(standardFormatWithSampleRate: self.bufferInfo.inputFormat.sampleRate, channels: 2)
+        self.audioConverter = AVAudioConverter(fromFormat: self.bufferInfo.inputFormat, toFormat: outputFormat)
                 
         self.timePitchEffect = AVAudioUnitTimePitch()
         self.audioEngine.attachNode(self.timePitchEffect)
@@ -76,12 +91,14 @@ public class AudioManager
         self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputFormat)
         self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputFormat)
         
+        super.init()
+        
         for _ in 0 ..< AudioBufferCount
         {
-            let inputBuffer = AVAudioPCMBuffer(PCMFormat: inputFormat, frameCapacity: AVAudioFrameCount(self.preferredBufferSize))
+            let inputBuffer = AVAudioPCMBuffer(PCMFormat: self.bufferInfo.inputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
             self.audioBuffers.append(inputBuffer)
             
-            let outputBuffer = AVAudioPCMBuffer(PCMFormat: outputFormat, frameCapacity: AVAudioFrameCount(self.preferredBufferSize))
+            let outputBuffer = AVAudioPCMBuffer(PCMFormat: outputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
             self.audioBuffers.append(outputBuffer)
             
             self.renderAudioBuffer(inputBuffer, intoOutputBuffer: outputBuffer)
@@ -122,7 +139,7 @@ private extension AudioManager
     {
         if self.audioEngine.running
         {
-            self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Float(self.preferredBufferSize) * self.rate))
+            self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Float(self.bufferInfo.preferredSize) * self.rate))
             
             do
             {
@@ -141,7 +158,7 @@ private extension AudioManager
     
     func updateAudioBufferFrameLengths()
     {
-        let frameLength = (Float(self.preferredBufferSize) / Float(self.audioConverter.inputFormat.streamDescription.memory.mBytesPerFrame)) * self.rate
+        let frameLength = (Float(self.bufferInfo.preferredSize) / Float(self.audioConverter.inputFormat.streamDescription.memory.mBytesPerFrame)) * self.rate
         
         for buffer in self.audioBuffers
         {

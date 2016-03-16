@@ -21,7 +21,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         }
     }
     
-    public lazy var audioManager: AudioManager = AudioManager(preferredBufferSize: self.preferredBufferSize, audioFormat: self.audioFormat)
+    public lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
     public lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
@@ -54,8 +54,20 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     /** Subclass Methods **/
     /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
-     
+    
+    public var audioBufferInfo: AudioManager.BufferInfo {
+        fatalError("To be implemented by subclasses.")
+    }
+    
     public var videoBufferInfo: VideoManager.BufferInfo {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var preferredRenderingSize: CGSize {
+       fatalError("To be implemented by subclasses.")
+    }
+    
+    public var fastForwardRate: Float {
         fatalError("To be implemented by subclasses.")
     }
     
@@ -136,27 +148,6 @@ public extension EmulatorCore
     {
         self.running = true
         self.audioManager.paused = false
-    }
-}
-
-//MARK: - System Information -
-/// System Information
-public extension EmulatorCore
-{
-    var preferredRenderingSize: CGSize {
-        return CGSizeMake(0, 0)
-    }
-    
-    var preferredBufferSize: Int {
-        return 4096
-    }
-    
-    var audioFormat: AVAudioFormat {
-        return AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)
-    }
-    
-    var fastForwardRate: Float {
-        return 2.0
     }
 }
 

@@ -8,6 +8,16 @@
 
 import AVFoundation
 
+public extension EmulatorCore
+{
+    enum State
+    {
+        case Stopped
+        case Running
+        case Paused
+    }
+}
+
 public class EmulatorCore: DynamicObject, GameControllerReceiverType
 {
     //MARK: - Properties -
@@ -28,7 +38,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     /// Can be customized to provide different default formatting
     public let timestampDateFormatter: NSDateFormatter
     
-    public var running = false
+    public private(set) var state = State.Stopped
     
     public var fastForwarding = false {
         didSet {
@@ -92,14 +102,18 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     //MARK: - Save States -
     /// Save States
-    public func saveSaveState(completion: (SaveStateType -> Void))
+    public func saveSaveState(completion: (SaveStateType -> Void)) -> Bool
     {
-        fatalError("saveStateState() must be implemented by a subclass of EmulatorCore.")
+        guard self.state != .Stopped else { return false }
+        
+        return true
     }
     
-    public func loadSaveState(saveState: SaveStateType)
+    public func loadSaveState(saveState: SaveStateType) -> Bool
     {
-        // Implemented by subclasses
+        guard self.state != .Stopped else { return false }
+        
+        return true
     }
     
     //MARK: - Game Views -
@@ -126,28 +140,44 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
 /// Emulation
 public extension EmulatorCore
 {
-    func startEmulation()
+    func startEmulation() -> Bool
     {
-        self.running = true
+        guard self.state == .Stopped else { return false }
+        
+        self.state = .Running
         self.audioManager.start()
+        
+        return true
     }
     
-    func stopEmulation()
+    func stopEmulation() -> Bool
     {
-        self.running = false
+        guard self.state != .Stopped else { return false }
+        
+        self.state = .Stopped
         self.audioManager.stop()
+        
+        return true
     }
     
-    func pauseEmulation()
+    func pauseEmulation() -> Bool
     {
-        self.running = false
+        guard self.state == .Running else { return false }
+        
+        self.state = .Paused
         self.audioManager.paused = true
+        
+        return true
     }
     
-    func resumeEmulation()
+    func resumeEmulation() -> Bool
     {
-        self.running = true
+        guard self.state == .Paused else { return false }
+        
+        self.state = .Running
         self.audioManager.paused = false
+        
+        return true
     }
 }
 

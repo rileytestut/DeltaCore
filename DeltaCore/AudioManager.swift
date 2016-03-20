@@ -130,6 +130,8 @@ public extension AudioManager
     {
         self.audioPlayerNode.stop()
         self.audioEngine.stop()
+        
+        self.resetRingBuffer()
     }
 }
 
@@ -168,9 +170,11 @@ private extension AudioManager
     
     func resetRingBuffer()
     {
-        let bufferSize = Int(self.ringBuffer.availableBytesForReading) / sizeof(Int32)
-        let buffer = UnsafeMutablePointer<Int32>.alloc(bufferSize)
-        self.ringBuffer.readIntoBuffer(buffer, preferredSize: self.ringBuffer.availableBytesForReading)
+        let bufferSize = Int(self.ringBuffer.availableBytesForReading)
+        
+        let buffer = UnsafeMutablePointer<Int8>.alloc(bufferSize)
+        self.ringBuffer.readIntoBuffer(buffer, preferredSize: Int32(bufferSize))
+        buffer.dealloc(bufferSize)
     }
 }
 

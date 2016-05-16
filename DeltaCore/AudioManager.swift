@@ -29,18 +29,21 @@ public class AudioManager: NSObject, DLTAAudioRendering
 {
     public let bufferInfo: BufferInfo
     
-    public var paused = false {
-        didSet {
+    public var enabled = true {
+        didSet
+        {
+            self.ringBuffer.enabled = self.enabled
+            self.audioEngine.mainMixerNode.outputVolume = self.enabled ? 1.0 : 0.0
             
             do
             {
-                if self.paused
+                if self.enabled
                 {
-                    self.audioEngine.pause()
+                    try self.audioEngine.start()
                 }
                 else
                 {
-                    try self.audioEngine.start()
+                    self.audioEngine.pause()
                 }
             }
             catch let error as NSError
@@ -50,7 +53,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
             
             self.updateAudioBufferFrameLengths()
             
-            self.resetRingBuffer()
+            self.ringBuffer.reset()
         }
     }
     
@@ -63,7 +66,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
     
     public var ringBuffer: DLTARingBuffer
     
-    public let audioEngine: AVAudioEngine!
+    public let audioEngine: AVAudioEngine
     public let audioPlayerNode: AVAudioPlayerNode
     public let audioConverter: AVAudioConverter
     public let timePitchEffect: AVAudioUnitTimePitch
@@ -112,6 +115,8 @@ public extension AudioManager
 {
     func start()
     {
+        self.ringBuffer.reset()
+        
         do
         {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback, withOptions: [])
@@ -131,7 +136,8 @@ public extension AudioManager
         self.audioPlayerNode.stop()
         self.audioEngine.stop()
         
-        self.resetRingBuffer()
+        self.ringBuffer.enabled = false
+        self.ringBuffer.reset()
     }
 }
 
@@ -140,7 +146,7 @@ private extension AudioManager
     func renderAudioBuffer(inputBuffer: AVAudioPCMBuffer, intoOutputBuffer outputBuffer: AVAudioPCMBuffer)
     {
         if self.audioEngine.running
-        {
+        {            
             self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Float(self.bufferInfo.preferredSize) * self.rate))
             
             do
@@ -168,14 +174,7 @@ private extension AudioManager
         }
     }
     
-    func resetRingBuffer()
-    {
-        let bufferSize = Int(self.ringBuffer.availableBytesForReading)
-        
-        let buffer = UnsafeMutablePointer<Int8>.alloc(bufferSize)
-        self.ringBuffer.readIntoBuffer(buffer, preferredSize: Int32(bufferSize))
-        buffer.dealloc(bufferSize)
-    }
+    
 }
 
 

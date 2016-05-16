@@ -165,7 +165,7 @@ public extension EmulatorCore
         guard self.state == .Running else { return false }
         
         self.state = .Paused
-        self.audioManager.paused = true
+        self.audioManager.enabled = false
         
         return true
     }
@@ -175,7 +175,7 @@ public extension EmulatorCore
         guard self.state == .Paused else { return false }
         
         self.state = .Running
-        self.audioManager.paused = false
+        self.audioManager.enabled = true
         
         return true
     }

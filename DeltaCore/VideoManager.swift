@@ -55,6 +55,8 @@ public class VideoManager: NSObject
 {
     public private(set) var gameViews = [GameView]()
     
+    public var enabled = true
+    
     public let bufferInfo: BufferInfo
     
     public let videoBuffer: UnsafeMutablePointer<UInt8>
@@ -99,6 +101,8 @@ extension VideoManager: DLTAVideoRendering
 {
     public func didUpdateVideoBuffer()
     {
+        guard self.enabled else { return }
+        
         autoreleasepool {
             
             var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.inputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))

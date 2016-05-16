@@ -12,6 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DLTARingBuffer : NSObject
 
+@property (assign, nonatomic, getter=isEnabled) BOOL enabled;
+
 @property (assign, nonatomic, readonly) int32_t availableBytesForWriting;
 @property (assign, nonatomic, readonly) int32_t availableBytesForReading;
 
@@ -23,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Copies `size` bytes from ring buffer to provided buffer if available. Otherwise, copies as many as possible.
 - (void)readIntoBuffer:(void *)buffer preferredSize:(int32_t)size;
+
+// Resets buffer to clean state
+- (void)reset;
 
 @end
 

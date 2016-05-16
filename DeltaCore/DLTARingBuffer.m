@@ -24,6 +24,8 @@
     self = [super init];
     if (self)
     {
+        _enabled = YES;
+        
         if (!TPCircularBufferInit(&_circularBuffer, bufferSize))
         {
             ALog(@"Error: Failed to initialize DLTARingBuffer with preferred buffer size of %@", @(bufferSize));
@@ -45,7 +47,10 @@
     
     int32_t writtenBytes = writingHandler(buffer, availableBytes);
     
-    TPCircularBufferProduce(&_circularBuffer, writtenBytes);
+    if ([self isEnabled])
+    {
+        TPCircularBufferProduce(&_circularBuffer, writtenBytes);
+    }
 }
 
 - (void)readIntoBuffer:(void *)buffer preferredSize:(int32_t)size
@@ -54,9 +59,18 @@
     void *ringBuffer = TPCircularBufferTail(&_circularBuffer, &availableBytes);
     
     size = MIN(size, availableBytes);
-    memcpy(buffer, ringBuffer, size);
+    
+    if ([self isEnabled])
+    {
+        memcpy(buffer, ringBuffer, size);
+    }
     
     TPCircularBufferConsume(&_circularBuffer, size);
+}
+
+- (void)reset
+{
+    TPCircularBufferClear(&_circularBuffer);
 }
 
 #pragma mark - Getters/Setters -

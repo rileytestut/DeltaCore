@@ -119,7 +119,7 @@ public extension AudioManager
         
         do
         {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback, withOptions: [])
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient, withOptions: [])
             try AVAudioSession.sharedInstance().setActive(true)
             try self.audioEngine.start()
         }

@@ -67,7 +67,7 @@ public class GameView: UIView
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         self.glkView.delegate = self
-        self.glkView.enableSetNeedsDisplay = true
+        self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
     }
     
@@ -84,9 +84,7 @@ private extension GameView
 {
     func update()
     {
-        rst_dispatch_sync_on_main_thread() {
-            self.glkView.setNeedsDisplay()
-        }
+        self.glkView.display()
     }
 }
 

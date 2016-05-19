@@ -16,6 +16,12 @@ public extension EmulatorCore
         case Running
         case Paused
     }
+    
+    enum CheatError: ErrorType
+    {
+        case invalid
+        case doesNotExist
+    }
 }
 
 public class EmulatorCore: DynamicObject, GameControllerReceiverType
@@ -114,6 +120,18 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         guard self.state != .Stopped else { return false }
         
         return true
+    }
+    
+    //MARK: - Cheats -
+    /// Cheats
+    public func activateCheat(cheat: CheatProtocol) throws
+    {
+        
+    }
+    
+    public func deactivateCheat(cheat: CheatProtocol) throws
+    {
+        
     }
     
     //MARK: - Game Views -

@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol GameType: NSObjectProtocol
+@objc public protocol GameType: NSObjectProtocol
 {
     var name: String { get }
     var fileURL: NSURL { get }

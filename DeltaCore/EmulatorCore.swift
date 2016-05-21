@@ -66,7 +66,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         self.timestampDateFormatter.timeStyle = .ShortStyle
         self.timestampDateFormatter.dateStyle = .LongStyle
         
-        super.init(dynamicIdentifier: game.typeIdentifier, initSelector: Selector("initWithGame:"), initParameters: [game])
+        super.init(dynamicIdentifier: game.typeIdentifier, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
     }
     
     /** Subclass Methods **/

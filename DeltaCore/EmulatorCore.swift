@@ -10,7 +10,7 @@ import AVFoundation
 
 public extension EmulatorCore
 {
-    enum State
+    @objc enum State: Int
     {
         case Stopped
         case Running
@@ -44,7 +44,8 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     /// Can be customized to provide different default formatting
     public let timestampDateFormatter: NSDateFormatter
     
-    public private(set) var state = State.Stopped
+    // KVO-Compliant
+    public private(set) dynamic var state = State.Stopped
     
     public var fastForwarding = false {
         didSet {

@@ -88,16 +88,20 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         fatalError("To be implemented by subclasses.")
     }
     
+    public var supportedCheatFormats: [CheatFormat] {
+        fatalError("To be implemented by subclasses.")
+    }
+    
     //MARK: - GameControllerReceiver -
     /// GameControllerReceiver
     public func gameController(gameController: GameControllerType, didActivateInput input: InputType)
     {
-        // Implemented by subclasses
+        fatalError("To be implemented by subclasses.")
     }
     
     public func gameController(gameController: GameControllerType, didDeactivateInput input: InputType)
     {
-        // Implemented by subclasses
+        fatalError("To be implemented by subclasses.")
     }
     
     //MARK: - Input Transformation -
@@ -127,12 +131,12 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     /// Cheats
     public func activateCheat(cheat: CheatProtocol) throws
     {
-        
+        fatalError("To be implemented by subclasses.")
     }
     
     public func deactivateCheat(cheat: CheatProtocol) throws
     {
-        
+        fatalError("To be implemented by subclasses.")
     }
     
     //MARK: - Game Views -

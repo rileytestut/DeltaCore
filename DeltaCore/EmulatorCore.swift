@@ -42,7 +42,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
     /// Can be customized to provide different default formatting
-    public let timestampDateFormatter: NSDateFormatter
+    public var timestampDateFormatter: NSDateFormatter
     
     // KVO-Compliant
     public private(set) dynamic var state = State.Stopped

@@ -20,7 +20,6 @@ public extension EmulatorCore
     enum CheatError: ErrorType
     {
         case invalid
-        case doesNotExist
     }
 }
 
@@ -134,7 +133,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
         fatalError("To be implemented by subclasses.")
     }
     
-    public func deactivateCheat(cheat: CheatProtocol) throws
+    public func deactivateCheat(cheat: CheatProtocol)
     {
         fatalError("To be implemented by subclasses.")
     }

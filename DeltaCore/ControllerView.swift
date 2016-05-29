@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class ControllerView: UIView
+public class ControllerView: UIView, GameControllerProtocol
 {
     //MARK: - Properties -
     /** Properties **/
@@ -18,9 +18,7 @@ public class ControllerView: UIView
             self.setNeedsLayout()
         }
     }
-    public var activatedInputs: [InputType] {
-        return self.activatedInputBoxes.map({ $0.input })
-    }
+    
     public var currentConfiguration: ControllerSkinConfiguration {
         return ControllerSkinConfiguration(traitCollection: self.traitCollection, containerSize: self.containerView?.bounds.size ?? self.superview?.bounds.size ?? CGSizeZero, targetWidth: self.bounds.width)
     }
@@ -30,33 +28,20 @@ public class ControllerView: UIView
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public var inputTransformationHandler: (InputType -> [InputType])?
-    
-    public var receivers: [GameControllerReceiverType] {
-        return self.privateReceivers.allObjects.map({ $0 as! GameControllerReceiverType })
-    }
+    public var inputTransformationHandler: ((GameControllerProtocol, InputType) -> [InputType])?
+    public var _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties
     private let imageView: UIImageView = UIImageView(frame: CGRectZero)
     private var transitionImageView: UIImageView? = nil
     private let controllerDebugView = ControllerDebugView()
     
-    private var touchesInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
-    private var previousActivatedInputs: Set<InputTypeBox> = []
-    
     private var _performedInitialLayout = false
     
-    // Should only be used for modifying receivers. Otherwise, use `receivers`
-    private let privateReceivers = NSHashTable.weakObjectsHashTable()
-    
-    private var activatedInputBoxes: Set<InputTypeBox> {
-        var activatedInputs: Set<InputTypeBox> = []
-        for inputs in self.touchesInputsMappingDictionary.values
-        {
-            activatedInputs.unionInPlace(inputs)
-        }
-        
-        return activatedInputs
+    private var touchInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
+    private var previousTouchInputs = Set<InputTypeBox>()
+    private var touchInputs: Set<InputTypeBox> {
+        return self.touchInputsMappingDictionary.values.reduce(Set<InputTypeBox>(), combine: { $0.union($1) })
     }
     
     //MARK: - Initializers -
@@ -116,7 +101,7 @@ public class ControllerView: UIView
     {
         for touch in touches
         {
-            self.touchesInputsMappingDictionary[touch] = []
+            self.touchInputsMappingDictionary[touch] = []
         }
         
         self.updateInputsForTouches(touches)
@@ -131,7 +116,7 @@ public class ControllerView: UIView
     {
         for touch in touches
         {
-            self.touchesInputsMappingDictionary[touch] = nil
+            self.touchInputsMappingDictionary[touch] = nil
         }
         
         self.updateInputsForTouches(touches)
@@ -223,21 +208,6 @@ public extension ControllerView
     }
 }
 
-//MARK: - <GameController> -
-/// <GameController>
-extension ControllerView: GameControllerType
-{
-    public func addReceiver(receiver: GameControllerReceiverType)
-    {
-        self.privateReceivers.addObject(receiver)
-    }
-    
-    public func removeReceiver(receiver: GameControllerReceiverType)
-    {
-        self.privateReceivers.removeObject(receiver)
-    }
-}
-
 //MARK: - Private Methods -
 private extension ControllerView
 {
@@ -247,51 +217,30 @@ private extension ControllerView
         guard let controllerSkin = self.controllerSkin else { return }
         
         // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
-        for touch in touches where self.touchesInputsMappingDictionary[touch] != nil
+        for touch in touches where self.touchInputsMappingDictionary[touch] != nil
         {
             var point = touch.locationInView(self)
             point.x /= self.bounds.width
             point.y /= self.bounds.height
             
             let inputs = controllerSkin.inputsForPoint(point, configuration: self.currentConfiguration) ?? []
+            let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputTypeBox(input: $0) }
             
-            var boxedInputs: Set<InputTypeBox> = []
-            for input in inputs
-            {
-                let transformedInputs = self.inputTransformationHandler?(input) ?? [input]
-                
-                for transformedInput in transformedInputs
-                {
-                    let boxedInput = InputTypeBox(input: transformedInput)
-                    boxedInputs.insert(boxedInput)
-                }
-            }
-            
-            self.touchesInputsMappingDictionary[touch] = boxedInputs
+            self.touchInputsMappingDictionary[touch] = Set(boxedInputs)
         }
         
-        let currentActivatedInputs = self.activatedInputBoxes
-        
-        let receivers = self.receivers
-        
-        let activatedInputs = currentActivatedInputs.subtract(self.previousActivatedInputs)
+        let activatedInputs = self.touchInputs.subtract(self.previousTouchInputs)
         for inputBox in activatedInputs
         {
-            for receiver in receivers
-            {
-                receiver.gameController(self, didActivateInput: inputBox.input)
-            }
+            self.activate(inputBox.input)
         }
         
-        let deactivatedInputs = self.previousActivatedInputs.subtract(currentActivatedInputs)
+        let deactivatedInputs = self.previousTouchInputs.subtract(self.touchInputs)
         for inputBox in deactivatedInputs
         {
-            for receiver in receivers
-            {
-                receiver.gameController(self, didDeactivateInput: inputBox.input)
-            }
+            self.deactivate(inputBox.input)
         }
         
-        self.previousActivatedInputs = currentActivatedInputs
+        self.previousTouchInputs = self.touchInputs
     }
 }

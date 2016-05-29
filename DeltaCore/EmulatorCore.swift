@@ -23,13 +23,13 @@ public extension EmulatorCore
     }
 }
 
-public class EmulatorCore: DynamicObject, GameControllerReceiverType
+public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
 {
     //MARK: - Properties -
     /** Properties **/
     public let game: GameType
     public private(set) var gameViews: [GameView] = []
-    public var gameControllers: [GameControllerType] {
+    public var gameControllers: [GameControllerProtocol] {
         get
         {
             return Array(self.gameControllersDictionary.values)
@@ -53,7 +53,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     }
     
     //MARK: - Private Properties
-    private var gameControllersDictionary: [Int: GameControllerType] = [:]
+    private var gameControllersDictionary: [Int: GameControllerProtocol] = [:]
 
     //MARK: - Initializers -
     /** Initializers **/
@@ -93,19 +93,19 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverType
     
     //MARK: - GameControllerReceiver -
     /// GameControllerReceiver
-    public func gameController(gameController: GameControllerType, didActivateInput input: InputType)
+    public func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
     {
         fatalError("To be implemented by subclasses.")
     }
     
-    public func gameController(gameController: GameControllerType, didDeactivateInput input: InputType)
+    public func gameController(gameController: GameControllerProtocol, didDeactivateInput input: InputType)
     {
         fatalError("To be implemented by subclasses.")
     }
     
     //MARK: - Input Transformation -
     /// Input Transformation
-    public func inputsForMFiExternalControllerInput(input: InputType) -> [InputType]
+    public func inputsForMFiExternalController(controller: GameControllerProtocol, input: InputType) -> [InputType]
     {
         return []
     }
@@ -207,7 +207,7 @@ public extension EmulatorCore
 /// Controllers
 public extension EmulatorCore
 {
-    func setGameController(gameController: GameControllerType?, atIndex index: Int) -> GameControllerType?
+    func setGameController(gameController: GameControllerProtocol?, atIndex index: Int) -> GameControllerProtocol?
     {
         let previousGameController = self.gameControllerAtIndex(index)
         previousGameController?.playerIndex = nil
@@ -218,7 +218,7 @@ public extension EmulatorCore
         
         if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
         {
-            gameController.inputTransformationHandler = inputsForMFiExternalControllerInput
+            gameController.inputTransformationHandler = inputsForMFiExternalController
         }
         
         return previousGameController
@@ -235,7 +235,7 @@ public extension EmulatorCore
         }
     }
     
-    func gameControllerAtIndex(index: Int) -> GameControllerType?
+    func gameControllerAtIndex(index: Int) -> GameControllerProtocol?
     {
         return self.gameControllersDictionary[index]
     }

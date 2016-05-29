@@ -33,8 +33,8 @@ public extension ExternalControllerManager
             self.addExternalController(externalController)
         }
                 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("controllerDidConnect:"), name: GCControllerDidConnectNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("controllerDidDisconnect:"), name: GCControllerDidDisconnectNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: GCControllerDidConnectNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: GCControllerDidDisconnectNotification, object: nil)
     }
     
     func stopMonitoringExternalControllers()

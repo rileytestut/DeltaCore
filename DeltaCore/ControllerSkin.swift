@@ -106,7 +106,7 @@ public class ControllerSkin: DynamicObject
         
         self.representations = representations
         
-        super.init(dynamicIdentifier: self.gameTypeIdentifier, initSelector: Selector("initWithURL:"), initParameters: [URL])
+        super.init(dynamicIdentifier: self.gameTypeIdentifier, initSelector: #selector(ControllerSkin.init(URL:)), initParameters: [URL])
         
         if info.isEmpty || self.name == "" || self.identifier == "" || self.gameTypeIdentifier == ""
         {

@@ -36,8 +36,8 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
         }
     }
     
-    public lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
-    public lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
+    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
+    public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
     /// Can be customized to provide different default formatting

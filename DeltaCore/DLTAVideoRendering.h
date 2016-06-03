@@ -12,6 +12,4 @@
 
 @property (nonatomic, readonly) unsigned char *videoBuffer;
 
-- (void)didUpdateVideoBuffer;
-
 @end

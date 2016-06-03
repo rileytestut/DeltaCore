@@ -51,7 +51,7 @@ public extension VideoManager.BufferInfo
     }
 }
 
-public class VideoManager: NSObject
+public class VideoManager: NSObject, DLTAVideoRendering
 {
     public private(set) var gameViews = [GameView]()
     
@@ -97,9 +97,9 @@ public extension VideoManager
     }
 }
 
-extension VideoManager: DLTAVideoRendering
+internal extension VideoManager
 {
-    public func didUpdateVideoBuffer()
+    func didUpdateVideoBuffer()
     {
         guard self.enabled else { return }
         

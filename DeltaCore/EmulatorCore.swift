@@ -36,6 +36,8 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
         }
     }
     
+    public var updateHandler: (EmulatorCore -> Void)?
+    
     public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
     public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
@@ -241,4 +243,13 @@ public extension EmulatorCore
     }
 }
 
+extension EmulatorCore: DLTAEmulating
+{
+    public func didUpdate()
+    {
+        self.videoManager.didUpdateVideoBuffer()
+        
+        self.updateHandler?(self)
+    }
+}
 

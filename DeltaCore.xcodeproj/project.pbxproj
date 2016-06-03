@@ -46,6 +46,7 @@
 		BF86249D1BB745B500C12EEE /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8624D01BB74A5100C12EEE /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8624CF1BB74A4A00C12EEE /* ZipZap.framework */; };
 		BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
+		BFA3920F1CFBBDD700E5907C /* DLTAEmulating.h in Headers */ = {isa = PBXBuildFile; fileRef = BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAA1FE91B8A971000495943 /* ExternalController.swift */; };
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
 		BFB177971C9A06330052439B /* DLTAAudioRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = BFB177961C9A06330052439B /* DLTAAudioRendering.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -136,6 +137,7 @@
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
 		BF8624A21BB745B500C12EEE /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF9873C01AB6C8BF0001D8C9 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAEmulating.h; sourceTree = "<group>"; };
 		BFAA1FE91B8A971000495943 /* ExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalController.swift; sourceTree = "<group>"; };
 		BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerDebugView.swift; sourceTree = "<group>"; };
 		BFB177961C9A06330052439B /* DLTAAudioRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAAudioRendering.h; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */,
+				BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */,
 				BFD78F591C994587000441FC /* Video */,
 				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
@@ -358,6 +361,7 @@
 				BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
+				BFA3920F1CFBBDD700E5907C /* DLTAEmulating.h in Headers */,
 				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 				BFB177971C9A06330052439B /* DLTAAudioRendering.h in Headers */,
 			);

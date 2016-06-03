@@ -47,27 +47,27 @@ public protocol GameControllerProtocol: class
 
 public extension GameControllerProtocol
 {
-    public var receivers: [GameControllerReceiverProtocol] {
-        return self._stateManager.receivers.allObjects.map({ $0 as! GameControllerReceiverProtocol })
+    var receivers: [GameControllerReceiverProtocol] {
+        return self._stateManager.receivers
     }
     
-    public func addReceiver(receiver: GameControllerReceiverProtocol)
+    func addReceiver(receiver: GameControllerReceiverProtocol)
     {
-        self._stateManager.receivers.addObject(receiver)
+        self._stateManager.addReceiver(receiver)
     }
     
-    public func removeReceiver(receiver: GameControllerReceiverProtocol)
+    func removeReceiver(receiver: GameControllerReceiverProtocol)
     {
-        self._stateManager.receivers.removeObject(receiver)
+        self._stateManager.removeReceiver(receiver)
     }
     
-    public func isInputActivated(input: InputType) -> Bool
+    func isInputActivated(input: InputType) -> Bool
     {
         let box = InputTypeBox(input: input)
         return self._stateManager.activatedInputs.contains(box)
     }
     
-    public func activate(input: InputType)
+    func activate(input: InputType)
     {
         let box = InputTypeBox(input: input)
         self._stateManager.activatedInputs.insert(box)
@@ -78,7 +78,7 @@ public extension GameControllerProtocol
         }
     }
     
-    public func deactivate(input: InputType)
+    func deactivate(input: InputType)
     {
         // Unlike activate(_:), we don't allow an input to be deactivated multiple times
         guard self.isInputActivated(input) else { return }

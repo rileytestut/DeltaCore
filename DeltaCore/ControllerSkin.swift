@@ -132,7 +132,7 @@ public class ControllerSkin: DynamicObject
     
     public func inputsForItem(item: Item, point: CGPoint) -> [InputType]
     {
-        fatalError("ControllerSkin subclass must implement defaultControllerSkinForGameUTI:")
+        fatalError("ControllerSkin subclass must implement inputsForItem(_:point:)")
     }
 }
 

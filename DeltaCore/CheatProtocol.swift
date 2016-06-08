@@ -13,6 +13,8 @@ public enum CheatType
 {
     case actionReplay
     case gameGenie
+    case gameShark
+    case codeBreaker
 }
 
 public protocol CheatProtocol

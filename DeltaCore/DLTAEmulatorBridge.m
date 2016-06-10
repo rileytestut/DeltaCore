@@ -58,5 +58,17 @@
     [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge runFrame] must be implemented by subclasses."];
 }
 
+#pragma mark - Save States -
+
+- (void)saveSaveStateToURL:(NSURL *)URL
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge saveSaveStateToURL:] must be implemented by subclasses."];
+}
+
+- (void)loadSaveStateFromURL:(NSURL *)URL
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge loadSaveStateFromURL:] must be implemented by subclasses."];
+}
+
 
 @end

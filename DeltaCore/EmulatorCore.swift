@@ -21,6 +21,11 @@ public extension EmulatorCore
     {
         case invalid
     }
+    
+    enum SaveStateError: ErrorType
+    {
+        case doesNotExist
+    }
 }
 
 public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
@@ -130,22 +135,6 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
         return []
     }
     
-    //MARK: - Save States -
-    /// Save States
-    public func saveSaveState(completion: (SaveStateType -> Void)) -> Bool
-    {
-        guard self.state != .Stopped else { return false }
-        
-        return true
-    }
-    
-    public func loadSaveState(saveState: SaveStateType) -> Bool
-    {
-        guard self.state != .Stopped else { return false }
-        
-        return true
-    }
-    
     //MARK: - Cheats -
     /// Cheats
     public func activateCheat(cheat: CheatProtocol) throws
@@ -247,6 +236,30 @@ public extension EmulatorCore
         self.bridge.resume()
         
         return true
+    }
+}
+
+//MARK: - Save States -
+/// Save States
+public extension EmulatorCore
+{
+    func saveSaveState(completion: (SaveStateType -> Void))
+    {
+        NSFileManager.defaultManager().prepareTemporaryURL { URL in
+            
+            self.bridge.saveSaveStateToURL(URL)
+            
+            let name = self.timestampDateFormatter.stringFromDate(NSDate())
+            let saveState = SaveState(name: name, fileURL: URL)
+            completion(saveState)
+        }
+    }
+    
+    func loadSaveState(saveState: SaveStateType) throws
+    {
+        guard let path = saveState.fileURL.path where NSFileManager.defaultManager().fileExistsAtPath(path) else { throw SaveStateError.doesNotExist }
+        
+        self.bridge.loadSaveStateFromURL(saveState.fileURL)
     }
 }
 

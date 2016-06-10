@@ -35,6 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
 // Game Loop
 - (void)runFrame;
 
+// Inputs
+- (void)activateInput:(NSInteger)gameInput;
+- (void)deactivateInput:(NSInteger)gameInput;
+
 // Save States
 - (void)saveSaveStateToURL:(NSURL *)URL;
 - (void)loadSaveStateFromURL:(NSURL *)URL;

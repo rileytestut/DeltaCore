@@ -16,6 +16,9 @@ public protocol InputType
     
     /// Convenience method used for implementing Equatable. Default implementation via protocol extension
     func isEqual<T>(input: T) -> Bool
+    
+    // So we can pass into generic Objective-C method
+    var rawValue: Int { get }
 }
 
 /// Provide default implementatation for InputType.isEqual()

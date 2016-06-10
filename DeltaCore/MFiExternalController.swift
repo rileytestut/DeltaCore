@@ -22,6 +22,11 @@ public enum MFiExternalControllerInput: InputType, Hashable
     case LeftTrigger
     case RightTrigger
     
+    public var rawValue: Int
+    {
+        return self.hashValue
+    }
+    
     public var hashValue: Int
     {
         switch self

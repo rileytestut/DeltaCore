@@ -28,7 +28,7 @@ public extension EmulatorCore
     }
 }
 
-public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
+public class EmulatorCore: DynamicObject
 {
     //MARK: - Properties -
     /** Properties **/
@@ -68,6 +68,10 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
     /** Subclass Properties **/
     
     public var bridge: DLTAEmulatorBridge {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var gameInputType: InputType.Type {
         fatalError("To be implemented by subclasses.")
     }
     
@@ -116,18 +120,6 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
     /** Subclass Methods **/
     /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
 
-    //MARK: - GameControllerReceiver -
-    /// GameControllerReceiver
-    public func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
-    {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public func gameController(gameController: GameControllerProtocol, didDeactivateInput input: InputType)
-    {
-        fatalError("To be implemented by subclasses.")
-    }
-    
     //MARK: - Input Transformation -
     /// Input Transformation
     public func inputsForMFiExternalController(controller: GameControllerProtocol, input: InputType) -> [InputType]
@@ -298,6 +290,23 @@ public extension EmulatorCore
     func gameControllerAtIndex(index: Int) -> GameControllerProtocol?
     {
         return self.gameControllersDictionary[index]
+    }
+}
+
+extension EmulatorCore: GameControllerReceiverProtocol
+{
+    public func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
+    {
+        guard input.dynamicType == self.gameInputType else { return }
+        
+        self.bridge.activateInput(input.rawValue)
+    }
+    
+    public func gameController(gameController: GameControllerProtocol, didDeactivateInput input: InputType)
+    {
+        guard input.dynamicType == self.gameInputType else { return }
+        
+        self.bridge.deactivateInput(input.rawValue)
     }
 }
 

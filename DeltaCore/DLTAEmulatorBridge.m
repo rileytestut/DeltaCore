@@ -58,6 +58,18 @@
     [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge runFrame] must be implemented by subclasses."];
 }
 
+#pragma mark - Inputs -
+
+- (void)activateInput:(NSInteger)gameInput
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge activateInput:] must be implemented by subclasses."];
+}
+
+- (void)deactivateInput:(NSInteger)gameInput
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge deactivateInput:] must be implemented by subclasses."];
+}
+
 #pragma mark - Save States -
 
 - (void)saveSaveStateToURL:(NSURL *)URL

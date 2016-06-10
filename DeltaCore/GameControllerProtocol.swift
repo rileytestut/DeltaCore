@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
-public enum ControllerInput: InputType
+public enum ControllerInput: Int, InputType
 {
     case Menu
 }

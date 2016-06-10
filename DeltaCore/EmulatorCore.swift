@@ -80,7 +80,7 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
     }
     
     public var preferredRenderingSize: CGSize {
-        fatalError("To be implemented by subclasses.")
+        return self.videoBufferInfo.outputDimensions
     }
     
     public var supportedCheatFormats: [CheatFormat] {

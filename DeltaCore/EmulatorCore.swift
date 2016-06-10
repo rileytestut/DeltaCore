@@ -47,16 +47,52 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
     
     // KVO-Compliant
     public private(set) dynamic var state = State.Stopped
-    
-    public var fastForwarding = false {
-        didSet {
-            self.audioManager.rate = self.fastForwarding ? self.fastForwardRate : 1.0
+    public dynamic var rate = 1.0
+    {
+        didSet
+        {
+            if !self.supportedRates.contains(self.rate)
+            {
+                self.rate = min(max(self.rate, self.supportedRates.start), self.supportedRates.end)
+            }
+            
+            self.audioManager.rate = self.rate
         }
     }
     
+    /** Subclass Properties **/
+    
+    public var bridge: DLTAEmulatorBridge {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var audioBufferInfo: AudioManager.BufferInfo {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var videoBufferInfo: VideoManager.BufferInfo {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var preferredRenderingSize: CGSize {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var supportedCheatFormats: [CheatFormat] {
+        fatalError("To be implemented by subclasses.")
+    }
+    
+    public var supportedRates: ClosedInterval<Double> {
+        return 1...4
+    }
+    
     //MARK: - Private Properties
-    private var gameControllersDictionary: [Int: GameControllerProtocol] = [:]
-
+    private let emulationSemaphore = dispatch_semaphore_create(0)
+    private var gameControllersDictionary = [Int: GameControllerProtocol]()
+    
+    private var previousState = State.Stopped
+    private var previousRate: Double? = nil
+    
     //MARK: - Initializers -
     /** Initializers **/
     public required init(game: GameType)
@@ -68,31 +104,13 @@ public class EmulatorCore: DynamicObject, GameControllerReceiverProtocol
         self.timestampDateFormatter.dateStyle = .LongStyle
         
         super.init(dynamicIdentifier: game.typeIdentifier, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
+        
+        self.rate = self.supportedRates.start
     }
     
     /** Subclass Methods **/
     /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
-    
-    public var audioBufferInfo: AudioManager.BufferInfo {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var videoBufferInfo: VideoManager.BufferInfo {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var preferredRenderingSize: CGSize {
-       fatalError("To be implemented by subclasses.")
-    }
-    
-    public var fastForwardRate: Float {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var supportedCheatFormats: [CheatFormat] {
-        fatalError("To be implemented by subclasses.")
-    }
-    
+
     //MARK: - GameControllerReceiver -
     /// GameControllerReceiver
     public func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
@@ -171,6 +189,14 @@ public extension EmulatorCore
         self.state = .Running
         self.audioManager.start()
         
+        self.bridge.audioRenderer = self.audioManager
+        self.bridge.videoRenderer = self.videoManager
+        
+        self.bridge.startWithGameURL(self.game.fileURL)
+        self.runGameLoop()
+        
+        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        
         return true
     }
     
@@ -178,8 +204,17 @@ public extension EmulatorCore
     {
         guard self.state != .Stopped else { return false }
         
+        let isRunning = self.state == .Running
+        
         self.state = .Stopped
+        
+        if isRunning
+        {
+            dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        }
+        
         self.audioManager.stop()
+        self.bridge.stop()
         
         return true
     }
@@ -189,7 +224,11 @@ public extension EmulatorCore
         guard self.state == .Running else { return false }
         
         self.state = .Paused
+        
+        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        
         self.audioManager.enabled = false
+        self.bridge.pause()
         
         return true
     }
@@ -199,7 +238,13 @@ public extension EmulatorCore
         guard self.state == .Paused else { return false }
         
         self.state = .Running
+        
+        self.runGameLoop()
+        
+        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        
         self.audioManager.enabled = true
+        self.bridge.resume()
         
         return true
     }
@@ -243,11 +288,97 @@ public extension EmulatorCore
     }
 }
 
-extension EmulatorCore: DLTAEmulating
+private extension EmulatorCore
 {
-    public func didUpdate()
+    func runGameLoop()
     {
-        self.videoManager.didUpdateVideoBuffer()
+        let emulationQueue = dispatch_queue_create("com.rileytestut.DeltaCore.emulationQueue", DISPATCH_QUEUE_SERIAL)
+        dispatch_async(emulationQueue) {
+            
+            let screenRefreshRate = 1.0 / 60.0
+            
+            var emulationTime = NSThread.absoluteTime()
+            var counter = 0.0
+            
+            while true
+            {
+                let frameDuration = 1.0 / (self.rate * 60.0)
+                
+                if self.rate != self.previousRate
+                {
+                    NSThread.setRealTimePriorityWithPeriod(frameDuration)
+                    
+                    self.previousRate = self.rate
+                    
+                    // Reset counter
+                    counter = 0
+                }
+                
+                if counter >= screenRefreshRate
+                {
+                    self.runFrame(renderGraphics: true)
+                    
+                    // Reset counter
+                    counter = 0
+                }
+                else
+                {
+                    // No need to render graphics more than once per screen refresh rate
+                    self.runFrame(renderGraphics: false)
+                }
+                
+                counter += frameDuration
+                emulationTime += frameDuration
+                
+                let currentTime = NSThread.absoluteTime()
+                
+                // The number of frames we need to skip to keep in sync
+                let framesToSkip = Int((currentTime - emulationTime) / frameDuration)
+                
+                if framesToSkip > 0
+                {
+                    // Only actually skip frames if we're running at normal speed
+                    if self.rate == self.supportedRates.start
+                    {
+                        for _ in 0 ..< framesToSkip
+                        {
+                            // "Skip" frames by running them without rendering graphics
+                            self.runFrame(renderGraphics: false)
+                        }
+                    }
+                    
+                    emulationTime = currentTime
+                }
+                
+                // Prevent race conditions
+                let state = self.state
+                
+                if self.previousState != state
+                {
+                    dispatch_semaphore_signal(self.emulationSemaphore)
+                    
+                    self.previousState = state
+                }
+                
+                if state != .Running
+                {
+                    break
+                }
+                
+                NSThread.realTimeWaitUntil(emulationTime)
+            }
+            
+        }
+    }
+    
+    func runFrame(renderGraphics renderGraphics: Bool)
+    {
+        self.bridge.runFrame()
+        
+        if renderGraphics
+        {
+            self.videoManager.didUpdateVideoBuffer()
+        }
         
         self.updateHandler?(self)
     }

@@ -57,7 +57,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
         }
     }
     
-    public var rate: Float = 1.0 {
+    public var rate = 1.0 {
         didSet {
             self.timePitchEffect.rate = Float(self.rate)
             self.updateAudioBufferFrameLengths()
@@ -147,7 +147,7 @@ private extension AudioManager
     {
         if self.audioEngine.running
         {            
-            self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Float(self.bufferInfo.preferredSize) * self.rate))
+            self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
             
             do
             {
@@ -166,7 +166,7 @@ private extension AudioManager
     
     func updateAudioBufferFrameLengths()
     {
-        let frameLength = (Float(self.bufferInfo.preferredSize) / Float(self.audioConverter.inputFormat.streamDescription.memory.mBytesPerFrame)) * self.rate
+        let frameLength = (Double(self.bufferInfo.preferredSize) / Double(self.audioConverter.inputFormat.streamDescription.memory.mBytesPerFrame)) * self.rate
         
         for buffer in self.audioBuffers
         {

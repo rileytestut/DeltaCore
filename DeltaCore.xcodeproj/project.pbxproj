@@ -45,8 +45,11 @@
 		BF86249C1BB745B500C12EEE /* DynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = BFECA1D51AE3935700AF9144 /* DynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF86249D1BB745B500C12EEE /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8624D01BB74A5100C12EEE /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8624CF1BB74A4A00C12EEE /* ZipZap.framework */; };
+		BF95BC081D0A10A6005FC657 /* DLTAEmulatorBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = BF95BC061D0A10A6005FC657 /* DLTAEmulatorBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF95BC091D0A10A6005FC657 /* DLTAEmulatorBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = BF95BC071D0A10A6005FC657 /* DLTAEmulatorBridge.m */; };
+		BF95BC101D0A3437005FC657 /* NSThread+RealTime.h in Headers */ = {isa = PBXBuildFile; fileRef = BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF95BC111D0A3437005FC657 /* NSThread+RealTime.m in Sources */ = {isa = PBXBuildFile; fileRef = BF95BC0F1D0A3437005FC657 /* NSThread+RealTime.m */; };
 		BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
-		BFA3920F1CFBBDD700E5907C /* DLTAEmulating.h in Headers */ = {isa = PBXBuildFile; fileRef = BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAA1FE91B8A971000495943 /* ExternalController.swift */; };
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
 		BFB177971C9A06330052439B /* DLTAAudioRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = BFB177961C9A06330052439B /* DLTAAudioRendering.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -136,8 +139,11 @@
 		BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiExternalController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
 		BF8624A21BB745B500C12EEE /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF95BC061D0A10A6005FC657 /* DLTAEmulatorBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAEmulatorBridge.h; sourceTree = "<group>"; };
+		BF95BC071D0A10A6005FC657 /* DLTAEmulatorBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DLTAEmulatorBridge.m; sourceTree = "<group>"; };
+		BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSThread+RealTime.h"; sourceTree = "<group>"; };
+		BF95BC0F1D0A3437005FC657 /* NSThread+RealTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSThread+RealTime.m"; sourceTree = "<group>"; };
 		BF9873C01AB6C8BF0001D8C9 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
-		BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAEmulating.h; sourceTree = "<group>"; };
 		BFAA1FE91B8A971000495943 /* ExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalController.swift; sourceTree = "<group>"; };
 		BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerDebugView.swift; sourceTree = "<group>"; };
 		BFB177961C9A06330052439B /* DLTAAudioRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAAudioRendering.h; sourceTree = "<group>"; };
@@ -259,6 +265,15 @@
 			name = Audio;
 			sourceTree = "<group>";
 		};
+		BF95BBFE1D0A107E005FC657 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				BF95BC061D0A10A6005FC657 /* DLTAEmulatorBridge.h */,
+				BF95BC071D0A10A6005FC657 /* DLTAEmulatorBridge.m */,
+			);
+			name = Bridge;
+			sourceTree = "<group>";
+		};
 		BF9873BF1AB6C8AE0001D8C9 /* UI */ = {
 			isa = PBXGroup;
 			children = (
@@ -282,6 +297,8 @@
 			children = (
 				BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */,
 				BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */,
+				BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */,
+				BF95BC0F1D0A3437005FC657 /* NSThread+RealTime.m */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -343,7 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */,
-				BFA3920E1CFBBDD700E5907C /* DLTAEmulating.h */,
+				BF95BBFE1D0A107E005FC657 /* Bridge */,
 				BFD78F591C994587000441FC /* Video */,
 				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
@@ -357,11 +374,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF95BC101D0A3437005FC657 /* NSThread+RealTime.h in Headers */,
 				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
 				BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
-				BFA3920F1CFBBDD700E5907C /* DLTAEmulating.h in Headers */,
+				BF95BC081D0A10A6005FC657 /* DLTAEmulatorBridge.h in Headers */,
 				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 				BFB177971C9A06330052439B /* DLTAAudioRendering.h in Headers */,
 			);
@@ -536,6 +554,7 @@
 				BF1FB1791C5EE4B7007E2494 /* SaveStateType.swift in Sources */,
 				BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */,
 				BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */,
+				BF95BC111D0A3437005FC657 /* NSThread+RealTime.m in Sources */,
 				BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */,
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
@@ -548,6 +567,7 @@
 				BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,
+				BF95BC091D0A10A6005FC657 /* DLTAEmulatorBridge.m in Sources */,
 				BFE438101AF606980095A5F1 /* GameControllerProtocol.swift in Sources */,
 				BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */,
 				BFD78F621C994596000441FC /* VideoManager.swift in Sources */,

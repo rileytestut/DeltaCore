@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+@protocol DLTAEmulating;
 @protocol DLTAAudioRendering;
 @protocol DLTAVideoRendering;
 
@@ -18,6 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 // State
 @property (copy, nonatomic, nullable, readonly) NSURL *gameURL;
 
+// Core
+@property (weak, nonatomic, nullable) id<DLTAEmulating> emulatorCore;
+
 // Audio
 @property (weak, nonatomic, nullable) id<DLTAAudioRendering> audioRenderer;
 
@@ -27,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedBridge;
 
 // Emulation State
-- (void)startWithGameURL:(NSURL *)gameURL;
+- (void)startWithGameURL:(NSURL *)gameURL NS_REQUIRES_SUPER;
 - (void)stop;
 - (void)pause;
 - (void)resume;
@@ -42,6 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 // Save States
 - (void)saveSaveStateToURL:(NSURL *)URL;
 - (void)loadSaveStateFromURL:(NSURL *)URL;
+
+// Game Saves
+- (void)saveGameSaveToURL:(NSURL *)URL;
+- (void)loadGameSaveFromURL:(NSURL *)URL;
 
 // Cheats
 - (BOOL)addCheatCode:(NSString *)cheatCode type:(NSInteger)type;

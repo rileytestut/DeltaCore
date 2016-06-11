@@ -36,17 +36,14 @@
 
 - (void)stop
 {
-    
 }
 
 - (void)pause
 {
-    
 }
 
 - (void)resume
 {
-    
 }
 
 #pragma mark - Game Loop -
@@ -78,6 +75,18 @@
 - (void)loadSaveStateFromURL:(NSURL *)URL
 {
     [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge loadSaveStateFromURL:] must be implemented by subclasses."];
+}
+
+#pragma mark - Game Saves -
+
+- (void)saveGameSaveToURL:(NSURL *)URL
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge saveGameSaveToURL:] must be implemented by subclasses."];
+}
+
+- (void)loadGameSaveFromURL:(NSURL *)URL
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge loadGameSaveFromURL:] must be implemented by subclasses."];
 }
 
 #pragma mark - Cheats -

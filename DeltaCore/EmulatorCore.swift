@@ -75,6 +75,10 @@ public class EmulatorCore: DynamicObject
         fatalError("To be implemented by subclasses.")
     }
     
+    public var gameSaveURL: NSURL {
+        fatalError("To be implemented by subclasses.")
+    }
+    
     public var audioBufferInfo: AudioManager.BufferInfo {
         fatalError("To be implemented by subclasses.")
     }
@@ -159,10 +163,13 @@ public extension EmulatorCore
         self.state = .Running
         self.audioManager.start()
         
+        self.bridge.emulatorCore = self
         self.bridge.audioRenderer = self.audioManager
         self.bridge.videoRenderer = self.videoManager
         
         self.bridge.startWithGameURL(self.game.fileURL)
+        self.bridge.loadGameSaveFromURL(self.gameSaveURL)
+        
         self.runGameLoop()
         
         dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
@@ -183,6 +190,8 @@ public extension EmulatorCore
             dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
         }
         
+        self.bridge.saveGameSaveToURL(self.gameSaveURL)
+        
         self.audioManager.stop()
         self.bridge.stop()
         
@@ -196,6 +205,8 @@ public extension EmulatorCore
         self.state = .Paused
         
         dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        
+        self.bridge.saveGameSaveToURL(self.gameSaveURL)
         
         self.audioManager.enabled = false
         self.bridge.pause()
@@ -354,6 +365,14 @@ extension EmulatorCore: GameControllerReceiverProtocol
         guard input.dynamicType == self.gameInputType else { return }
         
         self.bridge.deactivateInput(input.rawValue)
+    }
+}
+
+extension EmulatorCore: DLTAEmulating
+{
+    public func didUpdateGameSave()
+    {
+        self.bridge.saveGameSaveToURL(self.gameSaveURL)
     }
 }
 

@@ -8,8 +8,6 @@
 
 #import "DLTAEmulatorBridge.h"
 
-#import <DeltaCore/DeltaCore-Swift.h>
-
 @interface DLTAEmulatorBridge ()
 
 @property (copy, nonatomic, nullable, readwrite) NSURL *gameURL;
@@ -82,5 +80,21 @@
     [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge loadSaveStateFromURL:] must be implemented by subclasses."];
 }
 
+#pragma mark - Cheats -
+
+- (BOOL)addCheatCode:(NSString *)cheatCode type:(NSInteger)type
+{
+    @throw [NSException exceptionWithName:@"Invoked Abstract Method" reason:@"-[DLTAEmulatorBridge addCheatCode:type:] must be implemented by subclasses." userInfo:nil];
+}
+
+- (void)resetCheats
+{
+    [NSException raise:@"Invoked Abstract Method" format:@"-[DLTAEmulatorBridge resetCheats] must be implemented by subclasses."];
+}
+
+- (void)updateCheats
+{
+    // Optionally implemented by subclasses
+}
 
 @end

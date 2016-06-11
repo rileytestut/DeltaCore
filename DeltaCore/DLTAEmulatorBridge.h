@@ -43,6 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)saveSaveStateToURL:(NSURL *)URL;
 - (void)loadSaveStateFromURL:(NSURL *)URL;
 
+// Cheats
+- (BOOL)addCheatCode:(NSString *)cheatCode type:(NSInteger)type;
+- (void)resetCheats;
+- (void)updateCheats;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

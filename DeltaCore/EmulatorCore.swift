@@ -98,6 +98,7 @@ public class EmulatorCore: DynamicObject
     //MARK: - Private Properties
     private let emulationSemaphore = dispatch_semaphore_create(0)
     private var gameControllersDictionary = [Int: GameControllerProtocol]()
+    private var cheatCodes = [String: CheatType]()
     
     private var previousState = State.Stopped
     private var previousRate: Double? = nil
@@ -125,18 +126,6 @@ public class EmulatorCore: DynamicObject
     public func inputsForMFiExternalController(controller: GameControllerProtocol, input: InputType) -> [InputType]
     {
         return []
-    }
-    
-    //MARK: - Cheats -
-    /// Cheats
-    public func activateCheat(cheat: CheatProtocol) throws
-    {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public func deactivateCheat(cheat: CheatProtocol)
-    {
-        fatalError("To be implemented by subclasses.")
     }
     
     //MARK: - Game Views -
@@ -252,6 +241,64 @@ public extension EmulatorCore
         guard let path = saveState.fileURL.path where NSFileManager.defaultManager().fileExistsAtPath(path) else { throw SaveStateError.doesNotExist }
         
         self.bridge.loadSaveStateFromURL(saveState.fileURL)
+    }
+}
+
+//MARK: - Cheats -
+/// Cheats
+public extension EmulatorCore
+{
+    func activateCheat(cheat: CheatProtocol) throws
+    {
+        var success = true
+        
+        let codes = cheat.code.characters.split("\n")
+        for code in codes
+        {
+            if !self.bridge.addCheatCode(String(code), type: cheat.type.rawValue)
+            {
+                success = false
+                break
+            }
+        }
+        
+        if success
+        {
+            self.cheatCodes[cheat.code] = cheat.type
+        }
+        
+        // Ensures correct state, especially if attempted cheat was invalid
+        self.updateCheats()
+        
+        if !success
+        {
+            throw CheatError.invalid
+        }
+    }
+    
+    func deactivateCheat(cheat: CheatProtocol)
+    {
+        guard self.cheatCodes[cheat.code] != nil else { return }
+        
+        self.cheatCodes[cheat.code] = nil
+        
+        self.updateCheats()
+    }
+    
+    private func updateCheats()
+    {
+        self.bridge.resetCheats()
+        
+        for (cheatCode, type) in self.cheatCodes
+        {
+            let codes = cheatCode.characters.split("\n")
+            for code in codes
+            {
+                self.bridge.addCheatCode(String(code), type: type.rawValue)
+            }
+        }
+        
+        self.bridge.updateCheats()
     }
 }
 

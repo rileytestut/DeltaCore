@@ -24,3 +24,5 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 
 #import <DeltaCore/NSThread+RealTime.h>
 
+// HACK: Needed because the generated DeltaCore-Swift header file doesn't include this import
+#import <GLKit/GLKit.h>

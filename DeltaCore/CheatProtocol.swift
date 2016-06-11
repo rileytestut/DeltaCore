@@ -9,7 +9,7 @@
 import Foundation
 
 // Cannot nest type in Cheat namespace due to Swift bug :(
-public enum CheatType
+@objc public enum CheatType: Int
 {
     case actionReplay
     case gameGenie

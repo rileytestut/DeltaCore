@@ -1,0 +1,44 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "816D57F18EE93972A535858CB18F29A85BE91A39",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "82DF43EF5CA016D15C41E0AF1AF686E9973475B7" : 0,
+    "816D57F18EE93972A535858CB18F29A85BE91A39" : 0,
+    "A1BF268530E217C860B34A81A1DA1B446006BF9E" : 0,
+    "A92F984637B9EAE95E95252EC6CBD8DE42DB61D1" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "0A5660E3-C22C-4BC7-BD54-AAE7E72240E9",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "82DF43EF5CA016D15C41E0AF1AF686E9973475B7" : "DeltaCore\/External\/ZipZap\/",
+    "816D57F18EE93972A535858CB18F29A85BE91A39" : "DeltaCore\/",
+    "A1BF268530E217C860B34A81A1DA1B446006BF9E" : "..",
+    "A92F984637B9EAE95E95252EC6CBD8DE42DB61D1" : "DeltaCore\/External\/TPCircularBuffer\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "DeltaCore",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "DeltaCore.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:rileytestut\/DeltaCore.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "816D57F18EE93972A535858CB18F29A85BE91A39"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:pixelglow\/ZipZap.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "82DF43EF5CA016D15C41E0AF1AF686E9973475B7"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:rileytestut\/Delta.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A1BF268530E217C860B34A81A1DA1B446006BF9E"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:michaeltyson\/TPCircularBuffer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A92F984637B9EAE95E95252EC6CBD8DE42DB61D1"
+    }
+  ]
+}

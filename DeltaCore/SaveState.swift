@@ -11,9 +11,9 @@ import Foundation
 public struct SaveState: SaveStateType
 {
     public var name: String?
-    public var fileURL: NSURL
+    public var fileURL: URL
     
-    public init(name: String?, fileURL: NSURL)
+    public init(name: String?, fileURL: URL)
     {
         self.name = name
         self.fileURL = fileURL

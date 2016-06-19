@@ -15,7 +15,7 @@ public protocol InputType
     var _hashValue: Int { get }
     
     /// Convenience method used for implementing Equatable. Default implementation via protocol extension
-    func isEqual<T>(input: T) -> Bool
+    func isEqual<T>(_ input: T) -> Bool
     
     // So we can pass into generic Objective-C method
     var rawValue: Int { get }
@@ -28,7 +28,7 @@ public extension InputType where Self: Hashable
         return self.hashValue
     }
     
-    func isEqual<T>(input: T) -> Bool
+    func isEqual<T>(_ input: T) -> Bool
     {
         if let input = input as? Self
         {

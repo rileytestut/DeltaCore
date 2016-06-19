@@ -44,7 +44,7 @@ public func ==(lhs: ExternalController, rhs: ExternalController) -> Bool
 //MARK: - Private Methods -
 internal extension ExternalController
 {
-    func updateReceiversForActivatedInput(input: InputType)
+    func updateReceiversForActivatedInput(_ input: InputType)
     {
         let activatedInputs = [input].flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }
 
@@ -54,7 +54,7 @@ internal extension ExternalController
         }
     }
     
-    func updateReceiversForDeactivatedInput(input: InputType)
+    func updateReceiversForDeactivatedInput(_ input: InputType)
     {
         let deactivatedInputs = [input].flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }
         

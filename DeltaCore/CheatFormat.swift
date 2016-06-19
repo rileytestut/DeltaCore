@@ -18,9 +18,9 @@ public struct CheatFormat
     
     public let type: CheatType
     
-    public let allowedCodeCharacters: NSCharacterSet
+    public let allowedCodeCharacters: CharacterSet
     
-    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: NSCharacterSet = NSCharacterSet.hexadecimalCharacterSet())
+    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: CharacterSet = CharacterSet.hexadecimalCharacterSet())
     {
         self.name = name
         self.format = format
@@ -29,29 +29,29 @@ public struct CheatFormat
     }
 }
 
-public extension NSCharacterSet
+public extension CharacterSet
 {
-    class func hexadecimalCharacterSet() -> NSCharacterSet
+    static func hexadecimalCharacterSet() -> CharacterSet
     {
-        let characterSet = NSCharacterSet(charactersInString: "0123456789ABCDEFabcdef")
+        let characterSet = CharacterSet(charactersIn: "0123456789ABCDEFabcdef")
         return characterSet
     }
 }
 
 public extension String
 {
-    func sanitized(characterSet characterSet: NSCharacterSet) -> String
+    func sanitized(characterSet: CharacterSet) -> String
     {
-        let sanitizedString = (self as NSString).componentsSeparatedByCharactersInSet(characterSet.invertedSet).joinWithSeparator("")
+        let sanitizedString = (self as NSString).components(separatedBy: characterSet.inverted).joined(separator: "")
         return sanitizedString
     }
     
-    func formatted(cheatFormat cheatFormat: CheatFormat) -> String
+    func formatted(cheatFormat: CheatFormat) -> String
     {
         // NOTE: We do not use cheatFormat.allowedCodeCharacters because the code format typically includes non-legal characters.
         // Ex: Using "XXXX-YYYY" for the code format despite the actual code format being strictly hexadecial characters.
         // This is okay because this function's job is not to validate the input, but simply to format it
-        let characterSet = NSCharacterSet.alphanumericCharacterSet()
+        let characterSet = CharacterSet.alphanumerics
         
         // Remove all characters not in characterSet
         let sanitizedFormat = cheatFormat.format.sanitized(characterSet: characterSet)
@@ -77,14 +77,14 @@ public extension String
         // Serves as a sort of stack buffer for us to draw characters from
         let codeBuffer = NSMutableString(string: self)
         
-        let scanner = NSScanner(string: format)
+        let scanner = Scanner(string: format)
         scanner.charactersToBeSkipped = nil
         
-        while !scanner.atEnd
+        while !scanner.isAtEnd
         {
             // Scan up until the first separator character
             var string: NSString? = nil
-            scanner.scanCharactersFromSet(characterSet, intoString: &string)
+            scanner.scanCharacters(from: characterSet, into: &string)
             
             // Might start with separator characters, in which case scannedString would be nil/empty
             if let scannedString = string where scannedString.length > 0
@@ -92,8 +92,8 @@ public extension String
                 let range = NSRange(location: 0, length: min(scannedString.length, codeBuffer.length))
                 
                 // "Pop off" characters from the front of codeBuffer
-                let code = codeBuffer.substringWithRange(range)
-                codeBuffer.replaceCharactersInRange(range, withString: "")
+                let code = codeBuffer.substring(with: range)
+                codeBuffer.replaceCharacters(in: range, with: "")
                 
                 formattedString += code
                 
@@ -103,7 +103,7 @@ public extension String
             
             // Scan all separator characters
             var separatorString: NSString? = nil
-            scanner.scanUpToCharactersFromSet(characterSet, intoString: &separatorString)
+            scanner.scanUpToCharacters(from: characterSet, into: &separatorString)
             
             // If no separator characters, we're done!
             guard let tempString = separatorString as? String where separatorString?.length > 0 else { break }
@@ -112,6 +112,6 @@ public extension String
         }
         
         // Ensure it is all uppercase
-        return formattedString.uppercaseString
+        return formattedString.uppercased()
     }
 }

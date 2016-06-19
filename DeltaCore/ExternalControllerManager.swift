@@ -33,21 +33,21 @@ public extension ExternalControllerManager
             self.addExternalController(externalController)
         }
                 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: GCControllerDidConnectNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: GCControllerDidDisconnectNotification, object: nil)
+        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: NSNotification.Name.GCControllerDidConnect, object: nil)
+        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
     }
     
     func stopMonitoringExternalControllers()
     {
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: GCControllerDidConnectNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: GCControllerDidDisconnectNotification, object: nil)
+        NotificationCenter.default().removeObserver(self, name: NSNotification.Name.GCControllerDidConnect, object: nil)
+        NotificationCenter.default().removeObserver(self, name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
         
         self.connectedControllers.removeAll()
     }
     
-    func startWirelessControllerPairingWithCompletionHandler(completionHandler: (() -> Void)?)
+    func startWirelessControllerPairingWithCompletionHandler(_ completionHandler: (() -> Void)?)
     {
-        GCController.startWirelessControllerDiscoveryWithCompletionHandler(completionHandler)
+        GCController.startWirelessControllerDiscovery(completionHandler: completionHandler)
     }
     
     func stopWirelessControllerPairing()
@@ -59,7 +59,7 @@ public extension ExternalControllerManager
 //MARK: - Managing Controllers -
 private extension ExternalControllerManager
 {
-    dynamic func controllerDidConnect(notification: NSNotification)
+    dynamic func controllerDidConnect(_ notification: Notification)
     {        
         guard let controller = notification.object as? GCController else { return }
         
@@ -67,7 +67,7 @@ private extension ExternalControllerManager
         self.addExternalController(externalController)
     }
     
-    dynamic func controllerDidDisconnect(notification: NSNotification)
+    dynamic func controllerDidDisconnect(_ notification: Notification)
     {
         guard let controller = notification.object as? GCController else { return }
         
@@ -80,7 +80,7 @@ private extension ExternalControllerManager
         }
     }
     
-    func addExternalController(controller: ExternalController)
+    func addExternalController(_ controller: ExternalController)
     {
         if let playerIndex = controller.playerIndex where self.connectedControllers.contains({ $0.playerIndex == playerIndex })
         {
@@ -90,16 +90,16 @@ private extension ExternalControllerManager
         
         self.connectedControllers.append(controller)
         
-        NSNotificationCenter.defaultCenter().postNotificationName(ExternalControllerDidConnectNotification, object: controller)
+        NotificationCenter.default().post(name: Notification.Name(rawValue: ExternalControllerDidConnectNotification), object: controller)
     }
     
-    func removeExternalController(controller: ExternalController)
+    func removeExternalController(_ controller: ExternalController)
     {
-        if let index = self.connectedControllers.indexOf(controller)
+        if let index = self.connectedControllers.index(of: controller)
         {
-            self.connectedControllers.removeAtIndex(index)
+            self.connectedControllers.remove(at: index)
             
-            NSNotificationCenter.defaultCenter().postNotificationName(ExternalControllerDidDisconnectNotification, object: controller)
+            NotificationCenter.default().post(name: Notification.Name(rawValue: ExternalControllerDidDisconnectNotification), object: controller)
         }
     }
 }

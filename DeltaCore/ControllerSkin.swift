@@ -13,8 +13,8 @@ import ZipZap
 public struct ControllerSkinConfiguration
 {
     // Trait Collection
-    public var horizontalSizeClass = UIUserInterfaceSizeClass.Compact
-    public var verticalSizeClass = UIUserInterfaceSizeClass.Compact
+    public var horizontalSizeClass = UIUserInterfaceSizeClass.compact
+    public var verticalSizeClass = UIUserInterfaceSizeClass.compact
     public var displayScale: CGFloat
     
     // Misc.
@@ -24,8 +24,8 @@ public struct ControllerSkinConfiguration
     
     public init(traitCollection: UITraitCollection, containerSize: CGSize, targetWidth: CGFloat)
     {
-        self.horizontalSizeClass = (traitCollection.horizontalSizeClass != .Unspecified) ? traitCollection.horizontalSizeClass : .Compact
-        self.verticalSizeClass = (traitCollection.verticalSizeClass != .Unspecified) ? traitCollection.verticalSizeClass : .Compact
+        self.horizontalSizeClass = (traitCollection.horizontalSizeClass != .unspecified) ? traitCollection.horizontalSizeClass : .compact
+        self.verticalSizeClass = (traitCollection.verticalSizeClass != .unspecified) ? traitCollection.verticalSizeClass : .compact
         self.displayScale = traitCollection.displayScale
         
         self.containerSize = containerSize
@@ -44,7 +44,7 @@ public class ControllerSkin: DynamicObject
     public let gameTypeIdentifier: String
     public let debugModeEnabled: Bool
     
-    public let URL: NSURL
+    public let URL: Foundation.URL
     
     /// <CustomStringConvertible>
     public override var description: String {
@@ -53,11 +53,11 @@ public class ControllerSkin: DynamicObject
     
     private let representations: [String: Representation]
     
-    private let imageCache = NSCache()
+    private let imageCache = Cache<NSString, UIImage>()
     
     //MARK: - Initializers -
     /** Initializers **/
-    public required init?(URL: NSURL)
+    public required init?(URL: Foundation.URL)
     {
         self.URL = URL
         
@@ -65,14 +65,14 @@ public class ControllerSkin: DynamicObject
         
         do
         {
-            let archive = try ZZArchive(URL: self.URL)
+            let archive = try ZZArchive(url: self.URL)
             
-            if let index = archive.entries.indexOf({ $0.fileName == "info.json" })
+            if let index = archive.entries.index(where: { $0.fileName == "info.json" })
             {
                 let entry = archive.entries[index]
                 let data = try entry.newData()
                 
-                info = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String: AnyObject] ?? [:]
+                info = try JSONSerialization.jsonObject(with: data) as? [String: AnyObject] ?? [:]
             }
             else
             {
@@ -118,11 +118,11 @@ public class ControllerSkin: DynamicObject
      
     //MARK: - Convenience Methods -
     /// Convenience Methods
-    public class func defaultControllerSkinForGameUTI(UTI: String) -> ControllerSkin?
+    public class func defaultControllerSkinForGameUTI(_ UTI: String) -> ControllerSkin?
     {
         guard self == ControllerSkin.self else { fatalError("ControllerSkin subclass must implement defaultControllerSkinForGameUTI:") }
         
-        let subclass = ControllerSkin.self.subclassForDynamicIdentifier(UTI) as! ControllerSkin.Type
+        let subclass = ControllerSkin.self.subclass(forDynamicIdentifier: UTI) as! ControllerSkin.Type
         return subclass.defaultControllerSkinForGameUTI(UTI)
     }
     
@@ -130,7 +130,7 @@ public class ControllerSkin: DynamicObject
     /** Subclass Methods **/
     /** These methods should never be called directly **/
     
-    public func inputsForItem(item: Item, point: CGPoint) -> [InputType]
+    public func inputsForItem(_ item: Item, point: CGPoint) -> [InputType]
     {
         fatalError("ControllerSkin subclass must implement inputsForItem(_:point:)")
     }
@@ -138,20 +138,20 @@ public class ControllerSkin: DynamicObject
 
 public extension ControllerSkin
 {
-    func supportsConfiguration(configuration: ControllerSkinConfiguration) -> Bool
+    func supportsConfiguration(_ configuration: ControllerSkinConfiguration) -> Bool
     {
         return (self.representationForConfiguration(configuration) != nil)
     }
     
     /// Provided point should be normalized [0,1] for both axies
-    func inputsForPoint(point: CGPoint, configuration: ControllerSkinConfiguration) -> [InputType]?
+    func inputsForPoint(_ point: CGPoint, configuration: ControllerSkinConfiguration) -> [InputType]?
     {
         guard let representation = self.representationForConfiguration(configuration) else { return nil }
         
         var inputs: [InputType] = []
         for item in representation.items
         {
-            guard CGRectContainsPoint(item.extendedFrame, point) else { continue }
+            guard item.extendedFrame.contains(point) else { continue }
             
             for input in self.inputsForItem(item, point: point)
             {
@@ -162,20 +162,20 @@ public extension ControllerSkin
         return inputs
     }
     
-    func gameScreenFrameForConfiguration(configuration: ControllerSkinConfiguration) -> CGRect?
+    func gameScreenFrameForConfiguration(_ configuration: ControllerSkinConfiguration) -> CGRect?
     {
         let representation = self.representationForConfiguration(configuration)
         return representation?.gameScreenFrame
     }
     
-    func imageForConfiguration(configuration: ControllerSkinConfiguration) -> UIImage?
+    func imageForConfiguration(_ configuration: ControllerSkinConfiguration) -> UIImage?
     {
         guard configuration.displayScale > 0.0 else { return nil }
         guard let representation = self.representationForConfiguration(configuration) else { return nil }
 
         let cacheKey = representation.assetFilename + "_" + String(configuration.targetWidth)
         
-        var image: UIImage? = self.imageCache.objectForKey(cacheKey) as? UIImage
+        var image = self.imageCache.object(forKey: cacheKey)
         if image != nil
         {
             return image
@@ -183,7 +183,7 @@ public extension ControllerSkin
         
         defer { if let image = image { self.imageCache.setObject(image, forKey: cacheKey) } }
         
-        if representation.assetFilename.lowercaseString.hasSuffix(".pdf")
+        if representation.assetFilename.lowercased().hasSuffix(".pdf")
         {
             // PDF
             
@@ -213,7 +213,7 @@ public extension ControllerSkin
                 archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@3x")
                 
                 // iPads
-            case 2.0 where (configuration.horizontalSizeClass == .Regular && configuration.verticalSizeClass == .Regular):
+            case 2.0 where (configuration.horizontalSizeClass == .regular && configuration.verticalSizeClass == .regular):
                 archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@2x")
                 
                 // iPhone 6
@@ -252,7 +252,7 @@ public extension ControllerSkin
         return image
     }
     
-    func itemsForConfiguration(configuration: ControllerSkinConfiguration) -> [ControllerSkin.Item]?
+    func itemsForConfiguration(_ configuration: ControllerSkinConfiguration) -> [ControllerSkin.Item]?
     {
         let representation = self.representationForConfiguration(configuration)
         return representation?.items
@@ -363,7 +363,7 @@ extension ControllerSkin
 
 private extension ControllerSkin
 {
-    func representationForConfiguration(configuration: ControllerSkinConfiguration) -> Representation?
+    func representationForConfiguration(_ configuration: ControllerSkinConfiguration) -> Representation?
     {
         switch configuration
         {
@@ -371,7 +371,7 @@ private extension ControllerSkin
         case _ where configuration.splitViewActivated: return self.representations["splitView"]
             
             // Regular skins
-        case _ where configuration.horizontalSizeClass == .Regular && configuration.verticalSizeClass == .Regular:
+        case _ where configuration.horizontalSizeClass == .regular && configuration.verticalSizeClass == .regular:
             
             if configuration.containerSize.width > configuration.containerSize.height
             {
@@ -384,7 +384,7 @@ private extension ControllerSkin
             
             
             // Compact skins
-        case _ where configuration.horizontalSizeClass == .Compact || configuration.verticalSizeClass == .Compact:
+        case _ where configuration.horizontalSizeClass == .compact || configuration.verticalSizeClass == .compact:
             
             let legacyAspectRatio: CGFloat = 3.0 / 2.0
             let widescreenAspectRatio: CGFloat = 16.0 / 9.0
@@ -428,17 +428,17 @@ private extension ControllerSkin
         }
     }
     
-    func archiveEntryForRepresentation(representation: Representation, suffix: String = "") -> ZZArchiveEntry?
+    func archiveEntryForRepresentation(_ representation: Representation, suffix: String = "") -> ZZArchiveEntry?
     {
-        guard let insertionIndex = representation.assetFilename.characters.indexOf(".") else { return nil }
+        guard let insertionIndex = representation.assetFilename.characters.index(of: ".") else { return nil }
         
         var filename = representation.assetFilename
-        filename.insertContentsOf(suffix.characters, at: insertionIndex)
+        filename.insert(contentsOf: suffix.characters, at: insertionIndex)
         
         // Would be strange if this fails since it had to work to init ControllerSkin in the first place...
-        if let archive = try? ZZArchive(URL: self.URL)
+        if let archive = try? ZZArchive(url: self.URL)
         {
-            if let index = archive.entries.indexOf({ $0.fileName == filename })
+            if let index = archive.entries.index(where: { $0.fileName == filename })
             {
                 return archive.entries[index]
             }

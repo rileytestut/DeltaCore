@@ -32,7 +32,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
     public var enabled = true {
         didSet
         {
-            self.ringBuffer.enabled = self.enabled
+            self.ringBuffer.isEnabled = self.enabled
             self.audioEngine.mainMixerNode.outputVolume = self.enabled ? 1.0 : 0.0
             
             do
@@ -83,13 +83,13 @@ public class AudioManager: NSObject, DLTAAudioRendering
         self.audioEngine = AVAudioEngine()
         
         self.audioPlayerNode = AVAudioPlayerNode()
-        self.audioEngine.attachNode(self.audioPlayerNode)
+        self.audioEngine.attach(self.audioPlayerNode)
         
         let outputFormat = AVAudioFormat(standardFormatWithSampleRate: self.bufferInfo.inputFormat.sampleRate, channels: 2)
-        self.audioConverter = AVAudioConverter(fromFormat: self.bufferInfo.inputFormat, toFormat: outputFormat)
+        self.audioConverter = AVAudioConverter(from: self.bufferInfo.inputFormat, to: outputFormat)
                 
         self.timePitchEffect = AVAudioUnitTimePitch()
-        self.audioEngine.attachNode(self.timePitchEffect)
+        self.audioEngine.attach(self.timePitchEffect)
         
         self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputFormat)
         self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputFormat)
@@ -98,10 +98,10 @@ public class AudioManager: NSObject, DLTAAudioRendering
         
         for _ in 0 ..< AudioBufferCount
         {
-            let inputBuffer = AVAudioPCMBuffer(PCMFormat: self.bufferInfo.inputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
+            let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.bufferInfo.inputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
             self.audioBuffers.append(inputBuffer)
             
-            let outputBuffer = AVAudioPCMBuffer(PCMFormat: outputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
+            let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
             self.audioBuffers.append(outputBuffer)
             
             self.renderAudioBuffer(inputBuffer, intoOutputBuffer: outputBuffer)
@@ -119,7 +119,7 @@ public extension AudioManager
         
         do
         {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient, withOptions: [])
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
             try AVAudioSession.sharedInstance().setActive(true)
             try self.audioEngine.start()
         }
@@ -136,22 +136,24 @@ public extension AudioManager
         self.audioPlayerNode.stop()
         self.audioEngine.stop()
         
-        self.ringBuffer.enabled = false
+        self.ringBuffer.isEnabled = false
         self.ringBuffer.reset()
     }
 }
 
 private extension AudioManager
 {
-    func renderAudioBuffer(inputBuffer: AVAudioPCMBuffer, intoOutputBuffer outputBuffer: AVAudioPCMBuffer)
+    func renderAudioBuffer(_ inputBuffer: AVAudioPCMBuffer, intoOutputBuffer outputBuffer: AVAudioPCMBuffer)
     {
-        if self.audioEngine.running
+        guard let buffer = inputBuffer.int16ChannelData else { return }
+        
+        if self.audioEngine.isRunning
         {            
-            self.ringBuffer.readIntoBuffer(inputBuffer.int16ChannelData[0], preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
+            self.ringBuffer.read(intoBuffer: (buffer[0]), preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
             
             do
             {
-                try self.audioConverter.convertToBuffer(outputBuffer, fromBuffer: inputBuffer)
+                try self.audioConverter.convert(to: outputBuffer, from: inputBuffer)
             }
             catch let error as NSError
             {
@@ -166,7 +168,7 @@ private extension AudioManager
     
     func updateAudioBufferFrameLengths()
     {
-        let frameLength = (Double(self.bufferInfo.preferredSize) / Double(self.audioConverter.inputFormat.streamDescription.memory.mBytesPerFrame)) * self.rate
+        let frameLength = (Double(self.bufferInfo.preferredSize) / Double(self.audioConverter.inputFormat.streamDescription.pointee.mBytesPerFrame)) * self.rate
         
         for buffer in self.audioBuffers
         {

@@ -13,52 +13,52 @@ import CoreGraphics
 
 internal extension UIImage
 {
-    class func imageWithPDFData(data: NSData, targetWidth: CGFloat) -> UIImage?
+    class func imageWithPDFData(_ data: Data, targetWidth: CGFloat) -> UIImage?
     {
         guard targetWidth > 0 else { return nil }
         
-        let dataProvider = CGDataProviderCreateWithCFData(data as CFDataRef)
+        let dataProvider = CGDataProvider(data: data as CFData)
         
-        guard let document = CGPDFDocumentCreateWithProvider(dataProvider) else { return nil }
+        guard let document = CGPDFDocument(dataProvider!) else { return nil }
         
-        let page = CGPDFDocumentGetPage(document, 1)
-        let pageFrame = CGPDFPageGetBoxRect(page, .CropBox)
+        let page = document.page(at: 1)
+        let pageFrame = page?.getBoxRect(.cropBox)
         
-        let targetSize = CGSize(width: targetWidth, height: (pageFrame.height / pageFrame.width) * targetWidth)
+        let targetSize = CGSize(width: targetWidth, height: ((pageFrame?.height)! / (pageFrame?.width)!) * targetWidth)
         
         UIGraphicsBeginImageContextWithOptions(targetSize, false, 0.0)
         
         let context = UIGraphicsGetCurrentContext()
         
         // Save state
-        CGContextSaveGState(context)
+        context?.saveGState()
         
         // Flip coordinate system to match Quartz system
-        var transform = CGAffineTransformIdentity
-        transform = CGAffineTransformScale(transform, 1.0, -1.0)
-        transform = CGAffineTransformTranslate(transform, 0.0, -targetSize.height)
-        CGContextConcatCTM(context, transform)
+        var transform = CGAffineTransform.identity
+        transform = transform.scaleBy(x: 1.0, y: -1.0)
+        transform = transform.translateBy(x: 0.0, y: -targetSize.height)
+        context?.concatCTM(transform)
         
         // Calculate rendering frames
         var destinationFrame = CGRect(x: 0, y: 0, width: targetSize.width, height: targetSize.height)
-        destinationFrame = CGRectApplyAffineTransform(destinationFrame, transform)
+        destinationFrame = destinationFrame.apply(transform: transform)
     
-        let aspectScale = min(destinationFrame.width / pageFrame.width, destinationFrame.height / pageFrame.height)
+        let aspectScale = min(destinationFrame.width / (pageFrame?.width)!, destinationFrame.height / (pageFrame?.height)!)
         
         // Ensure aspect ratio is preserved
-        var drawingFrame = CGRectApplyAffineTransform(pageFrame, CGAffineTransformMakeScale(aspectScale, aspectScale))
-        drawingFrame.origin.x = destinationFrame.midX - (drawingFrame.width / 2.0)
-        drawingFrame.origin.y = destinationFrame.midY - (drawingFrame.height / 2.0)
+        var drawingFrame = pageFrame?.apply(transform: CGAffineTransform(scaleX: aspectScale, y: aspectScale))
+        drawingFrame?.origin.x = destinationFrame.midX - (drawingFrame!.width / 2.0)
+        drawingFrame?.origin.y = destinationFrame.midY - (drawingFrame!.height / 2.0)
         
         // Scale the context
-        CGContextTranslateCTM(context, destinationFrame.minX, destinationFrame.minY)
-        CGContextScaleCTM(context, aspectScale, aspectScale)
+        context?.translate(x: destinationFrame.minX, y: destinationFrame.minY)
+        context?.scale(x: aspectScale, y: aspectScale)
         
         // Render the PDF
-        CGContextDrawPDFPage(context, page)
+        context?.drawPDFPage(page!)
         
         // Restore state
-        CGContextRestoreGState(context)
+        context?.restoreGState()
         
         let image = UIGraphicsGetImageFromCurrentImageContext()
         

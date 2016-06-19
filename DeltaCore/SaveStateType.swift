@@ -11,5 +11,5 @@ import Foundation
 public protocol SaveStateType
 {
     var name: String? { get }
-    var fileURL: NSURL { get }
+    var fileURL: URL { get }
 }

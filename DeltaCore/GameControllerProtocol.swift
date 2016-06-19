@@ -8,17 +8,17 @@
 
 public enum ControllerInput: Int, InputType
 {
-    case Menu
+    case menu
 }
 
 //MARK: - GameControllerReceiverType
 public protocol GameControllerReceiverProtocol: class
 {
     /// Equivalent to pressing a button, or moving an analog stick
-    func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
+    func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputType)
     
     /// Equivalent to releasing a button or an analog stick
-    func gameController(gameController: GameControllerProtocol, didDeactivateInput input: InputType)
+    func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputType)
 }
 
 public func ==(x: GameControllerReceiverProtocol, y: GameControllerReceiverProtocol) -> Bool
@@ -36,13 +36,13 @@ public protocol GameControllerProtocol: class
     
     var _stateManager: GameControllerStateManager { get }
     
-    func addReceiver(receiver: GameControllerReceiverProtocol)
-    func removeReceiver(receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiverProtocol)
+    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
     
-    func isInputActivated(input: InputType) -> Bool
+    func isInputActivated(_ input: InputType) -> Bool
     
-    func activate(input: InputType)
-    func deactivate(input: InputType)
+    func activate(_ input: InputType)
+    func deactivate(_ input: InputType)
 }
 
 public extension GameControllerProtocol
@@ -51,23 +51,23 @@ public extension GameControllerProtocol
         return self._stateManager.receivers
     }
     
-    func addReceiver(receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiverProtocol)
     {
         self._stateManager.addReceiver(receiver)
     }
     
-    func removeReceiver(receiver: GameControllerReceiverProtocol)
+    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
     {
         self._stateManager.removeReceiver(receiver)
     }
     
-    func isInputActivated(input: InputType) -> Bool
+    func isInputActivated(_ input: InputType) -> Bool
     {
         let box = InputTypeBox(input: input)
         return self._stateManager.activatedInputs.contains(box)
     }
     
-    func activate(input: InputType)
+    func activate(_ input: InputType)
     {
         let box = InputTypeBox(input: input)
         self._stateManager.activatedInputs.insert(box)
@@ -78,7 +78,7 @@ public extension GameControllerProtocol
         }
     }
     
-    func deactivate(input: InputType)
+    func deactivate(_ input: InputType)
     {
         // Unlike activate(_:), we don't allow an input to be deactivated multiple times
         guard self.isInputActivated(input) else { return }

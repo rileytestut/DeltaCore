@@ -8,4 +8,4 @@
 
 import Foundation
 
-public let kUTTypeDeltaGame: CFStringRef = "com.rileytestut.delta.game"
+public let kUTTypeDeltaGame: CFString = "com.rileytestut.delta.game"

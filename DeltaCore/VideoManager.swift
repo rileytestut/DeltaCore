@@ -31,7 +31,7 @@ public extension VideoManager
             self.inputFormat = inputFormat
             self.inputDimensions = inputDimensions
             
-            self.outputFormat = .BGRA8
+            self.outputFormat = .bgra8
             self.outputDimensions = outputDimensions
         }
     }
@@ -41,14 +41,14 @@ public extension VideoManager.BufferInfo
 {
     public enum Format
     {
-        case RGB565
-        case BGRA8
+        case rgb565
+        case bgra8
 
         public var bytesPerPixel: Int {
             switch self
             {
-            case .RGB565: return 2
-            case .BGRA8: return 4
+            case .rgb565: return 2
+            case .bgra8: return 4
             }
         }
     }
@@ -69,31 +69,31 @@ public class VideoManager: NSObject, DLTAVideoRendering
     {
         self.bufferInfo = bufferInfo
         
-        self.videoBuffer = UnsafeMutablePointer<UInt8>.alloc(self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer = UnsafeMutablePointer<UInt8>.alloc(self.bufferInfo.outputBufferSize)
+        self.videoBuffer = UnsafeMutablePointer<UInt8>(allocatingCapacity: self.bufferInfo.inputBufferSize)
+        self.convertedVideoBuffer = UnsafeMutablePointer<UInt8>(allocatingCapacity: self.bufferInfo.outputBufferSize)
         
         super.init()
     }
     
     deinit
     {
-        self.videoBuffer.dealloc(self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer.dealloc(self.bufferInfo.outputBufferSize)
+        self.videoBuffer.deallocateCapacity(self.bufferInfo.inputBufferSize)
+        self.convertedVideoBuffer.deallocateCapacity(self.bufferInfo.outputBufferSize)
     }
 }
 
 public extension VideoManager
 {
-    func addGameView(gameView: GameView)
+    func addGameView(_ gameView: GameView)
     {
         self.gameViews.append(gameView)
     }
     
-    func removeGameView(gameView: GameView)
+    func removeGameView(_ gameView: GameView)
     {
-        if let index = self.gameViews.indexOf(gameView)
+        if let index = self.gameViews.index(of: gameView)
         {
-            self.gameViews.removeAtIndex(index)
+            self.gameViews.remove(at: index)
         }
     }
 }
@@ -111,7 +111,7 @@ internal extension VideoManager
             let bitmapBuffer: UnsafeMutablePointer<UInt8>
             var convertedVImageBuffer: vImage_Buffer
             
-            if self.bufferInfo.inputFormat == .BGRA8
+            if self.bufferInfo.inputFormat == .bgra8
             {
                 bitmapBuffer = self.videoBuffer
                 convertedVImageBuffer = inputVImageBuffer
@@ -124,11 +124,11 @@ internal extension VideoManager
                         
             switch self.bufferInfo.inputFormat
             {
-            case .RGB565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &convertedVImageBuffer, 0)
-            case .BGRA8: break
+            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &convertedVImageBuffer, 0)
+            case .bgra8: break
             }
             
-            let bitmapData = NSData(bytes: bitmapBuffer, length: self.bufferInfo.outputBufferSize)
+            let bitmapData = Data(bytes: UnsafePointer<UInt8>(bitmapBuffer), count: self.bufferInfo.outputBufferSize)
             let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width), size: self.bufferInfo.outputDimensions, format: kCIFormatBGRA8, colorSpace: nil)
             
             for gameView in self.gameViews

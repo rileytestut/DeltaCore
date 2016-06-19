@@ -12,17 +12,17 @@ public extension EmulatorCore
 {
     @objc enum State: Int
     {
-        case Stopped
-        case Running
-        case Paused
+        case stopped
+        case running
+        case paused
     }
     
-    enum CheatError: ErrorType
+    enum CheatError: ErrorProtocol
     {
         case invalid
     }
     
-    enum SaveStateError: ErrorType
+    enum SaveStateError: ErrorProtocol
     {
         case doesNotExist
     }
@@ -41,24 +41,24 @@ public class EmulatorCore: DynamicObject
         }
     }
     
-    public var updateHandler: (EmulatorCore -> Void)?
+    public var updateHandler: ((EmulatorCore) -> Void)?
     
     public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
     public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
     /// Can be customized to provide different default formatting
-    public var timestampDateFormatter: NSDateFormatter
+    public var timestampDateFormatter: DateFormatter
     
     // KVO-Compliant
-    public private(set) dynamic var state = State.Stopped
+    public private(set) dynamic var state = State.stopped
     public dynamic var rate = 1.0
     {
         didSet
         {
             if !self.supportedRates.contains(self.rate)
             {
-                self.rate = min(max(self.rate, self.supportedRates.start), self.supportedRates.end)
+                self.rate = min(max(self.rate, self.supportedRates.lowerBound), self.supportedRates.upperBound)
             }
             
             self.audioManager.rate = self.rate
@@ -75,7 +75,7 @@ public class EmulatorCore: DynamicObject
         fatalError("To be implemented by subclasses.")
     }
     
-    public var gameSaveURL: NSURL {
+    public var gameSaveURL: URL {
         fatalError("To be implemented by subclasses.")
     }
     
@@ -95,16 +95,16 @@ public class EmulatorCore: DynamicObject
         fatalError("To be implemented by subclasses.")
     }
     
-    public var supportedRates: ClosedInterval<Double> {
+    public var supportedRates: ClosedRange<Double> {
         return 1...4
     }
     
     //MARK: - Private Properties
-    private let emulationSemaphore = dispatch_semaphore_create(0)
+    private let emulationSemaphore = DispatchSemaphore(value: 0)
     private var gameControllersDictionary = [Int: GameControllerProtocol]()
     private var cheatCodes = [String: CheatType]()
     
-    private var previousState = State.Stopped
+    private var previousState = State.stopped
     private var previousRate: Double? = nil
     
     //MARK: - Initializers -
@@ -113,39 +113,40 @@ public class EmulatorCore: DynamicObject
     {
         self.game = game
         
-        self.timestampDateFormatter = NSDateFormatter()
-        self.timestampDateFormatter.timeStyle = .ShortStyle
-        self.timestampDateFormatter.dateStyle = .LongStyle
+        self.timestampDateFormatter = DateFormatter()
+        self.timestampDateFormatter.timeStyle = .shortStyle
+        self.timestampDateFormatter.dateStyle = .longStyle
         
         super.init(dynamicIdentifier: game.typeIdentifier, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
         
-        self.rate = self.supportedRates.start
+        self.rate = self.supportedRates.lowerBound
     }
     
     /** Subclass Methods **/
     /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
 
+    
     //MARK: - Input Transformation -
     /// Input Transformation
-    public func inputsForMFiExternalController(controller: GameControllerProtocol, input: InputType) -> [InputType]
+    public func inputsForMFiExternalController(_ controller: GameControllerProtocol, input: InputType) -> [InputType]
     {
         return []
     }
     
     //MARK: - Game Views -
     /// Game Views
-    public func addGameView(gameView: GameView)
+    public func addGameView(_ gameView: GameView)
     {
         self.gameViews.append(gameView)
         
         self.videoManager.addGameView(gameView)
     }
     
-    public func removeGameView(gameView: GameView)
+    public func removeGameView(_ gameView: GameView)
     {
-        if let index = self.gameViews.indexOf(gameView)
+        if let index = self.gameViews.index(of: gameView)
         {
-            self.gameViews.removeAtIndex(index)
+            self.gameViews.remove(at: index)
         }
         
         self.videoManager.removeGameView(gameView)
@@ -158,39 +159,39 @@ public extension EmulatorCore
 {
     func startEmulation() -> Bool
     {
-        guard self.state == .Stopped else { return false }
+        guard self.state == .stopped else { return false }
         
-        self.state = .Running
+        self.state = .running
         self.audioManager.start()
         
         self.bridge.emulatorCore = self
         self.bridge.audioRenderer = self.audioManager
         self.bridge.videoRenderer = self.videoManager
         
-        self.bridge.startWithGameURL(self.game.fileURL)
-        self.bridge.loadGameSaveFromURL(self.gameSaveURL)
+        self.bridge.start(withGameURL: self.game.fileURL)
+        self.bridge.loadGameSave(from: self.gameSaveURL)
         
         self.runGameLoop()
         
-        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        self.emulationSemaphore.wait()
         
         return true
     }
     
     func stopEmulation() -> Bool
     {
-        guard self.state != .Stopped else { return false }
+        guard self.state != .stopped else { return false }
         
-        let isRunning = self.state == .Running
+        let isRunning = self.state == .running
         
-        self.state = .Stopped
+        self.state = .stopped
         
         if isRunning
         {
-            dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+            self.emulationSemaphore.wait()
         }
         
-        self.bridge.saveGameSaveToURL(self.gameSaveURL)
+        self.bridge.saveGameSave(to: self.gameSaveURL)
         
         self.audioManager.stop()
         self.bridge.stop()
@@ -200,13 +201,13 @@ public extension EmulatorCore
     
     func pauseEmulation() -> Bool
     {
-        guard self.state == .Running else { return false }
+        guard self.state == .running else { return false }
         
-        self.state = .Paused
+        self.state = .paused
         
-        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        self.emulationSemaphore.wait()
         
-        self.bridge.saveGameSaveToURL(self.gameSaveURL)
+        self.bridge.saveGameSave(to: self.gameSaveURL)
         
         self.audioManager.enabled = false
         self.bridge.pause()
@@ -216,13 +217,13 @@ public extension EmulatorCore
     
     func resumeEmulation() -> Bool
     {
-        guard self.state == .Paused else { return false }
+        guard self.state == .paused else { return false }
         
-        self.state = .Running
+        self.state = .running
         
         self.runGameLoop()
         
-        dispatch_semaphore_wait(self.emulationSemaphore, DISPATCH_TIME_FOREVER)
+        self.emulationSemaphore.wait()
         
         self.audioManager.enabled = true
         self.bridge.resume()
@@ -235,23 +236,23 @@ public extension EmulatorCore
 /// Save States
 public extension EmulatorCore
 {
-    func saveSaveState(completion: (SaveStateType -> Void))
+    func saveSaveState(_ completion: ((SaveStateType) -> Void))
     {
-        NSFileManager.defaultManager().prepareTemporaryURL { URL in
+        FileManager.default().prepareTemporaryURL { URL in
             
-            self.bridge.saveSaveStateToURL(URL)
+            self.bridge.saveSaveState(to: URL)
             
-            let name = self.timestampDateFormatter.stringFromDate(NSDate())
+            let name = self.timestampDateFormatter.string(from: Date())
             let saveState = SaveState(name: name, fileURL: URL)
             completion(saveState)
         }
     }
     
-    func loadSaveState(saveState: SaveStateType) throws
+    func loadSaveState(_ saveState: SaveStateType) throws
     {
-        guard let path = saveState.fileURL.path where NSFileManager.defaultManager().fileExistsAtPath(path) else { throw SaveStateError.doesNotExist }
+        guard let path = saveState.fileURL.path where FileManager.default().fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
-        self.bridge.loadSaveStateFromURL(saveState.fileURL)
+        self.bridge.loadSaveState(from: saveState.fileURL as URL)
     }
 }
 
@@ -263,7 +264,7 @@ public extension EmulatorCore
     {
         var success = true
         
-        let codes = cheat.code.characters.split("\n")
+        let codes = cheat.code.characters.split(separator: "\n")
         for code in codes
         {
             if !self.bridge.addCheatCode(String(code), type: cheat.type.rawValue)
@@ -302,7 +303,7 @@ public extension EmulatorCore
         
         for (cheatCode, type) in self.cheatCodes
         {
-            let codes = cheatCode.characters.split("\n")
+            let codes = cheatCode.characters.split(separator: "\n")
             for code in codes
             {
                 self.bridge.addCheatCode(String(code), type: type.rawValue)
@@ -317,7 +318,7 @@ public extension EmulatorCore
 /// Controllers
 public extension EmulatorCore
 {
-    func setGameController(gameController: GameControllerProtocol?, atIndex index: Int) -> GameControllerProtocol?
+    @discardableResult func setGameController(_ gameController: GameControllerProtocol?, atIndex index: Int) -> GameControllerProtocol?
     {
         let previousGameController = self.gameControllerAtIndex(index)
         previousGameController?.playerIndex = nil
@@ -345,7 +346,7 @@ public extension EmulatorCore
         }
     }
     
-    func gameControllerAtIndex(index: Int) -> GameControllerProtocol?
+    func gameControllerAtIndex(_ index: Int) -> GameControllerProtocol?
     {
         return self.gameControllersDictionary[index]
     }
@@ -353,14 +354,14 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiverProtocol
 {
-    public func gameController(gameController: GameControllerProtocol, didActivateInput input: InputType)
+    public func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputType)
     {
         guard input.dynamicType == self.gameInputType else { return }
         
         self.bridge.activateInput(input.rawValue)
     }
     
-    public func gameController(gameController: GameControllerProtocol, didDeactivateInput input: InputType)
+    public func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputType)
     {
         guard input.dynamicType == self.gameInputType else { return }
         
@@ -372,7 +373,7 @@ extension EmulatorCore: DLTAEmulating
 {
     public func didUpdateGameSave()
     {
-        self.bridge.saveGameSaveToURL(self.gameSaveURL)
+        self.bridge.saveGameSave(to: self.gameSaveURL)
     }
 }
 
@@ -380,12 +381,12 @@ private extension EmulatorCore
 {
     func runGameLoop()
     {
-        let emulationQueue = dispatch_queue_create("com.rileytestut.DeltaCore.emulationQueue", DISPATCH_QUEUE_SERIAL)
-        dispatch_async(emulationQueue) {
+        let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", attributes: DispatchQueueAttributes.serial)
+        emulationQueue.async {
             
             let screenRefreshRate = 1.0 / 60.0
             
-            var emulationTime = NSThread.absoluteTime()
+            var emulationTime = Thread.absoluteTime()
             var counter = 0.0
             
             while true
@@ -394,7 +395,7 @@ private extension EmulatorCore
                 
                 if self.rate != self.previousRate
                 {
-                    NSThread.setRealTimePriorityWithPeriod(frameDuration)
+                    Thread.setRealTimePriorityWithPeriod(frameDuration)
                     
                     self.previousRate = self.rate
                     
@@ -418,7 +419,7 @@ private extension EmulatorCore
                 counter += frameDuration
                 emulationTime += frameDuration
                 
-                let currentTime = NSThread.absoluteTime()
+                let currentTime = Thread.absoluteTime()
                 
                 // The number of frames we need to skip to keep in sync
                 let framesToSkip = Int((currentTime - emulationTime) / frameDuration)
@@ -426,7 +427,7 @@ private extension EmulatorCore
                 if framesToSkip > 0
                 {
                     // Only actually skip frames if we're running at normal speed
-                    if self.rate == self.supportedRates.start
+                    if self.rate == self.supportedRates.lowerBound
                     {
                         for _ in 0 ..< framesToSkip
                         {
@@ -443,23 +444,23 @@ private extension EmulatorCore
                 
                 if self.previousState != state
                 {
-                    dispatch_semaphore_signal(self.emulationSemaphore)
+                    self.emulationSemaphore.signal()
                     
                     self.previousState = state
                 }
                 
-                if state != .Running
+                if state != .running
                 {
                     break
                 }
                 
-                NSThread.realTimeWaitUntil(emulationTime)
+                Thread.realTimeWait(until: emulationTime)
             }
             
         }
     }
     
-    func runFrame(renderGraphics renderGraphics: Bool)
+    func runFrame(renderGraphics: Bool)
     {
         self.bridge.runFrame()
         

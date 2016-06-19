@@ -42,9 +42,9 @@ public class GameView: UIView
     
     public override init(frame: CGRect)
     {
-        let eaglContext = EAGLContext(API: .OpenGLES2)
-        self.glkView = GLKView(frame: CGRectZero, context: eaglContext)
-        self.context = CIContext(EAGLContext: eaglContext, options: [kCIContextWorkingColorSpace: NSNull()])
+        let eaglContext = EAGLContext(api: .openGLES2)
+        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext!)
+        self.context = CIContext(eaglContext: eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
         
         super.init(frame: frame)
         
@@ -53,9 +53,9 @@ public class GameView: UIView
     
     public required init?(coder aDecoder: NSCoder)
     {
-        let eaglContext = EAGLContext(API: .OpenGLES2)
-        self.glkView = GLKView(frame: CGRectZero, context: eaglContext)
-        self.context = CIContext(EAGLContext: eaglContext, options: [kCIContextWorkingColorSpace: NSNull()])
+        let eaglContext = EAGLContext(api: .openGLES2)
+        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext!)
+        self.context = CIContext(eaglContext: eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
         
         super.init(coder: aDecoder)
         
@@ -65,7 +65,7 @@ public class GameView: UIView
     private func initialize()
     {        
         self.glkView.frame = self.bounds
-        self.glkView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self
         self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
@@ -90,9 +90,9 @@ private extension GameView
 
 extension GameView: GLKViewDelegate
 {
-    public func glkView(view: GLKView, drawInRect rect: CGRect)
+    public func glkView(_ view: GLKView, drawIn rect: CGRect)
     {        
-        guard let window = self.window where !CGRectIsEmpty(self.bounds) else { return }
+        guard let window = self.window where !self.bounds.isEmpty else { return }
         
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
@@ -101,8 +101,8 @@ extension GameView: GLKViewDelegate
         {
             let bounds = CGRect(x: 0, y: 0, width: self.bounds.width * window.screen.scale, height: self.bounds.height * window.screen.scale)
             
-            let rect = AVMakeRectWithAspectRatioInsideRect(outputImage.extent.size, bounds)
-            self.context.drawImage(outputImage, inRect: rect, fromRect: outputImage.extent)
+            let rect = AVMakeRect(aspectRatio: outputImage.extent.size, insideRect: bounds)
+            self.context.draw(outputImage, in: rect, from: outputImage.extent)
         }
     }
 }

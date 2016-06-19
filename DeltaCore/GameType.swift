@@ -11,6 +11,6 @@ import Foundation
 @objc public protocol GameType: NSObjectProtocol
 {
     var name: String { get }
-    var fileURL: NSURL { get }
+    var fileURL: URL { get }
     var typeIdentifier: String { get }
 }

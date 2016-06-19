@@ -16,32 +16,32 @@ public class GameControllerStateManager
     {
         var objects: [AnyObject]!
         
-        dispatch_sync(self.dispatchQueue) {
+        self.dispatchQueue.sync {
             objects = self._receivers.allObjects
         }
         
         return objects.map({ $0 as! GameControllerReceiverProtocol })
     }
 
-    private let _receivers = NSHashTable.weakObjectsHashTable()
+    private let _receivers = HashTable<AnyObject>.weakObjects()
     
     // Used to synchronize access to _receivers to prevent race conditions (yay ObjC)
-    private let dispatchQueue = dispatch_queue_create("com.rileytestut.Delta.GameControllerStateManager.dispatchQueue", DISPATCH_QUEUE_SERIAL)
+    private let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue", attributes: DispatchQueueAttributes.serial)
 }
 
 public extension GameControllerStateManager
 {
-    func addReceiver(receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiverProtocol)
     {
-        dispatch_sync(self.dispatchQueue) {
-            self._receivers.addObject(receiver)
+        self.dispatchQueue.sync {
+            self._receivers.add(receiver)
         }
     }
     
-    func removeReceiver(receiver: GameControllerReceiverProtocol)
+    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
     {
-        dispatch_sync(self.dispatchQueue) {
-            self._receivers.removeObject(receiver)
+        self.dispatchQueue.sync {
+            self._receivers.remove(receiver)
         }
     }
 }

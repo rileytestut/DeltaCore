@@ -130,7 +130,7 @@ public class ControllerSkin: DynamicObject
     /** Subclass Methods **/
     /** These methods should never be called directly **/
     
-    public func inputsForItem(_ item: Item, point: CGPoint) -> [InputType]
+    public func inputsForItem(_ item: Item, point: CGPoint) -> [InputProtocol]
     {
         fatalError("ControllerSkin subclass must implement inputsForItem(_:point:)")
     }
@@ -144,11 +144,11 @@ public extension ControllerSkin
     }
     
     /// Provided point should be normalized [0,1] for both axies
-    func inputsForPoint(_ point: CGPoint, configuration: ControllerSkinConfiguration) -> [InputType]?
+    func inputsForPoint(_ point: CGPoint, configuration: ControllerSkinConfiguration) -> [InputProtocol]?
     {
         guard let representation = self.representationForConfiguration(configuration) else { return nil }
         
-        var inputs: [InputType] = []
+        var inputs: [InputProtocol] = []
         for item in representation.items
         {
             guard item.extendedFrame.contains(point) else { continue }

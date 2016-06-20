@@ -28,7 +28,7 @@ public class ControllerView: UIView, GameControllerProtocol
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public var inputTransformationHandler: ((GameControllerProtocol, InputType) -> [InputType])?
+    public var inputTransformationHandler: ((GameControllerProtocol, InputProtocol) -> [InputProtocol])?
     public var _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties
@@ -38,10 +38,10 @@ public class ControllerView: UIView, GameControllerProtocol
     
     private var _performedInitialLayout = false
     
-    private var touchInputsMappingDictionary: [UITouch: Set<InputTypeBox>] = [:]
-    private var previousTouchInputs = Set<InputTypeBox>()
-    private var touchInputs: Set<InputTypeBox> {
-        return self.touchInputsMappingDictionary.values.reduce(Set<InputTypeBox>(), combine: { $0.union($1) })
+    private var touchInputsMappingDictionary: [UITouch: Set<InputBox>] = [:]
+    private var previousTouchInputs = Set<InputBox>()
+    private var touchInputs: Set<InputBox> {
+        return self.touchInputsMappingDictionary.values.reduce(Set<InputBox>(), combine: { $0.union($1) })
     }
     
     //MARK: - Initializers -
@@ -221,7 +221,7 @@ private extension ControllerView
             point.y /= self.bounds.height
             
             let inputs = controllerSkin.inputsForPoint(point, configuration: self.currentConfiguration) ?? []
-            let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputTypeBox(input: $0) }
+            let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputBox(input: $0) }
             
             self.touchInputsMappingDictionary[touch] = Set(boxedInputs)
         }

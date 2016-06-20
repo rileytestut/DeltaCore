@@ -8,7 +8,7 @@
 
 import GameController
 
-public enum MFiExternalControllerInput: InputType, Hashable
+public enum MFiExternalControllerInput: InputProtocol, Hashable
 {
     case dPad(xAxis: Float, yAxis: Float)
     case leftThumbstick(xAxis: Float, yAxis: Float)

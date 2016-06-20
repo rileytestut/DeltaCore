@@ -1,5 +1,5 @@
 //
-//  SaveStateType.swift
+//  SaveStateProtocol.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 1/31/16.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol SaveStateType
+public protocol SaveStateProtocol
 {
     var name: String? { get }
     var fileURL: URL { get }

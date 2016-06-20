@@ -1,5 +1,5 @@
 //
-//  Game.swift
+//  GameProtocol.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 3/8/15.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-@objc public protocol GameType: NSObjectProtocol
+@objc public protocol GameProtocol: NSObjectProtocol
 {
     var name: String { get }
     var fileURL: URL { get }

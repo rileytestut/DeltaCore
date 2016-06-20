@@ -32,7 +32,7 @@ public class EmulatorCore: DynamicObject
 {
     //MARK: - Properties -
     /** Properties **/
-    public let game: GameType
+    public let game: GameProtocol
     public private(set) var gameViews: [GameView] = []
     public var gameControllers: [GameControllerProtocol] {
         get
@@ -71,7 +71,7 @@ public class EmulatorCore: DynamicObject
         fatalError("To be implemented by subclasses.")
     }
     
-    public var gameInputType: InputType.Type {
+    public var gameInputType: InputProtocol.Type {
         fatalError("To be implemented by subclasses.")
     }
     
@@ -109,7 +109,7 @@ public class EmulatorCore: DynamicObject
     
     //MARK: - Initializers -
     /** Initializers **/
-    public required init(game: GameType)
+    public required init(game: GameProtocol)
     {
         self.game = game
         
@@ -128,7 +128,7 @@ public class EmulatorCore: DynamicObject
     
     //MARK: - Input Transformation -
     /// Input Transformation
-    public func inputsForMFiExternalController(_ controller: GameControllerProtocol, input: InputType) -> [InputType]
+    public func inputsForMFiExternalController(_ controller: GameControllerProtocol, input: InputProtocol) -> [InputProtocol]
     {
         return []
     }
@@ -236,7 +236,7 @@ public extension EmulatorCore
 /// Save States
 public extension EmulatorCore
 {
-    func saveSaveState(_ completion: ((SaveStateType) -> Void))
+    func saveSaveState(_ completion: ((SaveStateProtocol) -> Void))
     {
         FileManager.default().prepareTemporaryURL { URL in
             
@@ -248,7 +248,7 @@ public extension EmulatorCore
         }
     }
     
-    func loadSaveState(_ saveState: SaveStateType) throws
+    func loadSaveState(_ saveState: SaveStateProtocol) throws
     {
         guard let path = saveState.fileURL.path where FileManager.default().fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
@@ -354,14 +354,14 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiverProtocol
 {
-    public func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputType)
+    public func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputProtocol)
     {
         guard input.dynamicType == self.gameInputType else { return }
         
         self.bridge.activateInput(input.rawValue)
     }
     
-    public func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputType)
+    public func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputProtocol)
     {
         guard input.dynamicType == self.gameInputType else { return }
         

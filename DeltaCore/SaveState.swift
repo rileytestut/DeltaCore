@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct SaveState: SaveStateType
+public struct SaveState: SaveStateProtocol
 {
     public var name: String?
     public var fileURL: URL

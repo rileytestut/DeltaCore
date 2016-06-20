@@ -10,9 +10,10 @@
 
 @interface NSThread (RealTime)
 
+@property (class, nonatomic, readonly) NSTimeInterval absoluteTime;
+
 + (BOOL)setRealTimePriorityWithPeriod:(NSTimeInterval)period;
 
-+ (NSTimeInterval)absoluteTime;
 + (void)realTimeWaitUntil:(NSTimeInterval)delay;
 
 @end

@@ -386,7 +386,7 @@ private extension EmulatorCore
             
             let screenRefreshRate = 1.0 / 60.0
             
-            var emulationTime = Thread.absoluteTime()
+            var emulationTime = Thread.absoluteTime
             var counter = 0.0
             
             while true
@@ -419,7 +419,7 @@ private extension EmulatorCore
                 counter += frameDuration
                 emulationTime += frameDuration
                 
-                let currentTime = Thread.absoluteTime()
+                let currentTime = Thread.absoluteTime
                 
                 // The number of frames we need to skip to keep in sync
                 let framesToSkip = Int((currentTime - emulationTime) / frameDuration)

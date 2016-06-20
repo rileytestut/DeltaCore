@@ -51,16 +51,16 @@ static double mach_to_sec = 0;
     return YES;
 }
 
-+ (NSTimeInterval)absoluteTime
-{
-    return mach_absolute_time() * mach_to_sec;
-}
-
 + (void)realTimeWaitUntil:(NSTimeInterval)delay
 {
     mach_wait_until(delay / mach_to_sec);
 }
 
+#pragma mark - Getters/Setters -
 
++ (NSTimeInterval)absoluteTime
+{
+    return mach_absolute_time() * mach_to_sec;
+}
 
 @end

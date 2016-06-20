@@ -117,7 +117,7 @@ public class EmulatorCore: DynamicObject
         self.timestampDateFormatter.timeStyle = .shortStyle
         self.timestampDateFormatter.dateStyle = .longStyle
         
-        super.init(dynamicIdentifier: game.typeIdentifier, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
+        super.init(dynamicIdentifier: game.typeIdentifier.rawValue, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
         
         self.rate = self.supportedRates.lowerBound
     }

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 internal extension CGRect
 {
@@ -36,18 +37,18 @@ internal extension CGSize
     }
 }
 
-internal extension UIEdgeInsets
-{
-    init?(dictionary: [String: CGFloat])
-    {
-        guard
-            let top = dictionary["top"],
-            let bottom = dictionary["bottom"],
-            let left = dictionary["left"],
-            let right = dictionary["right"]
-        else { return nil }
-        
-        self = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
-    }
-}
-
+//internal extension UIEdgeInsets
+//{
+//    init?(dictionary: [String: CGFloat])
+//    {
+//        guard
+//            let top = dictionary["top"],
+//            let bottom = dictionary["bottom"],
+//            let left = dictionary["left"],
+//            let right = dictionary["right"]
+//        else { return nil }
+//        
+//        self = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+//    }
+//}
+//

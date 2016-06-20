@@ -6,7 +6,9 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
-import AVFoundation
+//import Roxas
+
+import Foundation
 
 public extension EmulatorCore
 {
@@ -43,7 +45,7 @@ public class EmulatorCore: DynamicObject
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
+    //public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
     public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
@@ -61,7 +63,7 @@ public class EmulatorCore: DynamicObject
                 self.rate = min(max(self.rate, self.supportedRates.lowerBound), self.supportedRates.upperBound)
             }
             
-            self.audioManager.rate = self.rate
+           // self.audioManager.rate = self.rate
         }
     }
     
@@ -79,9 +81,9 @@ public class EmulatorCore: DynamicObject
         fatalError("To be implemented by subclasses.")
     }
     
-    public var audioBufferInfo: AudioManager.BufferInfo {
-        fatalError("To be implemented by subclasses.")
-    }
+//    public var audioBufferInfo: AudioManager.BufferInfo {
+//        fatalError("To be implemented by subclasses.")
+//    }
     
     public var videoBufferInfo: VideoManager.BufferInfo {
         fatalError("To be implemented by subclasses.")
@@ -162,10 +164,10 @@ public extension EmulatorCore
         guard self.state == .stopped else { return false }
         
         self.state = .running
-        self.audioManager.start()
+//        self.audioManager.start()
         
         self.bridge.emulatorCore = self
-        self.bridge.audioRenderer = self.audioManager
+//        self.bridge.audioRenderer = self.audioManager
         self.bridge.videoRenderer = self.videoManager
         
         self.bridge.start(withGameURL: self.game.fileURL)
@@ -193,7 +195,7 @@ public extension EmulatorCore
         
         self.bridge.saveGameSave(to: self.gameSaveURL)
         
-        self.audioManager.stop()
+//        self.audioManager.stop()
         self.bridge.stop()
         
         return true
@@ -209,7 +211,7 @@ public extension EmulatorCore
         
         self.bridge.saveGameSave(to: self.gameSaveURL)
         
-        self.audioManager.enabled = false
+//        self.audioManager.enabled = false
         self.bridge.pause()
         
         return true
@@ -225,7 +227,7 @@ public extension EmulatorCore
         
         self.emulationSemaphore.wait()
         
-        self.audioManager.enabled = true
+//        self.audioManager.enabled = true
         self.bridge.resume()
         
         return true
@@ -238,14 +240,14 @@ public extension EmulatorCore
 {
     func saveSaveState(_ completion: ((SaveStateType) -> Void))
     {
-        FileManager.default().prepareTemporaryURL { URL in
-            
-            self.bridge.saveSaveState(to: URL)
-            
-            let name = self.timestampDateFormatter.string(from: Date())
-            let saveState = SaveState(name: name, fileURL: URL)
-            completion(saveState)
-        }
+//        FileManager.default().prepareTemporaryURL { URL in
+//            
+//            self.bridge.saveSaveState(to: URL)
+//            
+//            let name = self.timestampDateFormatter.string(from: Date())
+//            let saveState = SaveState(name: name, fileURL: URL)
+//            completion(saveState)
+//        }
     }
     
     func loadSaveState(_ saveState: SaveStateType) throws
@@ -327,10 +329,10 @@ public extension EmulatorCore
         gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
         
-        if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
-        {
-            gameController.inputTransformationHandler = inputsForMFiExternalController
-        }
+//        if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
+//        {
+//            gameController.inputTransformationHandler = inputsForMFiExternalController
+//        }
         
         return previousGameController
     }

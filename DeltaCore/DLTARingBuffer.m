@@ -9,7 +9,7 @@
 #import "DLTARingBuffer.h"
 #import "TPCircularBuffer.h"
 
-@import Roxas;
+//@import Roxas;
 
 @interface DLTARingBuffer ()
 
@@ -28,7 +28,7 @@
         
         if (!TPCircularBufferInit(&_circularBuffer, bufferSize))
         {
-            ALog(@"Error: Failed to initialize DLTARingBuffer with preferred buffer size of %@", @(bufferSize));
+            NSLog(@"Error: Failed to initialize DLTARingBuffer with preferred buffer size of %@", @(bufferSize));
         }
     }
     

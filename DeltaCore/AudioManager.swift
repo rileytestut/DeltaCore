@@ -6,7 +6,7 @@
 //  Copyright © 2016 Riley Testut. All rights reserved.
 //
 
-import AVFoundation
+import AVFoundation.AVAudioEngine
 
 private let AudioBufferCount = 3
 
@@ -59,7 +59,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
     
     public var rate = 1.0 {
         didSet {
-            self.timePitchEffect.rate = Float(self.rate)
+            //self.timePitchEffect.rate = Float(self.rate)
             self.updateAudioBufferFrameLengths()
         }
     }
@@ -69,7 +69,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
     public let audioEngine: AVAudioEngine
     public let audioPlayerNode: AVAudioPlayerNode
     public let audioConverter: AVAudioConverter
-    public let timePitchEffect: AVAudioUnitTimePitch
+    //public let timePitchEffect: AVAudioUnitTimePitch
     
     private var audioBuffers = [AVAudioPCMBuffer]()
     
@@ -88,11 +88,11 @@ public class AudioManager: NSObject, DLTAAudioRendering
         let outputFormat = AVAudioFormat(standardFormatWithSampleRate: self.bufferInfo.inputFormat.sampleRate, channels: 2)
         self.audioConverter = AVAudioConverter(from: self.bufferInfo.inputFormat, to: outputFormat)
                 
-        self.timePitchEffect = AVAudioUnitTimePitch()
-        self.audioEngine.attach(self.timePitchEffect)
+        //self.timePitchEffect = AVAudioUnitTimePitch()
+        //self.audioEngine.attach(self.timePitchEffect)
         
-        self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputFormat)
-        self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputFormat)
+        //self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputFormat)
+        self.audioEngine.connect(self.audioPlayerNode, to: self.audioEngine.mainMixerNode, format: outputFormat)
         
         super.init()
         

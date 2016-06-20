@@ -7,7 +7,13 @@
 //
 
 import Foundation
-import Accelerate
+import SpriteKit
+//import Accelerate
+
+public class GameView: NSObject
+{
+    
+}
 
 public extension VideoManager
 {
@@ -56,6 +62,8 @@ public extension VideoManager.BufferInfo
 
 public class VideoManager: NSObject, DLTAVideoRendering
 {
+    public var handler: (Data -> Void)?
+    
     public private(set) var gameViews = [GameView]()
     
     public var enabled = true
@@ -106,36 +114,78 @@ internal extension VideoManager
         
         autoreleasepool {
             
-            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.inputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
+            let bitmapBuffer = self.videoBuffer
             
-            let bitmapBuffer: UnsafeMutablePointer<UInt8>
-            var convertedVImageBuffer: vImage_Buffer
+//            void ConvertBetweenBGRAandRGBA(unsigned char* input, int pixel_width,
+//                                           int pixel_height, unsigned char* output)
+//            {
+//                int offset = 0;
+//                
+//                for (int y = 0; y < pixel_height; y++) {
+//                    for (int x = 0; x < pixel_width; x++) {
+//                        output[offset] = input[offset + 2];
+//                        output[offset + 1] = input[offset + 1];
+//                        output[offset + 2] = input[offset];
+//                        output[offset + 3] = input[offset + 3];
+//                        
+//                        offset += 4;
+//                    }
+//                }
+//            }
+//            
             
-            if self.bufferInfo.inputFormat == .bgra8
+            var offset = 0
+            
+            for _ in 0...Int(self.bufferInfo.outputDimensions.height)
             {
-                bitmapBuffer = self.videoBuffer
-                convertedVImageBuffer = inputVImageBuffer
-            }
-            else
-            {
-                bitmapBuffer = self.convertedVideoBuffer
-                convertedVImageBuffer = vImage_Buffer(data: self.convertedVideoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
-            }
-                        
-            switch self.bufferInfo.inputFormat
-            {
-            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &convertedVImageBuffer, 0)
-            case .bgra8: break
+                for _ in 0...Int(self.bufferInfo.outputDimensions.width)
+                {
+                    self.convertedVideoBuffer[offset] = bitmapBuffer[offset + 2];
+                    self.convertedVideoBuffer[offset + 1] = bitmapBuffer[offset + 1];
+                    self.convertedVideoBuffer[offset + 2] = bitmapBuffer[offset];
+                    self.convertedVideoBuffer[offset + 3] = bitmapBuffer[offset + 3];
+                    
+                    offset += 4
+                }
             }
             
-            let bitmapData = Data(bytes: UnsafePointer<UInt8>(bitmapBuffer), count: self.bufferInfo.outputBufferSize)
-            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width), size: self.bufferInfo.outputDimensions, format: kCIFormatBGRA8, colorSpace: nil)
             
-            for gameView in self.gameViews
-            {
-                gameView.inputImage = image
-            }
             
+            let bitmapData = Data(bytes: self.convertedVideoBuffer, count: self.bufferInfo.outputBufferSize)
+            
+            
+            self.handler?(bitmapData)
+            
+//            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.inputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
+//            
+//            let bitmapBuffer: UnsafeMutablePointer<UInt8>
+//            var convertedVImageBuffer: vImage_Buffer
+//            
+//            if self.bufferInfo.inputFormat == .bgra8
+//            {
+//                bitmapBuffer = self.videoBuffer
+//                convertedVImageBuffer = inputVImageBuffer
+//            }
+//            else
+//            {
+//                bitmapBuffer = self.convertedVideoBuffer
+//                convertedVImageBuffer = vImage_Buffer(data: self.convertedVideoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
+//            }
+//                        
+//            switch self.bufferInfo.inputFormat
+//            {
+//            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &convertedVImageBuffer, 0)
+//            case .bgra8: break
+//            }
+            
+//            let bitmapData = Data(bytes: UnsafePointer<UInt8>(bitmapBuffer), count: self.bufferInfo.outputBufferSize)
+//            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width), size: self.bufferInfo.outputDimensions, format: kCIFormatBGRA8, colorSpace: nil)
+//            
+//            for gameView in self.gameViews
+//            {
+//                gameView.inputImage = image
+//            }
+//            
         }
     }
 }

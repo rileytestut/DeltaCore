@@ -100,7 +100,7 @@ public class MFiExternalController: ExternalController
             
             for receiver in self.receivers
             {
-                receiver.gameController(self, didActivateInput: ControllerInput.menu)
+                receiver.gameController(self, didActivate: ControllerInput.menu)
             }
             
         }

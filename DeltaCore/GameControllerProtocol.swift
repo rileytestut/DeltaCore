@@ -11,14 +11,14 @@ public enum ControllerInput: Int, InputProtocol
     case menu
 }
 
-//MARK: - GameControllerReceiverType
+//MARK: - GameControllerReceiverProtocol -
 public protocol GameControllerReceiverProtocol: class
 {
     /// Equivalent to pressing a button, or moving an analog stick
-    func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputProtocol)
+    func gameController(_ gameController: GameControllerProtocol, didActivate input: InputProtocol)
     
     /// Equivalent to releasing a button or an analog stick
-    func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputProtocol)
+    func gameController(_ gameController: GameControllerProtocol, didDeactivate input: InputProtocol)
 }
 
 public func ==(x: GameControllerReceiverProtocol, y: GameControllerReceiverProtocol) -> Bool
@@ -74,7 +74,7 @@ public extension GameControllerProtocol
         
         for receiver in self.receivers
         {
-            receiver.gameController(self, didActivateInput: input)
+            receiver.gameController(self, didActivate: input)
         }
     }
     
@@ -88,7 +88,7 @@ public extension GameControllerProtocol
         
         for receiver in self.receivers
         {
-            receiver.gameController(self, didDeactivateInput: input)
+            receiver.gameController(self, didDeactivate: input)
         }
     }
 }

@@ -354,14 +354,14 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiverProtocol
 {
-    public func gameController(_ gameController: GameControllerProtocol, didActivateInput input: InputProtocol)
+    public func gameController(_ gameController: GameControllerProtocol, didActivate input: InputProtocol)
     {
         guard input.dynamicType == self.gameInputType else { return }
         
         self.bridge.activateInput(input.rawValue)
     }
     
-    public func gameController(_ gameController: GameControllerProtocol, didDeactivateInput input: InputProtocol)
+    public func gameController(_ gameController: GameControllerProtocol, didDeactivate input: InputProtocol)
     {
         guard input.dynamicType == self.gameInputType else { return }
         

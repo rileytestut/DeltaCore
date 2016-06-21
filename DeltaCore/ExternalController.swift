@@ -22,7 +22,7 @@ public class ExternalController: GameControllerProtocol, Hashable
     /// <GameControllerType>
     public var playerIndex: Int?
     public var inputTransformationHandler: ((GameControllerProtocol, InputProtocol) -> [InputProtocol])?
-    public var _stateManager = GameControllerStateManager()
+    public let _stateManager = GameControllerStateManager()
     
     //MARK: <Hashable>
     /// <Hashable>
@@ -44,7 +44,7 @@ public func ==(lhs: ExternalController, rhs: ExternalController) -> Bool
 //MARK: - Private Methods -
 internal extension ExternalController
 {
-    func updateReceiversForActivatedInput(_ input: InputProtocol)
+    func updateReceivers(forActivatedInput input: InputProtocol)
     {
         let activatedInputs = [input].flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }
 
@@ -54,7 +54,7 @@ internal extension ExternalController
         }
     }
     
-    func updateReceiversForDeactivatedInput(_ input: InputProtocol)
+    func updateReceivers(forDeactivatedInput input: InputProtocol)
     {
         let deactivatedInputs = [input].flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }
         

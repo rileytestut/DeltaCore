@@ -109,11 +109,11 @@ public class MFiExternalController: ExternalController
             
             if pressed
             {
-                self.updateReceiversForActivatedInput(input)
+                self.updateReceivers(forActivatedInput: input)
             }
             else
             {
-                self.updateReceiversForDeactivatedInput(input)
+                self.updateReceivers(forDeactivatedInput: input)
             }
         }
         
@@ -140,11 +140,11 @@ public class MFiExternalController: ExternalController
                     let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
                     
                     let invertedDPad = MFiExternalControllerInput.dPad(xAxis: invertedXAxis, yAxis: invertedYAxis)
-                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                    self.updateReceivers(forDeactivatedInput: invertedDPad)
                 }
             }
             
-            self.updateReceiversForActivatedInput(input)
+            self.updateReceivers(forActivatedInput: input)
             
             self.previousDPadInput = input
         }
@@ -167,11 +167,11 @@ public class MFiExternalController: ExternalController
                     let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
                     
                     let invertedDPad = MFiExternalControllerInput.leftThumbstick(xAxis: invertedXAxis, yAxis: invertedYAxis)
-                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                    self.updateReceivers(forDeactivatedInput: invertedDPad)
                 }
             }
             
-            self.updateReceiversForActivatedInput(input)
+            self.updateReceivers(forActivatedInput: input)
             
             self.previousLeftThumbstickInput = input
         }
@@ -189,11 +189,11 @@ public class MFiExternalController: ExternalController
                     let invertedYAxis = (button.yAxis.value == 0) ? yAxis : 0
                     
                     let invertedDPad = MFiExternalControllerInput.rightThumbstick(xAxis: invertedXAxis, yAxis: invertedYAxis)
-                    self.updateReceiversForDeactivatedInput(invertedDPad)
+                    self.updateReceivers(forDeactivatedInput: invertedDPad)
                 }
             }
             
-            self.updateReceiversForActivatedInput(input)
+            self.updateReceivers(forActivatedInput: input)
             
             self.previousRightThumbstickInput = input
         }

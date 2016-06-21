@@ -40,13 +40,13 @@ public extension CharacterSet
 
 public extension String
 {
-    func sanitized(characterSet: CharacterSet) -> String
+    func sanitized(with characterSet: CharacterSet) -> String
     {
         let sanitizedString = (self as NSString).components(separatedBy: characterSet.inverted).joined(separator: "")
         return sanitizedString
     }
     
-    func formatted(cheatFormat: CheatFormat) -> String
+    func formatted(with cheatFormat: CheatFormat) -> String
     {
         // NOTE: We do not use cheatFormat.allowedCodeCharacters because the code format typically includes non-legal characters.
         // Ex: Using "XXXX-YYYY" for the code format despite the actual code format being strictly hexadecial characters.
@@ -54,7 +54,7 @@ public extension String
         let characterSet = CharacterSet.alphanumerics
         
         // Remove all characters not in characterSet
-        let sanitizedFormat = cheatFormat.format.sanitized(characterSet: characterSet)
+        let sanitizedFormat = cheatFormat.format.sanitized(with: characterSet)
         
         // We need to repeat the format enough times so it is greater than or equal to the length of self
         // This prevents us from having to account for wrapping around the cheat format

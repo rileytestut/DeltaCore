@@ -8,14 +8,14 @@
 
 import Foundation
 
-public class Game: NSObject, GameProtocol
+public struct Game: GameProtocol
 {
     public var fileURL: URL
-    public var typeIdentifier: GameType
+    public var type: GameType
     
-    public init(fileURL: URL, typeIdentifier: GameType)
+    public init(fileURL: URL, type: GameType)
     {
         self.fileURL = fileURL
-        self.typeIdentifier = typeIdentifier
+        self.type = type
     }
 }

@@ -28,23 +28,20 @@ public extension EmulatorCore
     }
 }
 
-public class EmulatorCore: DynamicObject
+public final class EmulatorCore
 {
     //MARK: - Properties -
     /** Properties **/
     public let game: GameProtocol
     public private(set) var gameViews: [GameView] = []
     public var gameControllers: [GameControllerProtocol] {
-        get
-        {
-            return Array(self.gameControllersDictionary.values)
-        }
+        return Array(self.gameControllersDictionary.values)
     }
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.audioBufferInfo)
-    public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.videoBufferInfo)
+    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.configuration.audioBufferInfo)
+    public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.configuration.videoBufferInfo)
     
     /// Used for converting timestamps to human-readable strings (such as for names of Save States)
     /// Can be customized to provide different default formatting
@@ -65,41 +62,15 @@ public class EmulatorCore: DynamicObject
         }
     }
     
-    /** Subclass Properties **/
+    /// Configuration
+    public var supportedRates: ClosedRange<Double> { return self.configuration.supportedRates }
+    public var supportedCheatFormats: [CheatFormat] { return self.configuration.supportedCheatFormats }
     
-    public var bridge: DLTAEmulatorBridge {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var gameInputType: InputProtocol.Type {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var gameSaveURL: URL {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var audioBufferInfo: AudioManager.BufferInfo {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var videoBufferInfo: VideoManager.BufferInfo {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var preferredRenderingSize: CGSize {
-        return self.videoBufferInfo.outputDimensions
-    }
-    
-    public var supportedCheatFormats: [CheatFormat] {
-        fatalError("To be implemented by subclasses.")
-    }
-    
-    public var supportedRates: ClosedRange<Double> {
-        return 1...4
-    }
+    public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.outputDimensions }
     
     //MARK: - Private Properties
+    private let configuration: EmulatorCoreConfiguration
+    
     private let emulationSemaphore = DispatchSemaphore(value: 0)
     private var gameControllersDictionary = [Int: GameControllerProtocol]()
     private var cheatCodes = [String: CheatType]()
@@ -117,39 +88,9 @@ public class EmulatorCore: DynamicObject
         self.timestampDateFormatter.timeStyle = .shortStyle
         self.timestampDateFormatter.dateStyle = .longStyle
         
-        super.init(dynamicIdentifier: game.typeIdentifier.rawValue, initSelector: #selector(EmulatorCore.init(game:)), initParameters: [game])
-        
+        self.configuration = EmulatorCoreConfiguration(gameType: game.type)
+                
         self.rate = self.supportedRates.lowerBound
-    }
-    
-    /** Subclass Methods **/
-    /** Contained within main class declaration because of a Swift limitation where non-ObjC compatible extension methods cannot be overridden **/
-
-    
-    //MARK: - Input Transformation -
-    /// Input Transformation
-    public func inputsForMFiExternalController(_ controller: GameControllerProtocol, input: InputProtocol) -> [InputProtocol]
-    {
-        return []
-    }
-    
-    //MARK: - Game Views -
-    /// Game Views
-    public func add(_ gameView: GameView)
-    {
-        self.gameViews.append(gameView)
-        
-        self.videoManager.addGameView(gameView)
-    }
-    
-    public func remove(_ gameView: GameView)
-    {
-        if let index = self.gameViews.index(of: gameView)
-        {
-            self.gameViews.remove(at: index)
-        }
-        
-        self.videoManager.removeGameView(gameView)
     }
 }
 
@@ -164,12 +105,14 @@ public extension EmulatorCore
         self.state = .running
         self.audioManager.start()
         
-        self.bridge.emulatorCore = self
-        self.bridge.audioRenderer = self.audioManager
-        self.bridge.videoRenderer = self.videoManager
+        self.configuration.bridge.audioRenderer = self.audioManager
+        self.configuration.bridge.videoRenderer = self.videoManager
+        self.configuration.bridge.saveUpdateHandler = { [unowned self] in
+            self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
+        }
         
-        self.bridge.start(withGameURL: self.game.fileURL)
-        self.bridge.loadGameSave(from: self.gameSaveURL)
+        self.configuration.bridge.start(withGameURL: self.game.fileURL)
+        self.configuration.bridge.loadGameSave(from: self.configuration.gameSaveURL)
         
         self.runGameLoop()
         
@@ -191,10 +134,10 @@ public extension EmulatorCore
             self.emulationSemaphore.wait()
         }
         
-        self.bridge.saveGameSave(to: self.gameSaveURL)
+        self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
         
         self.audioManager.stop()
-        self.bridge.stop()
+        self.configuration.bridge.stop()
         
         return true
     }
@@ -207,10 +150,10 @@ public extension EmulatorCore
         
         self.emulationSemaphore.wait()
         
-        self.bridge.saveGameSave(to: self.gameSaveURL)
+        self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
         
         self.audioManager.enabled = false
-        self.bridge.pause()
+        self.configuration.bridge.pause()
         
         return true
     }
@@ -226,9 +169,31 @@ public extension EmulatorCore
         self.emulationSemaphore.wait()
         
         self.audioManager.enabled = true
-        self.bridge.resume()
+        self.configuration.bridge.resume()
         
         return true
+    }
+}
+
+//MARK: - Game Views -
+/// Game Views
+public extension EmulatorCore
+{
+    public func add(_ gameView: GameView)
+    {
+        self.gameViews.append(gameView)
+        
+        self.videoManager.addGameView(gameView)
+    }
+    
+    public func remove(_ gameView: GameView)
+    {
+        if let index = self.gameViews.index(of: gameView)
+        {
+            self.gameViews.remove(at: index)
+        }
+        
+        self.videoManager.removeGameView(gameView)
     }
 }
 
@@ -240,7 +205,7 @@ public extension EmulatorCore
     {
         FileManager.default().prepareTemporaryURL { URL in
             
-            self.bridge.saveSaveState(to: URL)
+            self.configuration.bridge.saveSaveState(to: URL)
             
             let name = self.timestampDateFormatter.string(from: Date())
             let saveState = SaveState(name: name, fileURL: URL)
@@ -252,7 +217,7 @@ public extension EmulatorCore
     {
         guard let path = saveState.fileURL.path where FileManager.default().fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
-        self.bridge.loadSaveState(from: saveState.fileURL)
+        self.configuration.bridge.loadSaveState(from: saveState.fileURL)
     }
 }
 
@@ -267,7 +232,7 @@ public extension EmulatorCore
         let codes = cheat.code.characters.split(separator: "\n")
         for code in codes
         {
-            if !self.bridge.addCheatCode(String(code), type: cheat.type.rawValue)
+            if !self.configuration.bridge.addCheatCode(String(code), type: cheat.type.rawValue)
             {
                 success = false
                 break
@@ -299,18 +264,18 @@ public extension EmulatorCore
     
     private func updateCheats()
     {
-        self.bridge.resetCheats()
+        self.configuration.bridge.resetCheats()
         
         for (cheatCode, type) in self.cheatCodes
         {
             let codes = cheatCode.characters.split(separator: "\n")
             for code in codes
             {
-                self.bridge.addCheatCode(String(code), type: type.rawValue)
+                self.configuration.bridge.addCheatCode(String(code), type: type.rawValue)
             }
         }
         
-        self.bridge.updateCheats()
+        self.configuration.bridge.updateCheats()
     }
 }
 
@@ -329,7 +294,9 @@ public extension EmulatorCore
         
         if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
         {
-            gameController.inputTransformationHandler = inputsForMFiExternalController
+            gameController.inputTransformationHandler = { (gameController, input) in
+                return self.configuration.inputs(for: gameController as! MFiExternalController, input: input)
+            }
         }
         
         return previousGameController
@@ -356,24 +323,16 @@ extension EmulatorCore: GameControllerReceiverProtocol
 {
     public func gameController(_ gameController: GameControllerProtocol, didActivate input: InputProtocol)
     {
-        guard input.dynamicType == self.gameInputType else { return }
+        guard input.dynamicType == self.configuration.gameInputType else { return }
         
-        self.bridge.activateInput(input.rawValue)
+        self.configuration.bridge.activateInput(input.rawValue)
     }
     
     public func gameController(_ gameController: GameControllerProtocol, didDeactivate input: InputProtocol)
     {
-        guard input.dynamicType == self.gameInputType else { return }
+        guard input.dynamicType == self.configuration.gameInputType else { return }
         
-        self.bridge.deactivateInput(input.rawValue)
-    }
-}
-
-extension EmulatorCore: DLTAEmulating
-{
-    public func didUpdateGameSave()
-    {
-        self.bridge.saveGameSave(to: self.gameSaveURL)
+        self.configuration.bridge.deactivateInput(input.rawValue)
     }
 }
 
@@ -462,7 +421,7 @@ private extension EmulatorCore
     
     func runFrame(renderGraphics: Bool)
     {
-        self.bridge.runFrame()
+        self.configuration.bridge.runFrame()
         
         if renderGraphics
         {
@@ -472,4 +431,3 @@ private extension EmulatorCore
         self.updateHandler?(self)
     }
 }
-

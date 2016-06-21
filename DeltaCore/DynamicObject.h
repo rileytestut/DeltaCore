@@ -12,8 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DynamicObject : NSObject
 
-+ (BOOL)isDynamicSubclass;
-+ (nullable NSString *)dynamicIdentifier;
+@property (class, nonatomic, readonly, getter=isDynamicSubclass) BOOL dynamicSubclass;
+@property (class, nonatomic, nullable, readonly) NSString *dynamicIdentifier;
 
 + (Class)subclassForDynamicIdentifier:(NSString *)identifier;
 

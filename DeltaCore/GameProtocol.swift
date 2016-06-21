@@ -8,8 +8,8 @@
 
 import Foundation
 
-@objc public protocol GameProtocol: NSObjectProtocol
+public protocol GameProtocol
 {
     var fileURL: URL { get }
-    var typeIdentifier: GameType { get }
+    var type: GameType { get }
 }

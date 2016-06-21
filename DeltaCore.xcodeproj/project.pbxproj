@@ -14,7 +14,6 @@
 		BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */; };
 		BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
 		BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF34FA121CF18E40006624C7 /* CheatFormat.swift */; };
-		BF3BEA0A1D0BCB94004287EC /* DLTAEmulating.h in Headers */ = {isa = PBXBuildFile; fileRef = BF3BEA091D0BCB94004287EC /* DLTAEmulating.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameProtocol.swift */; };
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
@@ -57,6 +56,7 @@
 		BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
 		BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
 		BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D31D186D6000D9CD05 /* Game.swift */; };
+		BFB8F0D81D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D71D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
 		BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD78F651C995799000441FC /* DLTAVideoRendering.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */; };
@@ -126,7 +126,6 @@
 		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameControllerStateManager.swift; sourceTree = "<group>"; };
 		BF3273D41B86428200494CFC /* ExternalControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalControllerManager.swift; sourceTree = "<group>"; };
 		BF34FA121CF18E40006624C7 /* CheatFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatFormat.swift; sourceTree = "<group>"; };
-		BF3BEA091D0BCB94004287EC /* DLTAEmulating.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAEmulating.h; sourceTree = "<group>"; };
 		BF46895D1AACF36800A2586D /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
@@ -152,6 +151,7 @@
 		BFB177961C9A06330052439B /* DLTAAudioRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAAudioRendering.h; sourceTree = "<group>"; };
 		BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGGeometry+Dictionary.swift"; sourceTree = "<group>"; };
 		BFB8F0D31D186D6000D9CD05 /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		BFB8F0D71D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmulatorCoreConfiguration.swift; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
 		BFD78F651C995799000441FC /* DLTAVideoRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAVideoRendering.h; sourceTree = "<group>"; };
 		BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
@@ -365,7 +365,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */,
-				BF3BEA091D0BCB94004287EC /* DLTAEmulating.h */,
+				BFB8F0D71D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift */,
 				BF95BBFE1D0A107E005FC657 /* Bridge */,
 				BFD78F591C994587000441FC /* Video */,
 				BF9437FE1C46F42400E527B2 /* Audio */,
@@ -383,7 +383,6 @@
 				BF95BC101D0A3437005FC657 /* NSThread+RealTime.h in Headers */,
 				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
 				BFD78F661C995799000441FC /* DLTAVideoRendering.h in Headers */,
-				BF3BEA0A1D0BCB94004287EC /* DLTAEmulating.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
 				BF95BC081D0A10A6005FC657 /* DLTAEmulatorBridge.h in Headers */,
@@ -582,6 +581,7 @@
 				BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */,
 				BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */,
+				BFB8F0D81D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,
 				BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */,
 			);

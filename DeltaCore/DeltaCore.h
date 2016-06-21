@@ -19,7 +19,6 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 #import <DeltaCore/DLTARingBuffer.h>
 #import <DeltaCore/DLTAEmulatorBridge.h>
 
-#import <DeltaCore/DLTAEmulating.h>
 #import <DeltaCore/DLTAAudioRendering.h>
 #import <DeltaCore/DLTAVideoRendering.h>
 

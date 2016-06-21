@@ -19,14 +19,14 @@ NS_ASSUME_NONNULL_BEGIN
 // State
 @property (copy, nonatomic, nullable, readonly) NSURL *gameURL;
 
-// Core
-@property (weak, nonatomic, nullable) id<DLTAEmulating> emulatorCore;
-
 // Audio
 @property (weak, nonatomic, nullable) id<DLTAAudioRendering> audioRenderer;
 
 // Video
 @property (weak, nonatomic, nullable) id<DLTAVideoRendering> videoRenderer;
+
+// Saves
+@property (copy, nonatomic, nullable) void (^saveUpdateHandler)(void);
 
 + (instancetype)sharedBridge;
 

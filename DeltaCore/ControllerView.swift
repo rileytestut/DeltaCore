@@ -29,7 +29,7 @@ public class ControllerView: UIView, GameControllerProtocol
     /// <GameControllerType>
     public var playerIndex: Int?
     public var inputTransformationHandler: ((GameControllerProtocol, InputProtocol) -> [InputProtocol])?
-    public var _stateManager = GameControllerStateManager()
+    public let _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties
     private let imageView: UIImageView = UIImageView(frame: CGRect.zero)
@@ -104,12 +104,12 @@ public class ControllerView: UIView, GameControllerProtocol
             self.touchInputsMappingDictionary[touch] = []
         }
         
-        self.updateInputsForTouches(touches)
+        self.updateInputs(forTouches: touches)
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        self.updateInputsForTouches(touches)
+        self.updateInputs(forTouches: touches)
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -119,7 +119,7 @@ public class ControllerView: UIView, GameControllerProtocol
             self.touchInputsMappingDictionary[touch] = nil
         }
         
-        self.updateInputsForTouches(touches)
+        self.updateInputs(forTouches: touches)
     }
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -143,10 +143,7 @@ public extension ControllerView
 {
     func beginAnimatingUpdateControllerSkin()
     {
-        if self.transitionImageView != nil
-        {
-            return
-        }
+        guard self.transitionImageView == nil else { return }
         
         let transitionImageView = UIImageView(image: self.imageView.image)
         transitionImageView.frame = self.imageView.frame
@@ -209,7 +206,7 @@ public extension ControllerView
 private extension ControllerView
 {
     //MARK: - Activating/Deactivating Inputs
-    func updateInputsForTouches(_ touches: Set<UITouch>)
+    func updateInputs(forTouches touches: Set<UITouch>)
     {
         guard let controllerSkin = self.controllerSkin else { return }
         

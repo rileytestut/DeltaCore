@@ -9,8 +9,11 @@
 import Foundation
 import GameController
 
-public let ExternalControllerDidConnectNotification = "ExternalControllerDidConnectNotification"
-public let ExternalControllerDidDisconnectNotification = "ExternalControllerDidDisconnectNotification"
+public extension Notification.Name
+{
+    public static let externalControllerDidConnect = "ExternalControllerDidConnectNotification" as Notification.Name
+    public static let externalControllerDidDisconnect = "ExternalControllerDidDisconnectNotification" as Notification.Name
+}
 
 public class ExternalControllerManager
 {
@@ -18,7 +21,7 @@ public class ExternalControllerManager
     
     //MARK: - Properties -
     /** Properties **/
-    public var connectedControllers: [ExternalController] = []
+    public private(set) var connectedControllers: [ExternalController] = []
 }
 
 //MARK: - Discovery -
@@ -30,11 +33,11 @@ public extension ExternalControllerManager
         for controller in GCController.controllers()
         {
             let externalController = MFiExternalController(controller: controller)
-            self.addExternalController(externalController)
+            self.add(externalController)
         }
                 
-        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: NSNotification.Name.GCControllerDidConnect, object: nil)
-        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
+        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
+        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
     }
     
     func stopMonitoringExternalControllers()
@@ -45,7 +48,7 @@ public extension ExternalControllerManager
         self.connectedControllers.removeAll()
     }
     
-    func startWirelessControllerPairingWithCompletionHandler(_ completionHandler: (() -> Void)?)
+    func startWirelessControllerPairing(withCompletionHandler completionHandler: (() -> Void)?)
     {
         GCController.startWirelessControllerDiscovery(completionHandler: completionHandler)
     }
@@ -59,15 +62,15 @@ public extension ExternalControllerManager
 //MARK: - Managing Controllers -
 private extension ExternalControllerManager
 {
-    dynamic func controllerDidConnect(_ notification: Notification)
+    @objc func controllerDidConnect(_ notification: Notification)
     {        
         guard let controller = notification.object as? GCController else { return }
         
         let externalController = MFiExternalController(controller: controller)
-        self.addExternalController(externalController)
+        self.add(externalController)
     }
     
-    dynamic func controllerDidDisconnect(_ notification: Notification)
+    @objc func controllerDidDisconnect(_ notification: Notification)
     {
         guard let controller = notification.object as? GCController else { return }
         
@@ -75,12 +78,12 @@ private extension ExternalControllerManager
         {
             if (externalController as! MFiExternalController).controller == controller
             {
-                self.removeExternalController(externalController)
+                self.remove(externalController)
             }
         }
     }
     
-    func addExternalController(_ controller: ExternalController)
+    func add(_ controller: ExternalController)
     {
         if let playerIndex = controller.playerIndex where self.connectedControllers.contains({ $0.playerIndex == playerIndex })
         {
@@ -90,16 +93,16 @@ private extension ExternalControllerManager
         
         self.connectedControllers.append(controller)
         
-        NotificationCenter.default().post(name: Notification.Name(rawValue: ExternalControllerDidConnectNotification), object: controller)
+        NotificationCenter.default().post(name: .externalControllerDidConnect, object: controller)
     }
     
-    func removeExternalController(_ controller: ExternalController)
+    func remove(_ controller: ExternalController)
     {
         if let index = self.connectedControllers.index(of: controller)
         {
             self.connectedControllers.remove(at: index)
             
-            NotificationCenter.default().post(name: Notification.Name(rawValue: ExternalControllerDidDisconnectNotification), object: controller)
+            NotificationCenter.default().post(name: .externalControllerDidDisconnect, object: controller)
         }
     }
 }

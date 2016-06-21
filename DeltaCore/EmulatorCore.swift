@@ -135,14 +135,14 @@ public class EmulatorCore: DynamicObject
     
     //MARK: - Game Views -
     /// Game Views
-    public func addGameView(_ gameView: GameView)
+    public func add(_ gameView: GameView)
     {
         self.gameViews.append(gameView)
         
         self.videoManager.addGameView(gameView)
     }
     
-    public func removeGameView(_ gameView: GameView)
+    public func remove(_ gameView: GameView)
     {
         if let index = self.gameViews.index(of: gameView)
         {
@@ -157,7 +157,7 @@ public class EmulatorCore: DynamicObject
 /// Emulation
 public extension EmulatorCore
 {
-    func startEmulation() -> Bool
+    @discardableResult func start() -> Bool
     {
         guard self.state == .stopped else { return false }
         
@@ -178,7 +178,7 @@ public extension EmulatorCore
         return true
     }
     
-    func stopEmulation() -> Bool
+    @discardableResult func stop() -> Bool
     {
         guard self.state != .stopped else { return false }
         
@@ -199,7 +199,7 @@ public extension EmulatorCore
         return true
     }
     
-    func pauseEmulation() -> Bool
+    @discardableResult func pause() -> Bool
     {
         guard self.state == .running else { return false }
         
@@ -215,7 +215,7 @@ public extension EmulatorCore
         return true
     }
     
-    func resumeEmulation() -> Bool
+    @discardableResult func resume() -> Bool
     {
         guard self.state == .paused else { return false }
         
@@ -236,7 +236,7 @@ public extension EmulatorCore
 /// Save States
 public extension EmulatorCore
 {
-    func saveSaveState(_ completion: ((SaveStateProtocol) -> Void))
+    func save(withCompletion completion: ((SaveStateProtocol) -> Void))
     {
         FileManager.default().prepareTemporaryURL { URL in
             
@@ -248,11 +248,11 @@ public extension EmulatorCore
         }
     }
     
-    func loadSaveState(_ saveState: SaveStateProtocol) throws
+    func load(_ saveState: SaveStateProtocol) throws
     {
         guard let path = saveState.fileURL.path where FileManager.default().fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
-        self.bridge.loadSaveState(from: saveState.fileURL as URL)
+        self.bridge.loadSaveState(from: saveState.fileURL)
     }
 }
 
@@ -260,7 +260,7 @@ public extension EmulatorCore
 /// Cheats
 public extension EmulatorCore
 {
-    func activateCheat(cheat: CheatProtocol) throws
+    func activate(_ cheat: CheatProtocol) throws
     {
         var success = true
         
@@ -288,7 +288,7 @@ public extension EmulatorCore
         }
     }
     
-    func deactivateCheat(cheat: CheatProtocol)
+    func deactivate(_ cheat: CheatProtocol)
     {
         guard self.cheatCodes[cheat.code] != nil else { return }
         
@@ -318,9 +318,9 @@ public extension EmulatorCore
 /// Controllers
 public extension EmulatorCore
 {
-    @discardableResult func setGameController(_ gameController: GameControllerProtocol?, atIndex index: Int) -> GameControllerProtocol?
+    @discardableResult func setGameController(_ gameController: GameControllerProtocol?, at index: Int) -> GameControllerProtocol?
     {
-        let previousGameController = self.gameControllerAtIndex(index)
+        let previousGameController = self.gameController(at: index)
         previousGameController?.playerIndex = nil
         
         gameController?.playerIndex = index
@@ -341,12 +341,12 @@ public extension EmulatorCore
         {
             if let index = controller.playerIndex
             {
-                self.setGameController(nil, atIndex: index)
+                self.setGameController(nil, at: index)
             }
         }
     }
     
-    func gameControllerAtIndex(_ index: Int) -> GameControllerProtocol?
+    func gameController(at index: Int) -> GameControllerProtocol?
     {
         return self.gameControllersDictionary[index]
     }
@@ -381,7 +381,7 @@ private extension EmulatorCore
 {
     func runGameLoop()
     {
-        let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", attributes: DispatchQueueAttributes.serial)
+        let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", attributes: [.serial, .qosUserInitiated])
         emulationQueue.async {
             
             let screenRefreshRate = 1.0 / 60.0

@@ -10,6 +10,6 @@ import Foundation
 
 public protocol SaveStateProtocol
 {
-    var name: String? { get }
     var fileURL: URL { get }
+    var gameType: GameType { get }
 }

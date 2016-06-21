@@ -43,10 +43,6 @@ public final class EmulatorCore
     public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.configuration.audioBufferInfo)
     public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.configuration.videoBufferInfo)
     
-    /// Used for converting timestamps to human-readable strings (such as for names of Save States)
-    /// Can be customized to provide different default formatting
-    public var timestampDateFormatter: DateFormatter
-    
     // KVO-Compliant
     public private(set) dynamic var state = State.stopped
     public dynamic var rate = 1.0
@@ -83,13 +79,7 @@ public final class EmulatorCore
     public required init(game: GameProtocol)
     {
         self.game = game
-        
-        self.timestampDateFormatter = DateFormatter()
-        self.timestampDateFormatter.timeStyle = .shortStyle
-        self.timestampDateFormatter.dateStyle = .longStyle
-        
         self.configuration = EmulatorCoreConfiguration(gameType: game.type)
-                
         self.rate = self.supportedRates.lowerBound
     }
 }
@@ -207,8 +197,7 @@ public extension EmulatorCore
             
             self.configuration.bridge.saveSaveState(to: URL)
             
-            let name = self.timestampDateFormatter.string(from: Date())
-            let saveState = SaveState(name: name, fileURL: URL)
+            let saveState = SaveState(fileURL: URL, gameType: self.game.type)
             completion(saveState)
         }
     }

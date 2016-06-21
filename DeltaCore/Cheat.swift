@@ -10,14 +10,6 @@ import Foundation
 
 public struct Cheat: CheatProtocol
 {
-    public var name: String?
     public var code: String
     public var type: CheatType
-    
-    public init(name: String?, code: String, type: CheatType)
-    {
-        self.name = name
-        self.code = code
-        self.type = type
-    }
 }

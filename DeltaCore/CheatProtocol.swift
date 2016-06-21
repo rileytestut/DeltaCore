@@ -19,7 +19,6 @@ import Foundation
 
 public protocol CheatProtocol
 {
-    var name: String? { get }
     var code: String { get }
     var type: CheatType { get }
 }

@@ -10,12 +10,6 @@ import Foundation
 
 public struct SaveState: SaveStateProtocol
 {
-    public var name: String?
     public var fileURL: URL
-    
-    public init(name: String?, fileURL: URL)
-    {
-        self.name = name
-        self.fileURL = fileURL
-    }
+    public var gameType: GameType
 }

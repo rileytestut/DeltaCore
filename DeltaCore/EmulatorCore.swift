@@ -183,7 +183,7 @@ public extension EmulatorCore
     {
         self.gameViews.append(gameView)
         
-        self.videoManager.addGameView(gameView)
+        self.videoManager.add(gameView)
     }
     
     public func remove(_ gameView: GameView)
@@ -193,7 +193,7 @@ public extension EmulatorCore
             self.gameViews.remove(at: index)
         }
         
-        self.videoManager.removeGameView(gameView)
+        self.videoManager.remove(gameView)
     }
 }
 

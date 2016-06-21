@@ -84,12 +84,12 @@ public class VideoManager: NSObject, DLTAVideoRendering
 
 public extension VideoManager
 {
-    func addGameView(_ gameView: GameView)
+    func add(_ gameView: GameView)
     {
         self.gameViews.append(gameView)
     }
     
-    func removeGameView(_ gameView: GameView)
+    func remove(_ gameView: GameView)
     {
         if let index = self.gameViews.index(of: gameView)
         {
@@ -128,7 +128,7 @@ internal extension VideoManager
             case .bgra8: break
             }
             
-            let bitmapData = Data(bytes: UnsafePointer<UInt8>(bitmapBuffer), count: self.bufferInfo.outputBufferSize)
+            let bitmapData = Data(bytes: bitmapBuffer, count: self.bufferInfo.outputBufferSize)
             let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width), size: self.bufferInfo.outputDimensions, format: kCIFormatBGRA8, colorSpace: nil)
             
             for gameView in self.gameViews

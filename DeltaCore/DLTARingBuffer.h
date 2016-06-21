@@ -21,10 +21,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithPreferredBufferSize:(int32_t)bufferSize;
 
 // Handler returns number of bytes written
-- (void)writeToRingBuffer:(int32_t (^)(void *ringBuffer, int32_t availableBytes))writingHandler;
+- (void)writeWithHandler:(int32_t (^)(void *ringBuffer, int32_t availableBytes))writingHandler;
 
 // Copies `size` bytes from ring buffer to provided buffer if available. Otherwise, copies as many as possible.
-- (void)readIntoBuffer:(void *)buffer preferredSize:(int32_t)size;
+- (void)readIntoBuffer:(void *)buffer preferredSize:(int32_t)size NS_SWIFT_NAME(DLTARingBuffer.read(into:preferredSize:));
 
 // Resets buffer to clean state
 - (void)reset;

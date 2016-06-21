@@ -104,7 +104,7 @@ public class AudioManager: NSObject, DLTAAudioRendering
             let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: AVAudioFrameCount(self.bufferInfo.preferredSize))
             self.audioBuffers.append(outputBuffer)
             
-            self.renderAudioBuffer(inputBuffer, intoOutputBuffer: outputBuffer)
+            self.render(inputBuffer, into: outputBuffer)
         }
         
         self.updateAudioBufferFrameLengths()
@@ -143,13 +143,13 @@ public extension AudioManager
 
 private extension AudioManager
 {
-    func renderAudioBuffer(_ inputBuffer: AVAudioPCMBuffer, intoOutputBuffer outputBuffer: AVAudioPCMBuffer)
+    func render(_ inputBuffer: AVAudioPCMBuffer, into outputBuffer: AVAudioPCMBuffer)
     {
         guard let buffer = inputBuffer.int16ChannelData else { return }
         
         if self.audioEngine.isRunning
-        {            
-            self.ringBuffer.read(intoBuffer: (buffer[0]), preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
+        {
+            self.ringBuffer.read(into: buffer[0], preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
             
             do
             {
@@ -162,7 +162,7 @@ private extension AudioManager
         }        
         
         self.audioPlayerNode.scheduleBuffer(outputBuffer) {
-            self.renderAudioBuffer(inputBuffer, intoOutputBuffer: outputBuffer)
+            self.render(inputBuffer, into: outputBuffer)
         }
     }
     

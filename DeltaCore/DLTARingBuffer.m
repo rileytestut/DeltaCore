@@ -40,7 +40,7 @@
     TPCircularBufferCleanup(&_circularBuffer);
 }
 
-- (void)writeToRingBuffer:(int32_t (^)(void *ringBuffer, int32_t availableBytes))writingHandler
+- (void)writeWithHandler:(int32_t (^)(void * _Nonnull, int32_t))writingHandler
 {
     int32_t availableBytes = 0;
     void *buffer = TPCircularBufferHead(&_circularBuffer, &availableBytes);

@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */; };
-		BF1FB17A1C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */; };
 		BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1881C5EEC14007E2494 /* SaveState.swift */; };
-		BF1FB18A1C5EEC14007E2494 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1881C5EEC14007E2494 /* SaveState.swift */; };
 		BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */; };
 		BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
 		BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF34FA121CF18E40006624C7 /* CheatFormat.swift */; };
@@ -19,32 +17,14 @@
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
-		BF6834031C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
 		BF68340C1C45A1FE0052249F /* DLTARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF68340D1C45A1FE0052249F /* DLTARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF68340A1C45A1FE0052249F /* DLTARingBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF68340E1C45A1FE0052249F /* DLTARingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */; };
-		BF68340F1C45A1FE0052249F /* DLTARingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = BF68340B1C45A1FE0052249F /* DLTARingBuffer.m */; };
 		BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFEE12D11B602CCA00156A2C /* ZipZap.framework */; };
 		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
-		BF784EC01C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
 		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
-		BF784EC21C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
 		BF785C9D1B603C1800189DB8 /* DeltaCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* DeltaCore.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
-		BF86248D1BB745B500C12EEE /* InputProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* InputProtocol.swift */; };
-		BF86248E1BB745B500C12EEE /* DeltaCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* DeltaCore.swift */; };
-		BF8624901BB745B500C12EEE /* ExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAA1FE91B8A971000495943 /* ExternalController.swift */; };
-		BF8624921BB745B500C12EEE /* GameProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameProtocol.swift */; };
-		BF8624931BB745B500C12EEE /* DynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = BFECA1D61AE3935700AF9144 /* DynamicObject.m */; };
-		BF8624941BB745B500C12EEE /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
-		BF8624951BB745B500C12EEE /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
-		BF8624961BB745B500C12EEE /* GameControllerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameControllerProtocol.swift */; };
-		BF8624971BB745B500C12EEE /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
-		BF8624981BB745B500C12EEE /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
-		BF86249C1BB745B500C12EEE /* DynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = BFECA1D51AE3935700AF9144 /* DynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF86249D1BB745B500C12EEE /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF8624D01BB74A5100C12EEE /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8624CF1BB74A4A00C12EEE /* ZipZap.framework */; };
 		BF95BC081D0A10A6005FC657 /* DLTAEmulatorBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = BF95BC061D0A10A6005FC657 /* DLTAEmulatorBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF95BC091D0A10A6005FC657 /* DLTAEmulatorBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = BF95BC071D0A10A6005FC657 /* DLTAEmulatorBridge.m */; };
 		BF95BC101D0A3437005FC657 /* NSThread+RealTime.h in Headers */ = {isa = PBXBuildFile; fileRef = BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -54,7 +34,6 @@
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
 		BFB177971C9A06330052439B /* DLTAAudioRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = BFB177961C9A06330052439B /* DLTAAudioRendering.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
-		BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
 		BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D31D186D6000D9CD05 /* Game.swift */; };
 		BFB8F0D81D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D71D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
@@ -140,7 +119,6 @@
 		BF785C9C1B603C1800189DB8 /* DeltaCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaCore.swift; sourceTree = "<group>"; };
 		BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiExternalController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
-		BF8624A21BB745B500C12EEE /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF95BC061D0A10A6005FC657 /* DLTAEmulatorBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DLTAEmulatorBridge.h; sourceTree = "<group>"; };
 		BF95BC071D0A10A6005FC657 /* DLTAEmulatorBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DLTAEmulatorBridge.m; sourceTree = "<group>"; };
 		BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSThread+RealTime.h"; sourceTree = "<group>"; };
@@ -173,14 +151,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BF8624991BB745B500C12EEE /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BF8624D01BB74A5100C12EEE /* ZipZap.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -204,7 +174,6 @@
 			isa = PBXGroup;
 			children = (
 				BF46895D1AACF36800A2586D /* DeltaCore.framework */,
-				BF8624A21BB745B500C12EEE /* DeltaCore.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -391,17 +360,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BF86249B1BB745B500C12EEE /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BF86249C1BB745B500C12EEE /* DynamicObject.h in Headers */,
-				BF86249D1BB745B500C12EEE /* DeltaCore.h in Headers */,
-				BF68340D1C45A1FE0052249F /* DLTARingBuffer.h in Headers */,
-				BF784EC21C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -421,24 +379,6 @@
 			name = DeltaCore;
 			productName = DeltaCore;
 			productReference = BF46895D1AACF36800A2586D /* DeltaCore.framework */;
-			productType = "com.apple.product-type.framework";
-		};
-		BF86248B1BB745B500C12EEE /* DeltaCoreTV */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = BF86249F1BB745B500C12EEE /* Build configuration list for PBXNativeTarget "DeltaCoreTV" */;
-			buildPhases = (
-				BF86248C1BB745B500C12EEE /* Sources */,
-				BF8624991BB745B500C12EEE /* Frameworks */,
-				BF86249B1BB745B500C12EEE /* Headers */,
-				BF86249E1BB745B500C12EEE /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = DeltaCoreTV;
-			productName = DeltaCore;
-			productReference = BF8624A21BB745B500C12EEE /* DeltaCore.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -476,7 +416,6 @@
 			projectRoot = "";
 			targets = (
 				BF46895C1AACF36800A2586D /* DeltaCore */,
-				BF86248B1BB745B500C12EEE /* DeltaCoreTV */,
 			);
 		};
 /* End PBXProject section */
@@ -541,13 +480,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BF86249E1BB745B500C12EEE /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -584,29 +516,6 @@
 				BFB8F0D81D18D01D00D9CD05 /* EmulatorCoreConfiguration.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,
 				BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		BF86248C1BB745B500C12EEE /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BF784EC01C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
-				BF86248D1BB745B500C12EEE /* InputProtocol.swift in Sources */,
-				BF86248E1BB745B500C12EEE /* DeltaCore.swift in Sources */,
-				BF8624901BB745B500C12EEE /* ExternalController.swift in Sources */,
-				BF8624921BB745B500C12EEE /* GameProtocol.swift in Sources */,
-				BF8624931BB745B500C12EEE /* DynamicObject.m in Sources */,
-				BF68340F1C45A1FE0052249F /* DLTARingBuffer.m in Sources */,
-				BF8624941BB745B500C12EEE /* EmulatorCore.swift in Sources */,
-				BF6834031C459C250052249F /* AudioManager.swift in Sources */,
-				BF8624951BB745B500C12EEE /* MFiExternalController.swift in Sources */,
-				BF1FB18A1C5EEC14007E2494 /* SaveState.swift in Sources */,
-				BFB355DA1C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
-				BF8624961BB745B500C12EEE /* GameControllerProtocol.swift in Sources */,
-				BF1FB17A1C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,
-				BF8624971BB745B500C12EEE /* ExternalControllerManager.swift in Sources */,
-				BF8624981BB745B500C12EEE /* GameView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -742,41 +651,6 @@
 			};
 			name = Release;
 		};
-		BF8624A01BB745B500C12EEE /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
-				SDKROOT = appletvos;
-				SKIP_INSTALL = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-			};
-			name = Debug;
-		};
-		BF8624A11BB745B500C12EEE /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
-				SDKROOT = appletvos;
-				SKIP_INSTALL = YES;
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -794,15 +668,6 @@
 			buildConfigurations = (
 				BF4689741AACF36800A2586D /* Debug */,
 				BF4689751AACF36800A2586D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		BF86249F1BB745B500C12EEE /* Build configuration list for PBXNativeTarget "DeltaCoreTV" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				BF8624A01BB745B500C12EEE /* Debug */,
-				BF8624A11BB745B500C12EEE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

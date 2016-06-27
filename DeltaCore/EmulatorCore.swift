@@ -79,6 +79,11 @@ public final class EmulatorCore
     /** Initializers **/
     public required init(game: GameProtocol)
     {
+        // These MUST be set in start(), because it's possible the same emulator core might be stopped, another one started, and then resumed back to this one
+        // AKA, these need to always be set at start to ensure it points to the correct managers
+        // self.configuration.bridge.audioRenderer = self.audioManager
+        // self.configuration.bridge.videoRenderer = self.videoManager
+        
         self.game = game
         self.configuration = EmulatorCoreConfiguration(gameType: game.type)
         self.rate = self.supportedRates.lowerBound

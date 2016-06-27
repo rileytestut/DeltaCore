@@ -14,8 +14,6 @@ public class EmulatorCoreConfiguration: DynamicObject
     
     public var gameInputType: InputProtocol.Type { fatalError("To be implemented by subclasses.") }
     
-    public var gameSaveURL: URL { fatalError("To be implemented by subclasses.") }
-    
     public var audioBufferInfo: AudioManager.BufferInfo { fatalError("To be implemented by subclasses.") }
     
     public var videoBufferInfo: VideoManager.BufferInfo { fatalError("To be implemented by subclasses.") }
@@ -27,6 +25,11 @@ public class EmulatorCoreConfiguration: DynamicObject
     public init(gameType: GameType)
     {
         super.init(dynamicIdentifier: gameType.rawValue, initSelector: #selector(EmulatorCoreConfiguration.init(gameType:)), initParameters: [gameType])
+    }
+    
+    public func gameSaveURL(for game: GameProtocol) -> URL?
+    {
+        fatalError("To be implemented by subclasses.")
     }
     
     public func inputs(for controller: MFiExternalController, input: InputProtocol) -> [InputProtocol]

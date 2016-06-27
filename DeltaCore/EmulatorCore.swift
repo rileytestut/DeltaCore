@@ -98,12 +98,16 @@ public extension EmulatorCore
         
         self.configuration.bridge.audioRenderer = self.audioManager
         self.configuration.bridge.videoRenderer = self.videoManager
-        self.configuration.bridge.saveUpdateHandler = { [unowned self] in
-            self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
-        }
         
         self.configuration.bridge.start(withGameURL: self.game.fileURL)
-        self.configuration.bridge.loadGameSave(from: self.configuration.gameSaveURL)
+        
+        if let gameSaveURL = self.configuration.gameSaveURL(for: self.game)
+        {
+            self.configuration.bridge.loadGameSave(from: gameSaveURL)
+            self.configuration.bridge.saveUpdateHandler = { [unowned self] in
+                self.configuration.bridge.saveGameSave(to: gameSaveURL)
+            }
+        }
         
         self.runGameLoop()
         
@@ -125,7 +129,10 @@ public extension EmulatorCore
             self.emulationSemaphore.wait()
         }
         
-        self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
+        if let gameSaveURL = self.configuration.gameSaveURL(for: self.game)
+        {
+            self.configuration.bridge.saveGameSave(to: gameSaveURL)
+        }
         
         self.audioManager.stop()
         self.configuration.bridge.stop()
@@ -141,7 +148,10 @@ public extension EmulatorCore
         
         self.emulationSemaphore.wait()
         
-        self.configuration.bridge.saveGameSave(to: self.configuration.gameSaveURL)
+        if let gameSaveURL = self.configuration.gameSaveURL(for: self.game)
+        {
+            self.configuration.bridge.saveGameSave(to: gameSaveURL)
+        }
         
         self.audioManager.enabled = false
         self.configuration.bridge.pause()

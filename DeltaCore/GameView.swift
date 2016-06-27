@@ -11,8 +11,6 @@ import CoreImage
 import GLKit
 import AVFoundation
 
-import Roxas
-
 public class GameView: UIView
 {
     @NSCopying public var filter: CIFilter? {

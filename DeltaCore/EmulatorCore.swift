@@ -7,6 +7,7 @@
 //
 
 import AVFoundation
+import Roxas
 
 public extension EmulatorCore
 {

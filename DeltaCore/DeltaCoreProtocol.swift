@@ -14,7 +14,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     
     var emulatorBridge: DLTAEmulatorBridge { get }
     
-    var emulatorConfiguration: EmulatorCoreConfiguration { get }
+    var emulatorConfiguration: EmulatorConfiguration { get }
     
     var inputManager: InputManager { get }
 }

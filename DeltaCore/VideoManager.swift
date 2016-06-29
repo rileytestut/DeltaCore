@@ -54,7 +54,7 @@ public extension VideoManager.BufferInfo
     }
 }
 
-public class VideoManager: NSObject, DLTAVideoRendering
+public class VideoManager: NSObject, VideoRendering
 {
     public private(set) var gameViews = [GameView]()
     

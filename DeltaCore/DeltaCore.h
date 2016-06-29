@@ -18,9 +18,6 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 #import <DeltaCore/DynamicObject.h>
 #import <DeltaCore/DLTARingBuffer.h>
 
-#import <DeltaCore/DLTAAudioRendering.h>
-#import <DeltaCore/DLTAVideoRendering.h>
-
 #import <DeltaCore/NSThread+RealTime.h>
 
 // HACK: Needed because the generated DeltaCore-Swift header file doesn't include this import

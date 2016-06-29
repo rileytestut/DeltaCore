@@ -25,7 +25,7 @@ public extension AudioManager
     }
 }
 
-public class AudioManager: NSObject, DLTAAudioRendering
+public class AudioManager: NSObject, AudioRendering
 {
     public let bufferInfo: BufferInfo
     

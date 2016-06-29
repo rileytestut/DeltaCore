@@ -15,10 +15,10 @@ public protocol EmulatorBridging: NSObjectProtocol
     var gameURL: URL? { get }
     
     /// Audio
-    var audioRenderer: DLTAAudioRendering? { get set }
+    var audioRenderer: AudioRendering? { get set }
     
     /// Video
-    var videoRenderer: DLTAVideoRendering? { get set }
+    var videoRenderer: VideoRendering? { get set }
     
     /// Saves
     var saveUpdateHandler: ((Void) -> Void)? { get set }

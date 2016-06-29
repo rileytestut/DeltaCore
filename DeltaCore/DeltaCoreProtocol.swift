@@ -12,7 +12,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 {
     var supportedGameTypes: Set<GameType> { get }
     
-    var emulatorBridge: DLTAEmulatorBridge { get }
+    var emulatorBridge: EmulatorBridging { get }
     
     var emulatorConfiguration: EmulatorConfiguration { get }
     

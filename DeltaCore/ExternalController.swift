@@ -9,7 +9,7 @@
 import Foundation
 import GameController
 
-public class ExternalController: GameControllerProtocol, Hashable
+public class ExternalController: GameController, Hashable
 {
     //MARK: - Properties -
     /** Properties **/
@@ -21,7 +21,7 @@ public class ExternalController: GameControllerProtocol, Hashable
     //MARK: <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public var inputTransformationHandler: ((GameControllerProtocol, Input) -> [Input])?
+    public var inputTransformationHandler: ((GameController, Input) -> [Input])?
     public let _stateManager = GameControllerStateManager()
     
     //MARK: <Hashable>

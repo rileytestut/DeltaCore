@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class ControllerView: UIView, GameControllerProtocol
+public class ControllerView: UIView, GameController
 {
     //MARK: - Properties -
     /** Properties **/
@@ -28,7 +28,7 @@ public class ControllerView: UIView, GameControllerProtocol
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public var inputTransformationHandler: ((GameControllerProtocol, Input) -> [Input])?
+    public var inputTransformationHandler: ((GameController, Input) -> [Input])?
     public let _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties

@@ -12,7 +12,7 @@ public class GameControllerStateManager
 {
     internal var activatedInputs = Set<InputBox>()
     
-    internal var receivers: [GameControllerReceiverProtocol]
+    internal var receivers: [GameControllerReceiver]
     {
         var objects: [AnyObject]!
         
@@ -20,7 +20,7 @@ public class GameControllerStateManager
             objects = self._receivers.allObjects
         }
         
-        return objects.map({ $0 as! GameControllerReceiverProtocol })
+        return objects.map({ $0 as! GameControllerReceiver })
     }
 
     private let _receivers = HashTable<AnyObject>.weakObjects()
@@ -31,14 +31,14 @@ public class GameControllerStateManager
 
 public extension GameControllerStateManager
 {
-    func addReceiver(_ receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiver)
     {
         self.dispatchQueue.sync {
             self._receivers.add(receiver)
         }
     }
     
-    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
+    func removeReceiver(_ receiver: GameControllerReceiver)
     {
         self.dispatchQueue.sync {
             self._receivers.remove(receiver)

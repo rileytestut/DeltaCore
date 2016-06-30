@@ -35,7 +35,7 @@ public final class EmulatorCore
     /** Properties **/
     public let game: GameProtocol
     public private(set) var gameViews: [GameView] = []
-    public var gameControllers: [GameControllerProtocol] {
+    public var gameControllers: [GameController] {
         return Array(self.gameControllersDictionary.values)
     }
     
@@ -65,7 +65,7 @@ public final class EmulatorCore
     private let deltaCore: DeltaCoreProtocol
     
     private let emulationSemaphore = DispatchSemaphore(value: 0)
-    private var gameControllersDictionary = [Int: GameControllerProtocol]()
+    private var gameControllersDictionary = [Int: GameController]()
     private var cheatCodes = [String: CheatType]()
     
     private var previousState = State.stopped
@@ -286,7 +286,7 @@ public extension EmulatorCore
 /// Controllers
 public extension EmulatorCore
 {
-    @discardableResult func setGameController(_ gameController: GameControllerProtocol?, at index: Int) -> GameControllerProtocol?
+    @discardableResult func setGameController(_ gameController: GameController?, at index: Int) -> GameController?
     {
         let previousGameController = self.gameController(at: index)
         previousGameController?.playerIndex = nil
@@ -316,22 +316,22 @@ public extension EmulatorCore
         }
     }
     
-    func gameController(at index: Int) -> GameControllerProtocol?
+    func gameController(at index: Int) -> GameController?
     {
         return self.gameControllersDictionary[index]
     }
 }
 
-extension EmulatorCore: GameControllerReceiverProtocol
+extension EmulatorCore: GameControllerReceiver
 {
-    public func gameController(_ gameController: GameControllerProtocol, didActivate input: Input)
+    public func gameController(_ gameController: GameController, didActivate input: Input)
     {
         guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
         
         self.deltaCore.emulatorBridge.activateInput(input.rawValue)
     }
     
-    public func gameController(_ gameController: GameControllerProtocol, didDeactivate input: Input)
+    public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
         guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
         

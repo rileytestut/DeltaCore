@@ -1,5 +1,5 @@
 //
-//  GameControllerProtocol.swift
+//  GameController.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 5/3/15.
@@ -11,33 +11,33 @@ public enum ControllerInput: Int, Input
     case menu
 }
 
-//MARK: - GameControllerReceiverProtocol -
-public protocol GameControllerReceiverProtocol: class
+//MARK: - GameControllerReceiver -
+public protocol GameControllerReceiver: class
 {
     /// Equivalent to pressing a button, or moving an analog stick
-    func gameController(_ gameController: GameControllerProtocol, didActivate input: Input)
+    func gameController(_ gameController: GameController, didActivate input: Input)
     
     /// Equivalent to releasing a button or an analog stick
-    func gameController(_ gameController: GameControllerProtocol, didDeactivate input: Input)
+    func gameController(_ gameController: GameController, didDeactivate input: Input)
 }
 
-public func ==(x: GameControllerReceiverProtocol, y: GameControllerReceiverProtocol) -> Bool
+public func ==(x: GameControllerReceiver, y: GameControllerReceiver) -> Bool
 {
     return x === y
 }
 
-//MARK: - GameControllerProtocol -
-public protocol GameControllerProtocol: class
+//MARK: - GameController -
+public protocol GameController: class
 {
     var playerIndex: Int? { get set }
-    var receivers: [GameControllerReceiverProtocol] { get }
+    var receivers: [GameControllerReceiver] { get }
     
-    var inputTransformationHandler: ((GameControllerProtocol, Input) -> ([Input]))? { get set }
+    var inputTransformationHandler: ((GameController, Input) -> ([Input]))? { get set }
     
     var _stateManager: GameControllerStateManager { get }
     
-    func addReceiver(_ receiver: GameControllerReceiverProtocol)
-    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiver)
+    func removeReceiver(_ receiver: GameControllerReceiver)
     
     func isInputActivated(_ input: Input) -> Bool
     
@@ -45,18 +45,18 @@ public protocol GameControllerProtocol: class
     func deactivate(_ input: Input)
 }
 
-public extension GameControllerProtocol
+public extension GameController
 {
-    var receivers: [GameControllerReceiverProtocol] {
+    var receivers: [GameControllerReceiver] {
         return self._stateManager.receivers
     }
     
-    func addReceiver(_ receiver: GameControllerReceiverProtocol)
+    func addReceiver(_ receiver: GameControllerReceiver)
     {
         self._stateManager.addReceiver(receiver)
     }
     
-    func removeReceiver(_ receiver: GameControllerReceiverProtocol)
+    func removeReceiver(_ receiver: GameControllerReceiver)
     {
         self._stateManager.removeReceiver(receiver)
     }

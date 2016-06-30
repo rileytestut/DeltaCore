@@ -12,4 +12,10 @@ public struct SaveState: SaveStateProtocol
 {
     public var fileURL: URL
     public var gameType: GameType
+    
+    public init(fileURL: URL, gameType: GameType)
+    {
+        self.fileURL = fileURL
+        self.gameType = gameType
+    }
 }

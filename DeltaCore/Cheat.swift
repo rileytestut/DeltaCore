@@ -12,4 +12,10 @@ public struct Cheat: CheatProtocol
 {
     public var code: String
     public var type: CheatType
+    
+    public init(code: String, type: CheatType)
+    {
+        self.code = code
+        self.type = type
+    }
 }

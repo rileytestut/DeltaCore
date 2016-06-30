@@ -12,4 +12,10 @@ public struct Game: GameProtocol
 {
     public var fileURL: URL
     public var type: GameType
+    
+    public init(fileURL: URL, type: GameType)
+    {
+        self.fileURL = fileURL
+        self.type = type
+    }
 }

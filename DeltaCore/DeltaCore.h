@@ -23,5 +23,7 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 // HACK: Needed because the generated DeltaCore-Swift header file doesn't include this import
 #import <GLKit/GLKit.h>
 
-// Game Identifiers
+// Extensible Enums
 typedef NSString *GameType NS_EXTENSIBLE_STRING_ENUM;
+
+extern NSNotificationName const DeltaRegistrationRequestNotification;

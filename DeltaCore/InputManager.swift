@@ -10,8 +10,8 @@ import Foundation
 
 public protocol InputManager
 {
-    var gameInputType: InputProtocol.Type { get }
+    var gameInputType: Input.Type { get }
     
-    func inputs(for controller: ControllerSkin, item: ControllerSkin.Item, point: CGPoint) -> [InputProtocol]
-    func inputs(for controller: MFiExternalController, input: MFiExternalControllerInput) -> [InputProtocol]
+    func inputs(for controller: ControllerSkin, item: ControllerSkin.Item, point: CGPoint) -> [Input]
+    func inputs(for controller: MFiExternalController, input: MFiExternalControllerInput) -> [Input]
 }

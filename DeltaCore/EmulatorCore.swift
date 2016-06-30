@@ -324,14 +324,14 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiverProtocol
 {
-    public func gameController(_ gameController: GameControllerProtocol, didActivate input: InputProtocol)
+    public func gameController(_ gameController: GameControllerProtocol, didActivate input: Input)
     {
         guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
         
         self.deltaCore.emulatorBridge.activateInput(input.rawValue)
     }
     
-    public func gameController(_ gameController: GameControllerProtocol, didDeactivate input: InputProtocol)
+    public func gameController(_ gameController: GameControllerProtocol, didDeactivate input: Input)
     {
         guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
         

@@ -1,5 +1,5 @@
 //
-//  InputProtocol.swift
+//  Input.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 7/4/15.
@@ -7,11 +7,11 @@
 //
 
 /// Used by subclasses to declare appropriate form of representing emulator inputs
-public protocol InputProtocol
+public protocol Input
 {
     /// Used internally to conform to Hashable
-    /// We cannot have InputProtocol itself conform to Hashable due to the Self requirement of Equatable
-    /// Implemented by the InputProtocol protocol extension. Should not need to be overriden by conforming types.
+    /// We cannot have Input itself conform to Hashable due to the Self requirement of Equatable
+    /// Implemented by the Input protocol extension. Should not need to be overriden by conforming types.
     var _hashValue: Int { get }
     
     /// Convenience method used for implementing Equatable. Default implementation via protocol extension
@@ -21,8 +21,8 @@ public protocol InputProtocol
     var rawValue: Int { get }
 }
 
-/// Provide default implementatation for InputProtocol.isEqual()
-public extension InputProtocol where Self: Hashable
+/// Provide default implementatation for Input.isEqual()
+public extension Input where Self: Hashable
 {
     var _hashValue: Int {
         return self.hashValue
@@ -39,10 +39,10 @@ public extension InputProtocol where Self: Hashable
     }
 }
 
-/// Workaround for current inability to declare Set values and Dictionary keys as InputProtocol types
+/// Workaround for current inability to declare Set values and Dictionary keys as Input types
 internal struct InputBox: Hashable
 {
-    let input: InputProtocol
+    let input: Input
     var hashValue: Int { return input._hashValue }
 }
 

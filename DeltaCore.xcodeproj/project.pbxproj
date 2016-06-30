@@ -43,7 +43,7 @@
 		BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */; };
 		BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = BFECA1D51AE3935700AF9144 /* DynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = BFECA1D61AE3935700AF9144 /* DynamicObject.m */; };
-		BFF703D41B4888100098561C /* InputProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* InputProtocol.swift */; };
+		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 /* End PBXBuildFile section */
 
@@ -138,7 +138,7 @@
 		BFECA1D51AE3935700AF9144 /* DynamicObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicObject.h; sourceTree = "<group>"; };
 		BFECA1D61AE3935700AF9144 /* DynamicObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DynamicObject.m; sourceTree = "<group>"; };
 		BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZipZap.xcodeproj; path = External/ZipZap/ZipZap.xcodeproj; sourceTree = SOURCE_ROOT; };
-		BFF703D31B4888100098561C /* InputProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputProtocol.swift; sourceTree = "<group>"; };
+		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmulatorCore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -165,7 +165,7 @@
 		BF425A6D1D23922000F48ED9 /* Inputs */ = {
 			isa = PBXGroup;
 			children = (
-				BFF703D31B4888100098561C /* InputProtocol.swift */,
+				BFF703D31B4888100098561C /* Input.swift */,
 				BFE4380F1AF606980095A5F1 /* GameControllerProtocol.swift */,
 			);
 			name = Inputs;
@@ -509,7 +509,7 @@
 			files = (
 				BF425A951D23BD8500F48ED9 /* EmulatorBridging.swift in Sources */,
 				BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */,
-				BFF703D41B4888100098561C /* InputProtocol.swift in Sources */,
+				BFF703D41B4888100098561C /* Input.swift in Sources */,
 				BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */,
 				BFEC23C41D247D1F00B3A6A9 /* VideoRendering.swift in Sources */,
 				BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,

@@ -28,7 +28,7 @@ public class ControllerView: UIView, GameControllerProtocol
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var playerIndex: Int?
-    public var inputTransformationHandler: ((GameControllerProtocol, InputProtocol) -> [InputProtocol])?
+    public var inputTransformationHandler: ((GameControllerProtocol, Input) -> [Input])?
     public let _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties

@@ -348,7 +348,7 @@ private extension EmulatorCore
             
             let screenRefreshRate = 1.0 / 60.0
             
-            var emulationTime = Thread.absoluteTime
+            var emulationTime = Thread.absoluteSystemTime
             var counter = 0.0
             
             while true
@@ -357,7 +357,7 @@ private extension EmulatorCore
                 
                 if self.rate != self.previousRate
                 {
-                    Thread.setRealTimePriorityWithPeriod(frameDuration)
+                    Thread.setRealTimePriority(withPeriod: frameDuration)
                     
                     self.previousRate = self.rate
                     
@@ -381,7 +381,7 @@ private extension EmulatorCore
                 counter += frameDuration
                 emulationTime += frameDuration
                 
-                let currentTime = Thread.absoluteTime
+                let currentTime = Thread.absoluteSystemTime
                 
                 // The number of frames we need to skip to keep in sync
                 let framesToSkip = Int((currentTime - emulationTime) / frameDuration)

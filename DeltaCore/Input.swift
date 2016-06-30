@@ -6,7 +6,7 @@
 //  Copyright © 2015 Riley Testut. All rights reserved.
 //
 
-/// Used by subclasses to declare appropriate form of representing emulator inputs
+/// Used by delta cores to declare appropriate form of representing emulator inputs
 public protocol Input
 {
     /// Used internally to conform to Hashable
@@ -17,7 +17,7 @@ public protocol Input
     /// Convenience method used for implementing Equatable. Default implementation via protocol extension
     func isEqual<T>(_ input: T) -> Bool
     
-    // So we can pass into generic Objective-C method
+    /// So we can pass into generic Objective-C method
     var rawValue: Int { get }
 }
 

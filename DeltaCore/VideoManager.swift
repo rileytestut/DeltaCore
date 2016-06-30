@@ -8,6 +8,7 @@
 
 import Foundation
 import Accelerate
+import CoreImage
 
 public extension VideoManager
 {

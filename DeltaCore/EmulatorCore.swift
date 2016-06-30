@@ -86,7 +86,7 @@ public final class EmulatorCore
         // self.deltaCore.emulatorConfiguration.bridge.audioRenderer = self.audioManager
         // self.deltaCore.emulatorConfiguration.bridge.videoRenderer = self.videoManager
         
-        guard let deltaCore = DeltaCore.core(for: game.type) else {
+        guard let deltaCore = Delta.core(for: game.type) else {
             print(game.type.rawValue + " is not a supported game type.")
             return nil
         }

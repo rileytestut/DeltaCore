@@ -1,5 +1,5 @@
 //
-//  DeltaCore.swift
+//  Delta.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 7/22/15.
@@ -20,7 +20,7 @@ public extension GameType
     public static let delta = "com.rileytestut.delta.game" as GameType
 }
 
-public struct DeltaCore
+public struct Delta
 {
     public private(set) static var registeredCores = [GameType: DeltaCoreProtocol]()
     

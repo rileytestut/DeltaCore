@@ -23,7 +23,7 @@
 		BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFEE12D11B602CCA00156A2C /* ZipZap.framework */; };
 		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
 		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF785C9D1B603C1800189DB8 /* DeltaCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* DeltaCore.swift */; };
+		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
 		BF95BC101D0A3437005FC657 /* NSThread+RealTime.h in Headers */ = {isa = PBXBuildFile; fileRef = BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -117,7 +117,7 @@
 		BF6834011C459C250052249F /* AudioManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TPCircularBuffer.c; path = External/TPCircularBuffer/TPCircularBuffer.c; sourceTree = SOURCE_ROOT; };
 		BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TPCircularBuffer.h; path = External/TPCircularBuffer/TPCircularBuffer.h; sourceTree = SOURCE_ROOT; };
-		BF785C9C1B603C1800189DB8 /* DeltaCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaCore.swift; sourceTree = "<group>"; };
+		BF785C9C1B603C1800189DB8 /* Delta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delta.swift; sourceTree = "<group>"; };
 		BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiExternalController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
 		BF95BC0E1D0A3437005FC657 /* NSThread+RealTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSThread+RealTime.h"; sourceTree = "<group>"; };
@@ -212,7 +212,7 @@
 			isa = PBXGroup;
 			children = (
 				BF4689621AACF36800A2586D /* DeltaCore.h */,
-				BF785C9C1B603C1800189DB8 /* DeltaCore.swift */,
+				BF785C9C1B603C1800189DB8 /* Delta.swift */,
 				BF425A931D23BD2D00F48ED9 /* Cores */,
 				BFF912D11AB08E7400AC07A1 /* Emulator Core */,
 				BFECA1CE1AE38A1A00AF9144 /* Dynamic */,
@@ -510,7 +510,7 @@
 				BF425A951D23BD8500F48ED9 /* EmulatorBridging.swift in Sources */,
 				BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */,
 				BFF703D41B4888100098561C /* InputProtocol.swift in Sources */,
-				BF785C9D1B603C1800189DB8 /* DeltaCore.swift in Sources */,
+				BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */,
 				BFEC23C41D247D1F00B3A6A9 /* VideoRendering.swift in Sources */,
 				BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,
 				BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */,

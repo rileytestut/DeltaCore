@@ -11,5 +11,5 @@ import Foundation
 @objc(DLTAAudioRendering)
 public protocol AudioRendering: NSObjectProtocol
 {
-    var ringBuffer: DLTARingBuffer { get }
+    var audioBuffer: RingBuffer { get }
 }

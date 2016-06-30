@@ -32,7 +32,7 @@ public class AudioManager: NSObject, AudioRendering
     public var enabled = true {
         didSet
         {
-            self.ringBuffer.isEnabled = self.enabled
+            self.audioBuffer.enabled = self.enabled
             self.audioEngine.mainMixerNode.outputVolume = self.enabled ? 1.0 : 0.0
             
             do
@@ -53,7 +53,7 @@ public class AudioManager: NSObject, AudioRendering
             
             self.updateAudioBufferFrameLengths()
             
-            self.ringBuffer.reset()
+            self.audioBuffer.reset()
         }
     }
     
@@ -64,7 +64,7 @@ public class AudioManager: NSObject, AudioRendering
         }
     }
     
-    public var ringBuffer: DLTARingBuffer
+    public var audioBuffer: RingBuffer
     
     public let audioEngine: AVAudioEngine
     public let audioPlayerNode: AVAudioPlayerNode
@@ -77,7 +77,9 @@ public class AudioManager: NSObject, AudioRendering
     {
         self.bufferInfo = bufferInfo
         
-        self.ringBuffer = DLTARingBuffer(preferredBufferSize: Int32(self.bufferInfo.preferredSize * AudioBufferCount))
+        guard let ringBuffer = RingBuffer(preferredBufferSize: bufferInfo.preferredSize * AudioBufferCount) else { fatalError("Cannot initialize RingBuffer with preferredBufferSize of \(bufferInfo.preferredSize * AudioBufferCount)") }
+            
+        self.audioBuffer = ringBuffer
         
         // Audio Engine
         self.audioEngine = AVAudioEngine()
@@ -115,7 +117,7 @@ public extension AudioManager
 {
     func start()
     {
-        self.ringBuffer.reset()
+        self.audioBuffer.reset()
         
         do
         {
@@ -136,8 +138,8 @@ public extension AudioManager
         self.audioPlayerNode.stop()
         self.audioEngine.stop()
         
-        self.ringBuffer.isEnabled = false
-        self.ringBuffer.reset()
+        self.audioBuffer.enabled = false
+        self.audioBuffer.reset()
     }
 }
 
@@ -149,7 +151,9 @@ private extension AudioManager
         
         if self.audioEngine.isRunning
         {
-            self.ringBuffer.read(into: buffer[0], preferredSize: Int32(Double(self.bufferInfo.preferredSize) * self.rate))
+            let uint8Buffer = UnsafeMutablePointer<UInt8>(buffer[0])
+            
+            self.audioBuffer.read(into: uint8Buffer, preferredSize: Int(Double(self.bufferInfo.preferredSize) * self.rate))
             
             do
             {

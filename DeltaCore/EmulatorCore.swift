@@ -298,7 +298,7 @@ public extension EmulatorCore
         if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
         {
             gameController.inputTransformationHandler = { (gameController, input) in
-                return self.deltaCore.inputManager.inputs(for: gameController as! MFiExternalController, input: input as! MFiExternalControllerInput)
+                return self.deltaCore.inputTransformer.inputs(for: gameController as! MFiExternalController, input: input as! MFiExternalControllerInput)
             }
         }
         
@@ -326,14 +326,14 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
-        guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
+        guard input.dynamicType == self.deltaCore.inputTransformer.gameInputType else { return }
         
         self.deltaCore.emulatorBridge.activateInput(input.rawValue)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        guard input.dynamicType == self.deltaCore.inputManager.gameInputType else { return }
+        guard input.dynamicType == self.deltaCore.inputTransformer.gameInputType else { return }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.rawValue)
     }

@@ -12,7 +12,7 @@
 		BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */; };
 		BF3273D51B86428200494CFC /* ExternalControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalControllerManager.swift */; };
 		BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF34FA121CF18E40006624C7 /* CheatFormat.swift */; };
-		BF425A791D23925600F48ED9 /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A781D23925600F48ED9 /* InputManager.swift */; };
+		BF425A791D23925600F48ED9 /* InputTransforming.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A781D23925600F48ED9 /* InputTransforming.swift */; };
 		BF425A7E1D23B15800F48ED9 /* DeltaCoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A7D1D23B15800F48ED9 /* DeltaCoreProtocol.swift */; };
 		BF425A951D23BD8500F48ED9 /* EmulatorBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A941D23BD8500F48ED9 /* EmulatorBridging.swift */; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -106,7 +106,7 @@
 		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameControllerStateManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BF3273D41B86428200494CFC /* ExternalControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalControllerManager.swift; sourceTree = "<group>"; };
 		BF34FA121CF18E40006624C7 /* CheatFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatFormat.swift; sourceTree = "<group>"; };
-		BF425A781D23925600F48ED9 /* InputManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputManager.swift; sourceTree = "<group>"; };
+		BF425A781D23925600F48ED9 /* InputTransforming.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputTransforming.swift; sourceTree = "<group>"; };
 		BF425A7D1D23B15800F48ED9 /* DeltaCoreProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaCoreProtocol.swift; sourceTree = "<group>"; };
 		BF425A941D23BD8500F48ED9 /* EmulatorBridging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmulatorBridging.swift; sourceTree = "<group>"; };
 		BF46895D1AACF36800A2586D /* DeltaCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DeltaCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -188,7 +188,7 @@
 			children = (
 				BF425A7D1D23B15800F48ED9 /* DeltaCoreProtocol.swift */,
 				BFB8F0D71D18D01D00D9CD05 /* EmulatorConfiguration.swift */,
-				BF425A781D23925600F48ED9 /* InputManager.swift */,
+				BF425A781D23925600F48ED9 /* InputTransforming.swift */,
 				BF425A941D23BD8500F48ED9 /* EmulatorBridging.swift */,
 			);
 			name = Cores;
@@ -528,7 +528,7 @@
 				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
-				BF425A791D23925600F48ED9 /* InputManager.swift in Sources */,
+				BF425A791D23925600F48ED9 /* InputTransforming.swift in Sources */,
 				BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,

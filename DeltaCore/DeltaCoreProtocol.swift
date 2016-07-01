@@ -16,7 +16,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     
     var emulatorConfiguration: EmulatorConfiguration { get }
     
-    var inputManager: InputManager { get }
+    var inputTransformer: InputTransforming { get }
 }
 
 extension DeltaCoreProtocol

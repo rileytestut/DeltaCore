@@ -1,5 +1,5 @@
 //
-//  InputManager.swift
+//  InputTransforming.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 6/29/16.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol InputManager
+public protocol InputTransforming
 {
     var gameInputType: Input.Type { get }
     

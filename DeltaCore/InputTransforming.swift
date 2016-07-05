@@ -12,6 +12,6 @@ public protocol InputTransforming
 {
     var gameInputType: Input.Type { get }
     
-    func inputs(for controller: ControllerSkin, item: ControllerSkin.Item, point: CGPoint) -> [Input]
+    func inputs(for controllerSkin: ControllerSkin, item: ControllerSkin.Item, point: CGPoint) -> [Input]
     func inputs(for controller: MFiExternalController, input: MFiExternalControllerInput) -> [Input]
 }

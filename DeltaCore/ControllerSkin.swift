@@ -7,352 +7,34 @@
 //
 
 import UIKit
-
 import ZipZap
 
-public struct ControllerSkinConfiguration
-{
-    // Trait Collection
-    public var horizontalSizeClass = UIUserInterfaceSizeClass.compact
-    public var verticalSizeClass = UIUserInterfaceSizeClass.compact
-    public var displayScale: CGFloat
-    
-    // Misc.
-    public var containerSize: CGSize
-    public var targetWidth: CGFloat
-    public var splitViewActivated = false
-    
-    public init(traitCollection: UITraitCollection, containerSize: CGSize, targetWidth: CGFloat)
-    {
-        self.horizontalSizeClass = (traitCollection.horizontalSizeClass != .unspecified) ? traitCollection.horizontalSizeClass : .compact
-        self.verticalSizeClass = (traitCollection.verticalSizeClass != .unspecified) ? traitCollection.verticalSizeClass : .compact
-        self.displayScale = traitCollection.displayScale
-        
-        self.containerSize = containerSize
-        self.targetWidth = targetWidth
-    }
-}
-
-public class ControllerSkin: DynamicObject
-{
-    //MARK: - Properties -
-    /** Properties **/
-    
-    // Metadata
-    public let name: String
-    public let identifier: String
-    public let gameTypeIdentifier: String
-    public let debugModeEnabled: Bool
-    
-    public let URL: Foundation.URL
-    
-    /// <CustomStringConvertible>
-    public override var description: String {
-        return self.name + " (" + self.identifier + ")"
-    }
-    
-    private let representations: [String: Representation]
-    
-    private let imageCache = Cache<NSString, UIImage>()
-    
-    //MARK: - Initializers -
-    /** Initializers **/
-    public required init?(URL: Foundation.URL)
-    {
-        self.URL = URL
-        
-        let info: [String: AnyObject]
-        
-        do
-        {
-            let archive = try ZZArchive(url: self.URL)
-            
-            if let index = archive.entries.index(where: { $0.fileName == "info.json" })
-            {
-                let entry = archive.entries[index]
-                let data = try entry.newData()
-                
-                info = try JSONSerialization.jsonObject(with: data) as? [String: AnyObject] ?? [:]
-            }
-            else
-            {
-                info = [:]
-            }
-        }
-        catch let error as NSError
-        {
-            print("\(error) \(error.userInfo)")
-            
-            info = [:]
-        }
-        
-        self.name = info["name"] as? String ?? ""
-        self.identifier = info["identifier"] as? String ?? ""
-        self.gameTypeIdentifier = info["gameTypeIdentifier"] as? String ?? ""
-        self.debugModeEnabled = info["debug"] as? Bool ?? false
-        
-        var representations = [String: Representation]()
-        
-        if let representationsDictionary = info["representations"] as? [String: [String: AnyObject]]
-        {
-            for (key, dictionary) in representationsDictionary
-            {
-                if let representation = Representation(dictionary: dictionary)
-                {
-                    representations[key] = representation
-                }
-            }
-        }
-        
-        self.representations = representations
-        
-        super.init(dynamicIdentifier: self.gameTypeIdentifier, initSelector: #selector(ControllerSkin.init(URL:)), initParameters: [URL])
-        
-        if info.isEmpty || self.name == "" || self.identifier == "" || self.gameTypeIdentifier == ""
-        {
-            return nil
-        }
-    }
-    
-    /** Methods **/
-     
-    //MARK: - Convenience Methods -
-    /// Convenience Methods
-    public class func defaultControllerSkinForGameUTI(_ UTI: String) -> ControllerSkin?
-    {
-        guard self == ControllerSkin.self else { fatalError("ControllerSkin subclass must implement defaultControllerSkinForGameUTI:") }
-        
-        let subclass = ControllerSkin.self.subclass(forDynamicIdentifier: UTI) as! ControllerSkin.Type
-        return subclass.defaultControllerSkinForGameUTI(UTI)
-    }
-    
-    //MARK: - Subclass Methods -
-    /** Subclass Methods **/
-    /** These methods should never be called directly **/
-    
-    public func inputsForItem(_ item: Item, point: CGPoint) -> [Input]
-    {
-        fatalError("ControllerSkin subclass must implement inputsForItem(_:point:)")
-    }
-}
-
-public extension ControllerSkin
-{
-    func supportsConfiguration(_ configuration: ControllerSkinConfiguration) -> Bool
-    {
-        return (self.representationForConfiguration(configuration) != nil)
-    }
-    
-    /// Provided point should be normalized [0,1] for both axies
-    func inputsForPoint(_ point: CGPoint, configuration: ControllerSkinConfiguration) -> [Input]?
-    {
-        guard let representation = self.representationForConfiguration(configuration) else { return nil }
-        
-        var inputs: [Input] = []
-        for item in representation.items
-        {
-            guard item.extendedFrame.contains(point) else { continue }
-            
-            for input in self.inputsForItem(item, point: point)
-            {
-                inputs.append(input)
-            }
-        }
-        
-        return inputs
-    }
-    
-    func gameScreenFrameForConfiguration(_ configuration: ControllerSkinConfiguration) -> CGRect?
-    {
-        let representation = self.representationForConfiguration(configuration)
-        return representation?.gameScreenFrame
-    }
-    
-    func imageForConfiguration(_ configuration: ControllerSkinConfiguration) -> UIImage?
-    {
-        guard configuration.displayScale > 0.0 else { return nil }
-        guard let representation = self.representationForConfiguration(configuration) else { return nil }
-
-        let cacheKey = representation.assetFilename + "_" + String(configuration.targetWidth)
-        
-        var image = self.imageCache.object(forKey: cacheKey)
-        if image != nil
-        {
-            return image
-        }
-        
-        defer { if let image = image { self.imageCache.setObject(image, forKey: cacheKey) } }
-        
-        if representation.assetFilename.lowercased().hasSuffix(".pdf")
-        {
-            // PDF
-            
-            if let archiveEntry = self.archiveEntryForRepresentation(representation)
-            {
-                do
-                {
-                    let data = try archiveEntry.newData()
-                    image = UIImage.imageWithPDFData(data, targetWidth: configuration.targetWidth)
-                }
-                catch let error as NSError
-                {
-                    print("\(error) \(error.userInfo)")
-                }
-            }
-        }
-        else
-        {
-            // Image
-            
-            var archiveEntry: ZZArchiveEntry?
-
-            switch configuration.displayScale
-            {
-                // >= 3.0 (iPhone 6 Plus)
-            case 3.0...CGFloat.infinity:
-                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@3x")
-                
-                // iPads
-            case 2.0 where (configuration.horizontalSizeClass == .regular && configuration.verticalSizeClass == .regular):
-                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@2x")
-                
-                // iPhone 6
-            case 2.0 where (configuration.containerSize.height > 626 || configuration.containerSize.width > 626):
-                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@2x")
-                
-                // iPhone 5
-            case 2.0 where (configuration.containerSize.height > 520 || configuration.containerSize.width > 520):
-                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@568h")
-                
-                // iPhone 4
-            case 2.0:
-                archiveEntry = self.archiveEntryForRepresentation(representation, suffix: "@480h")
-                
-            default: break
-                
-            }
-            
-            if archiveEntry == nil
-            {
-                archiveEntry = self.archiveEntryForRepresentation(representation)
-            }
-            
-            do
-            {
-                if let data = try archiveEntry?.newData()
-                {
-                    image = UIImage(data: data, scale: configuration.displayScale)
-                }
-            }
-            catch let error as NSError {
-                print("\(error) \(error.userInfo)")
-            }
-        }
-        
-        return image
-    }
-    
-    func itemsForConfiguration(_ configuration: ControllerSkinConfiguration) -> [ControllerSkin.Item]?
-    {
-        let representation = self.representationForConfiguration(configuration)
-        return representation?.items
-    }
-}
+private typealias RepresentationDictionary = [String: [String: AnyObject]]
 
 extension ControllerSkin
 {
-    private struct Representation: CustomDebugStringConvertible
+    public struct Item
     {
-        let assetFilename: String
-        let translucent: Bool
-        let items: [Item]
-        let gameScreenFrame: CGRect?
-        
-        /// <CustomDebugStringConvertible>
-        var debugDescription: String {
-            return self.assetFilename + " " + String(self.items)
-        }
-        
-        init?(dictionary: [String: AnyObject])
-        {
-            guard let assetFilename = dictionary["assetFilename"] as? String else { return nil }
-            guard let itemsArray = dictionary["items"] as? [[String: AnyObject]] else { return nil }
-            guard let mappingSize = CGSize(dictionary: (dictionary["mappingSize"] as? [String: CGFloat]) ?? [:]) else { return nil }
-            
-            // extendedEdges is not required
-            var extendedEdges = UIEdgeInsets(dictionary: (dictionary["extendedEdges"] as? [String: CGFloat]) ?? [:]) ?? UIEdgeInsetsZero
-            
-            // Negate values (because a positive inset would technically be reducing the total size of the frame)
-            extendedEdges.top *= -1;
-            extendedEdges.bottom *= -1;
-            extendedEdges.left *= -1;
-            extendedEdges.right *= -1;
-            
-            self.assetFilename = assetFilename
-            self.translucent = (dictionary["translucent"] as? Bool) ?? false
-            
-            var items = [Item]()
-            
-            for dictionary in itemsArray
-            {
-                if let item = Item(mappingSize: mappingSize, extendedEdges: extendedEdges, dictionary: dictionary)
-                {
-                    items.append(item)
-                }
-            }
-            
-            self.items = items
-            
-            self.gameScreenFrame = CGRect(dictionary: (dictionary["gameScreen"] as? [String: CGFloat]) ?? [:])
-        }
-    }
-    
-    public struct Item: CustomDebugStringConvertible
-    {
-        public let keys: [String]
-        
+        public let keys: Set<String>
         public let frame: CGRect
         public let extendedFrame: CGRect
-
-        /// <CustomDebugStringConvertible>
-        public var debugDescription: String {
-            return String(self.keys) + " " + String(self.extendedFrame)
-        }
         
-        public init?(mappingSize: CGSize, extendedEdges: UIEdgeInsets, dictionary: [String: AnyObject])
+        private init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
-            guard let frameDictionary = dictionary["frame"] as? [String: CGFloat], frame = CGRect(dictionary: frameDictionary) else { return nil }
-            guard let keys = dictionary["keys"] as? [String] else { return nil }
+            guard
+                let keys = dictionary["keys"] as? [String],
+                let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
+                else { return nil }
             
-            self.keys = keys
+            self.keys = Set(keys)
             
-            var extendedEdges = extendedEdges
+            let overrideExtendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
-            if let adjustedExtendedEdges = dictionary["extendedEdges"] as? [String : CGFloat]
-            {
-                if let top = adjustedExtendedEdges["top"]
-                {
-                    extendedEdges.top = -top
-                }
-                
-                if let bottom = adjustedExtendedEdges["bottom"]
-                {
-                    extendedEdges.bottom = -bottom
-                }
-                
-                if let left = adjustedExtendedEdges["left"]
-                {
-                    extendedEdges.left = -left
-                }
-                
-                if let right = adjustedExtendedEdges["right"]
-                {
-                    extendedEdges.right = -right
-                }
-            }
-            
-            let extendedFrame = CGRect(x: frame.minX + extendedEdges.left, y: frame.minY + extendedEdges.top,
-                                       width: frame.width - extendedEdges.left - extendedEdges.right, height: frame.height - extendedEdges.top - extendedEdges.bottom)
+            var extendedFrame = frame
+            extendedFrame.origin.x -= overrideExtendedEdges.left ?? extendedEdges.left ?? 0
+            extendedFrame.origin.y -= overrideExtendedEdges.top ?? extendedEdges.top ?? 0
+            extendedFrame.size.width += (overrideExtendedEdges.left ?? extendedEdges.left ?? 0) + (overrideExtendedEdges.right ?? extendedEdges.right ?? 0)
+            extendedFrame.size.height += (overrideExtendedEdges.top ?? extendedEdges.top ?? 0) + (overrideExtendedEdges.bottom ?? extendedEdges.bottom ?? 0)
             
             // Convert frames to relative values
             self.frame = CGRect(x: frame.minX / mappingSize.width, y: frame.minY / mappingSize.height, width: frame.width / mappingSize.width, height: frame.height / mappingSize.height)
@@ -361,89 +43,467 @@ extension ControllerSkin
     }
 }
 
-private extension ControllerSkin
+public struct ControllerSkin
 {
-    func representationForConfiguration(_ configuration: ControllerSkinConfiguration) -> Representation?
+    public let name: String
+    public let identifier: String
+    public let gameType: GameType
+    public let debugModeEnabled: Bool
+    
+    public let fileURL: URL
+    
+    private let representations: [Traits: Representation]
+    private let imageCache = Cache<NSString, UIImage>()
+    
+    public init?(fileURL: URL)
     {
-        switch configuration
+        self.fileURL = fileURL
+        
+        var info = [String: AnyObject]()
+        
+        do
         {
-            // Split View
-        case _ where configuration.splitViewActivated: return self.representations["splitView"]
+            let archive = try ZZArchive(url: self.fileURL)
             
-            // Regular skins
-        case _ where configuration.horizontalSizeClass == .regular && configuration.verticalSizeClass == .regular:
-            
-            if configuration.containerSize.width > configuration.containerSize.height
+            if let index = archive.entries.index(where: { $0.fileName == "info.json" })
             {
-                return self.representations["regularLandscape"]
-            }
-            else
-            {
-                return self.representations["regularPortrait"]
-            }
-            
-            
-            // Compact skins
-        case _ where configuration.horizontalSizeClass == .compact || configuration.verticalSizeClass == .compact:
-            
-            let legacyAspectRatio: CGFloat = 3.0 / 2.0
-            let widescreenAspectRatio: CGFloat = 16.0 / 9.0
-            
-            if configuration.containerSize.width > configuration.containerSize.height
-            {
-                let aspectRatio = configuration.containerSize.width / configuration.containerSize.height
+                let entry = archive.entries[index]
+                let data = try entry.newData()
                 
-                if abs(aspectRatio - legacyAspectRatio) < abs(aspectRatio - widescreenAspectRatio)
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: AnyObject]
                 {
-                    // Closer to 3:2 aspect ratio
-                    return self.representations["compactLegacyLandscape"]
+                    info = json
+                }
+            }
+        }
+        catch let error as NSError
+        {
+            print("\(error) \(error.userInfo)")
+        }
+        
+        guard
+            let name = info["name"] as? String,
+            let identifier = info["identifier"] as? String,
+            let gameType = info["gameTypeIdentifier"] as? GameType,
+            let debugModeEnabled = info["debug"] as? Bool,
+            let representationsDictionary = info["representations"] as? RepresentationDictionary
+            else { return nil }
+        
+        self.name = name
+        self.identifier = identifier
+        self.gameType = gameType
+        self.debugModeEnabled = debugModeEnabled
+        
+        let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
+        
+        var representations = [Traits: Representation]()
+        for representation in representationsSet
+        {
+            representations[representation.traits] = representation
+        }
+        self.representations = representations
+    }
+    
+    // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
+    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, deviceType: DeviceType? = nil, displayMode: DisplayMode? = nil, orientation: Orientation? = nil) -> Set<Representation>
+    {
+        var representations = Set<Representation>()
+        
+        for (key, dictionary) in representationsDictionary
+        {
+            if deviceType == nil
+            {
+                guard let deviceType = DeviceType(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
+                
+                representations.formUnion(self.parsedRepresentations(from: dictionary, deviceType: deviceType))
+            }
+            else if displayMode == nil
+            {
+                if let displayMode = DisplayMode(rawValue: key), let dictionary = dictionary as? RepresentationDictionary
+                {
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, deviceType: deviceType, displayMode: displayMode))
                 }
                 else
                 {
-                    // Closer to 16:9 aspect ratio
-                    return self.representations["compactLandscape"]
-                }
-            }
-            else
-            {
-                let aspectRatio = configuration.containerSize.height / configuration.containerSize.width
-                
-                if abs(aspectRatio - legacyAspectRatio) < abs(aspectRatio - widescreenAspectRatio)
-                {
-                    // Closer to 3:2 aspect ratio
+                    // Key doesn't exist, so we continue with the same dictionary we're currently iterating, but pass in .fullScreen for displayMode
+                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, deviceType: deviceType, displayMode: .fullScreen))
                     
-                    // Unlike landscape, this is not required. So only return if it exists
-                    if let representation = self.representations["compactLegacyPortrait"]
-                    {
-                        return representation
-                    }
+                    // Return early to prevent us from repeating the above step multiple times
+                    return representations
                 }
-                
-                // Closer to 16:9 aspect ratio
-                return self.representations["compactPortrait"]
             }
-            
-            
-        default: return nil
+            else if orientation == nil
+            {
+                guard
+                    let deviceType = deviceType,
+                    let displayMode = displayMode,
+                    let orientation = Orientation(rawValue: key)
+                    else { continue }
+                
+                let traits = Traits(deviceType: deviceType, displayMode: displayMode, orientation: orientation)
+                if let representation = Representation(traits: traits, dictionary: dictionary)
+                {
+                    representations.insert(representation)
+                }
+            }
         }
+        
+        return representations
+    }
+}
+
+public extension ControllerSkin
+{
+    func supports(_ traits: Traits) -> Bool
+    {
+        let representation = self.representations[traits]
+        return representation != nil
     }
     
-    func archiveEntryForRepresentation(_ representation: Representation, suffix: String = "") -> ZZArchiveEntry?
+    func image(for traits: Traits, preferredSize: Size) -> UIImage?
     {
-        guard let insertionIndex = representation.assetFilename.characters.index(of: ".") else { return nil }
+        guard let representation = self.representations[traits] else { return nil }
         
-        var filename = representation.assetFilename
-        filename.insert(contentsOf: suffix.characters, at: insertionIndex)
+        let cacheKey = self.cacheKey(for: traits, size: preferredSize)
         
-        // Would be strange if this fails since it had to work to init ControllerSkin in the first place...
-        if let archive = try? ZZArchive(url: self.URL)
+        if let image = self.imageCache.object(forKey: cacheKey)
         {
-            if let index = archive.entries.index(where: { $0.fileName == filename })
+            return image
+        }
+        
+        var returnedImage: UIImage? = nil
+        
+        switch preferredSize
+        {
+        case .small:
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small, resizable: true)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+            
+        case .medium:
+            // First, attempt to load a medium image
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
+                
+                // If a medium image doesn't exist, fallback to trying to load a medium resizable image
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium, resizable: true)) { returnedImage = image }
+                
+                // If neither medium nor resizable exists, check for a large image (because downscaling large is better than upscaling small)
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+                
+                // If still no images exist, finally check the small image size
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            
+        case .large:
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large, resizable: true)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            
+        }
+        
+        if let image = returnedImage
+        {
+            self.imageCache.setObject(image, forKey: cacheKey)
+        }
+        
+        return returnedImage
+    }
+    
+    /// Provided point should be normalized [0,1] for both axies.
+    func inputs(for traits: Traits,  point: CGPoint) -> [Input]?
+    {
+        guard let representation = self.representations[traits], let core = Delta.core(for: self.gameType) else { return nil }
+        
+        var inputs: [Input] = []
+        for item in representation.items
+        {
+            guard item.extendedFrame.contains(point) else { continue }
+            
+            for input in core.inputTransformer.inputs(for: self, item: item, point: point)
             {
-                return archive.entries[index]
+                inputs.append(input)
             }
+        }
+        
+        return inputs
+    }
+    
+    func items(for traits: Traits) -> [Item]?
+    {
+        guard let representation = self.representations[traits] else { return nil }
+        return representation.items
+    }
+    
+    func isTranslucent(for traits: Traits) -> Bool?
+    {
+        guard let representation = self.representations[traits] else { return nil }
+        return representation.isTranslucent
+    }
+    
+    func gameScreenFrame(for traits: Traits) -> CGRect?
+    {
+        guard let representation = self.representations[traits] else { return nil }
+        return representation.gameScreenFrame
+    }
+}
+
+private extension ControllerSkin
+{
+    func image(for representation: Representation, assetSize: AssetSize) -> UIImage?
+    {
+        guard let filename = representation.assets[assetSize], let entry = self.archiveEntry(forFilename: filename) else { return nil }
+        
+        do
+        {
+            let data = try entry.newData()
+            
+            let image: UIImage?
+            
+            switch assetSize
+            {
+            case .small, .medium, .large:
+                guard let imageScale = assetSize.imageScale(for: representation.traits) else { return nil }
+                image = UIImage(data: data, scale: imageScale)
+                
+            case .resizable:
+                guard let targetSize = assetSize.targetSize(for: representation.traits) else { return nil }
+                image = UIImage.image(withPDFData: data, targetSize: targetSize)
+            }
+            
+            return image
+        }
+        catch let error as NSError
+        {
+            print("\(error) \(error.userInfo)")
         }
         
         return nil
     }
+    
+    func archiveEntry(forFilename filename: String) -> ZZArchiveEntry?
+    {
+        guard
+            let archive = try? ZZArchive(url: self.fileURL),
+            let index = archive.entries.index(where: { $0.fileName == filename })
+            else { return nil }
+        
+        let entry = archive.entries[index]
+        return entry
+    }
+    
+    func cacheKey(for traits: Traits, size: Size) -> String
+    {
+        return String(traits) + "-" + String(size)
+    }
+}
+
+private extension ControllerSkin
+{
+    struct ExtendedEdges
+    {
+        var top: CGFloat?
+        var bottom: CGFloat?
+        var left: CGFloat?
+        var right: CGFloat?
+        
+        init(dictionary: [String: CGFloat]?)
+        {
+            self.top = dictionary?["top"]
+            self.bottom = dictionary?["bottom"]
+            self.left = dictionary?["left"]
+            self.right = dictionary?["right"]
+        }
+    }
+    
+    private enum AssetSize: RawRepresentable, Hashable
+    {
+        case small
+        case medium
+        case large
+        indirect case resizable(assetSize: AssetSize?)
+        
+        // If we're resizable, return our associated AssetSize
+        // Otherwise, we just return self
+        var unwrapped: AssetSize?
+        {
+            if case .resizable(let size) = self
+            {
+                if let size = size
+                {
+                    return size
+                }
+                else
+                {
+                    return nil
+                }
+            }
+            else
+            {
+                return self
+            }
+        }
+        
+        /// Hashable
+        var hashValue: Int {
+            return self.rawValue.hashValue
+        }
+        
+        /// RawRepresentable
+        typealias RawValue = String
+        
+        var rawValue: String {
+            switch self
+            {
+            case .small:     return "small"
+            case .medium:    return "medium"
+            case .large:     return "large"
+            case .resizable: return "resizable"
+            }
+        }
+        
+        init?(rawValue: String)
+        {
+            switch rawValue
+            {
+            case "small":     self = .small
+            case "medium":    self = .medium
+            case "large":     self = .large
+            case "resizable": self = .resizable(assetSize: nil)
+            default:          return nil
+            }
+        }
+        
+        init(size: Size, resizable: Bool = false)
+        {
+            switch size
+            {
+            case .small:  self = .small
+            case .medium: self = .medium
+            case .large:  self = .large
+            }
+            
+            if resizable
+            {
+                self = .resizable(assetSize: self)
+            }
+        }
+        
+        // Should always be used over the associated value for .resizable because it handles orientation
+        func targetSize(for traits: ControllerSkin.Traits) -> CGSize?
+        {
+            guard let assetSize = self.unwrapped else { return nil }
+            
+            var targetSize: CGSize
+            
+            switch (traits.deviceType, assetSize)
+            {
+            case (.iphone, .small): targetSize = CGSize(width: 320, height: 568)
+            case (.iphone, .medium): targetSize = CGSize(width: 375, height: 667)
+            case (.iphone, .large): targetSize = CGSize(width: 414, height: 736)
+                
+            case (.ipad, .small): fallthrough
+            case (.ipad, .medium): targetSize = CGSize(width: 768, height: 1024)
+            case (.ipad, .large): targetSize = CGSize(width: 1024, height: 1366)
+                
+            case (_, .resizable): return nil
+            }
+            
+            switch traits.orientation
+            {
+            case .portrait: break
+            case .landscape: targetSize = CGSize(width: targetSize.height, height: targetSize.width)
+            }
+            
+            return targetSize
+        }
+        
+        func imageScale(for traits: ControllerSkin.Traits) -> CGFloat?
+        {
+            guard let assetSize = self.unwrapped else { return nil }
+            
+            switch (assetSize, traits.deviceType)
+            {
+            case (.small, _): return 2.0
+            case (.medium, _): return 2.0
+            case (.large, .ipad): return 2.0
+            case (.large, .iphone): return 3.0
+            case (.resizable, _): return nil
+            }
+        }
+    }
+    
+    struct Representation: Hashable, CustomStringConvertible
+    {
+        let traits: Traits
+        
+        let assets: [AssetSize: String]
+        let isTranslucent: Bool
+        let gameScreenFrame: CGRect?
+        
+        let items: [Item]
+        
+        /// Hashable
+        var hashValue: Int {
+            return self.traits.hashValue
+        }
+        
+        /// CustomStringConvertible
+        var description: String {
+            return self.traits.description
+        }
+        
+        init?(traits: Traits, dictionary: [String: AnyObject])
+        {
+            guard
+                let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
+                let itemsArray = dictionary["items"] as? [[String: AnyObject]],
+                let assetsDictionary = dictionary["assets"] as? [String: String]
+                else { return nil }
+            
+            self.traits = traits
+            
+            let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
+            
+            var items = [Item]()
+            for dictionary in itemsArray
+            {
+                if let item = Item(dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
+                {
+                    items.append(item)
+                }
+            }
+            self.items = items
+            
+            var assets = [AssetSize: String]()
+            for (key, value) in assetsDictionary
+            {
+                if let size = AssetSize(rawValue: key)
+                {
+                    assets[size] = value
+                }
+            }
+            self.assets = assets
+            
+            guard self.assets.count > 0 else { return nil }
+            
+            self.isTranslucent = dictionary["translucent"] as? Bool ?? false
+            
+            if
+                let gameScreenFrameDictionary = dictionary["gameScreenFrame"] as? [String: CGFloat],
+                let gameScreenFrame = CGRect(dictionary: gameScreenFrameDictionary)
+            {
+                self.gameScreenFrame = gameScreenFrame
+            }
+            else
+            {
+                self.gameScreenFrame = nil
+            }
+        }
+    }
+}
+
+private func ==(lhs: ControllerSkin.Representation, rhs: ControllerSkin.Representation) -> Bool
+{
+    return lhs.traits == rhs.traits
 }

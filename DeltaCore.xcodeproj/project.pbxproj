@@ -26,6 +26,9 @@
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
+		BF92794B1D2B01AD003084F3 /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */; };
+		BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */; };
+		BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */; };
 		BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
 		BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAA1FE91B8A971000495943 /* ExternalController.swift */; };
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
@@ -34,7 +37,6 @@
 		BFB8F0D81D18D01D00D9CD05 /* EmulatorConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D71D18D01D00D9CD05 /* EmulatorConfiguration.swift */; };
 		BFD27EF71D261E9B00E081A3 /* DeltaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaCore.m */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
-		BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */; };
 		BFE438101AF606980095A5F1 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameController.swift */; };
 		BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE438111AF60CDA0095A5F1 /* ControllerView.swift */; };
 		BFE7EEA01D2588E7008D0BA3 /* Delta+Dynamic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE7EE9F1D2588E7008D0BA3 /* Delta+Dynamic.swift */; };
@@ -121,6 +123,9 @@
 		BF785C9C1B603C1800189DB8 /* Delta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delta.swift; sourceTree = "<group>"; };
 		BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiExternalController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
+		BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
+		BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIScreen+ControllerSkin.swift"; sourceTree = "<group>"; };
+		BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinTraits.swift; sourceTree = "<group>"; };
 		BF9873C01AB6C8BF0001D8C9 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		BFAA1FE91B8A971000495943 /* ExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ExternalController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerDebugView.swift; sourceTree = "<group>"; };
@@ -129,7 +134,6 @@
 		BFB8F0D71D18D01D00D9CD05 /* EmulatorConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmulatorConfiguration.swift; sourceTree = "<group>"; };
 		BFD27EF61D261E9B00E081A3 /* DeltaCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCore.m; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
-		BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
 		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BFE438111AF60CDA0095A5F1 /* ControllerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ControllerView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BFE7EE9F1D2588E7008D0BA3 /* Delta+Dynamic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Delta+Dynamic.swift"; sourceTree = "<group>"; };
@@ -247,7 +251,8 @@
 				BF1FB1881C5EEC14007E2494 /* SaveState.swift */,
 				BF65E86D1CEE68F300CD3247 /* Cheat.swift */,
 				BF34FA121CF18E40006624C7 /* CheatFormat.swift */,
-				BFD9B9371C262B6A00B5FF7C /* ControllerSkin.swift */,
+				BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */,
+				BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */,
 				BFAA1FE91B8A971000495943 /* ExternalController.swift */,
 				BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */,
 			);
@@ -296,6 +301,7 @@
 				BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */,
 				BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */,
 				BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */,
+				BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -511,11 +517,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF92794B1D2B01AD003084F3 /* ControllerSkin.swift in Sources */,
 				BF425A951D23BD8500F48ED9 /* EmulatorBridging.swift in Sources */,
 				BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */,
 				BFF703D41B4888100098561C /* Input.swift in Sources */,
 				BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */,
 				BFEC23C41D247D1F00B3A6A9 /* VideoRendering.swift in Sources */,
+				BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */,
 				BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,
 				BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */,
 				BFE7EEA01D2588E7008D0BA3 /* Delta+Dynamic.swift in Sources */,
@@ -527,11 +535,11 @@
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
 				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
+				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
 				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BF425A791D23925600F48ED9 /* InputTransforming.swift in Sources */,
-				BFD9B9381C262B6A00B5FF7C /* ControllerSkin.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,
 				BFE438101AF606980095A5F1 /* GameController.swift in Sources */,

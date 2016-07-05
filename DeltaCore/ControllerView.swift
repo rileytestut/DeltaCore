@@ -13,17 +13,55 @@ public class ControllerView: UIView, GameController
     //MARK: - Properties -
     /** Properties **/
     public var controllerSkin: ControllerSkin? {
-        didSet
-        {
+        didSet {
             self.setNeedsLayout()
         }
     }
     
-    public var currentConfiguration: ControllerSkinConfiguration {
-        return ControllerSkinConfiguration(traitCollection: self.traitCollection, containerSize: self.containerView?.bounds.size ?? self.superview?.bounds.size ?? CGSize.zero, targetWidth: self.bounds.width)
+    public var controllerSkinTraits: ControllerSkin.Traits!
+    {
+        set { self.overrideTraits = newValue }
+        get
+        {
+            if let traits = self.overrideTraits
+            {
+                return traits
+            }
+            
+            // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
+            let orientation: ControllerSkin.Orientation = (UIScreen.main().bounds.width > UIScreen.main().bounds.height) ? .landscape : .portrait
+            
+            // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
+            // 99% of the time, won't make a difference ¯\_(ツ)_/¯
+            let deviceType: ControllerSkin.DeviceType = (self.traitCollection.userInterfaceIdiom == .pad) ? .ipad : .iphone
+            
+            var traits = ControllerSkin.Traits(deviceType: deviceType, displayMode: .fullScreen, orientation: orientation)
+            
+            if let window = self.window
+            {
+                if deviceType == .iphone || window.bounds.equalTo(UIScreen.main().bounds)
+                {
+                    traits.displayMode = .fullScreen
+                }
+                else
+                {
+                    traits.displayMode = .splitView
+                }
+            }
+            
+            return traits
+        }
     }
     
-    public var containerView: UIView?
+    public var controllerSkinSize: ControllerSkin.Size!
+    {
+        set { self.overrideSize = newValue }
+        get
+        {
+            let size = self.overrideSize ?? UIScreen.main().defaultControllerSkinSize
+            return size
+        }
+    }
     
     //MARK: - <GameControllerType>
     /// <GameControllerType>
@@ -32,9 +70,12 @@ public class ControllerView: UIView, GameController
     public let _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties
-    private let imageView: UIImageView = UIImageView(frame: CGRect.zero)
+    private let imageView = UIImageView(frame: CGRect.zero)
     private var transitionImageView: UIImageView? = nil
     private let controllerDebugView = ControllerDebugView()
+    
+    private var overrideTraits: ControllerSkin.Traits?
+    private var overrideSize: ControllerSkin.Size?
     
     private var _performedInitialLayout = false
     
@@ -166,9 +207,9 @@ public extension ControllerView
             self.controllerDebugView.isHidden = !debugModeEnabled
         }
         
-        self.controllerDebugView.items = self.controllerSkin?.itemsForConfiguration(self.currentConfiguration)
+        self.controllerDebugView.items = self.controllerSkin?.items(for: self.controllerSkinTraits)
         
-        let image = self.controllerSkin?.imageForConfiguration(self.currentConfiguration)
+        let image = self.controllerSkin?.image(for: self.controllerSkinTraits, preferredSize: self.controllerSkinSize)
         self.imageView.image = image
         
         self.invalidateIntrinsicContentSize()
@@ -217,7 +258,7 @@ private extension ControllerView
             point.x /= self.bounds.width
             point.y /= self.bounds.height
             
-            let inputs = controllerSkin.inputsForPoint(point, configuration: self.currentConfiguration) ?? []
+            let inputs = controllerSkin.inputs(for: self.controllerSkinTraits, point: point) ?? []
             let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputBox(input: $0) }
             
             self.touchInputsMappingDictionary[touch] = Set(boxedInputs)

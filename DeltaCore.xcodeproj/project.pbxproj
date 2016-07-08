@@ -44,8 +44,6 @@
 		BFEC23CD1D247E4A00B3A6A9 /* AudioRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC23CC1D247E4A00B3A6A9 /* AudioRendering.swift */; };
 		BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */; };
 		BFEC24131D24DAE800B3A6A9 /* Thread+RealTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */; };
-		BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = BFECA1D51AE3935700AF9144 /* DynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = BFECA1D61AE3935700AF9144 /* DynamicObject.m */; };
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 /* End PBXBuildFile section */
@@ -141,8 +139,6 @@
 		BFEC23CC1D247E4A00B3A6A9 /* AudioRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRendering.swift; sourceTree = "<group>"; };
 		BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
 		BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Thread+RealTime.swift"; sourceTree = "<group>"; };
-		BFECA1D51AE3935700AF9144 /* DynamicObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicObject.h; sourceTree = "<group>"; };
-		BFECA1D61AE3935700AF9144 /* DynamicObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DynamicObject.m; sourceTree = "<group>"; };
 		BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZipZap.xcodeproj; path = External/ZipZap/ZipZap.xcodeproj; sourceTree = SOURCE_ROOT; };
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -223,7 +219,6 @@
 				BFE7EE9F1D2588E7008D0BA3 /* Delta+Dynamic.swift */,
 				BF425A931D23BD2D00F48ED9 /* Cores */,
 				BFF912D11AB08E7400AC07A1 /* Emulator Core */,
-				BFECA1CE1AE38A1A00AF9144 /* Dynamic */,
 				BF9873BF1AB6C8AE0001D8C9 /* UI */,
 				BF4689801AAD702D00A2586D /* Model */,
 				BFAA1FE61B8A722F00495943 /* External Controllers */,
@@ -333,15 +328,6 @@
 			name = Audio/Video;
 			sourceTree = "<group>";
 		};
-		BFECA1CE1AE38A1A00AF9144 /* Dynamic */ = {
-			isa = PBXGroup;
-			children = (
-				BFECA1D51AE3935700AF9144 /* DynamicObject.h */,
-				BFECA1D61AE3935700AF9144 /* DynamicObject.m */,
-			);
-			name = Dynamic;
-			sourceTree = "<group>";
-		};
 		BFEE12C71B602CBF00156A2C /* External */ = {
 			isa = PBXGroup;
 			children = (
@@ -382,7 +368,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BFECA1D71AE3935700AF9144 /* DynamicObject.h in Headers */,
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 			);
@@ -536,7 +521,6 @@
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
 				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
-				BFECA1D81AE3935700AF9144 /* DynamicObject.m in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BF425A791D23925600F48ED9 /* InputTransforming.swift in Sources */,

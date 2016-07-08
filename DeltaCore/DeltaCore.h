@@ -15,7 +15,6 @@ FOUNDATION_EXPORT double DeltaCoreVersionNumber;
 FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <DeltaCore/PublicHeader.h>
-#import <DeltaCore/DynamicObject.h>
 
 // C-Libraries
 #import <DeltaCore/TPCircularBuffer.h>

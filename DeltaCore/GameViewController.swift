@@ -182,7 +182,7 @@ public extension GameViewController
     {
         super.viewDidLayoutSubviews()
         
-        if !self.controllerView.isHidden
+        if !self.controllerView.isHidden && self.controllerView.controllerSkin != nil
         {
             if self.view.bounds.width > self.view.bounds.height
             {

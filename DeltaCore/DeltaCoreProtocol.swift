@@ -10,6 +10,8 @@ import Foundation
 
 public protocol DeltaCoreProtocol: CustomStringConvertible
 {
+    var bundleIdentifier: String { get }
+    
     var supportedGameTypes: Set<GameType> { get }
     
     var emulatorBridge: EmulatorBridging { get }
@@ -22,6 +24,6 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 extension DeltaCoreProtocol
 {
     public var description: String {
-        return String(Self)
+        return self.bundleIdentifier
     }
 }

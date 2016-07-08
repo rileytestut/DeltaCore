@@ -28,6 +28,6 @@ public extension Delta
             Delta.register(core)
         }
         
-        NotificationCenter.default().post(name: .DeltaRegistrationRequest, object: response)
+        NotificationCenter.default.post(name: .DeltaRegistrationRequest, object: response)
     }
 }

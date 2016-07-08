@@ -36,14 +36,14 @@ public extension ExternalControllerManager
             self.add(externalController)
         }
                 
-        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
-        NotificationCenter.default().addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
     }
     
     func stopMonitoringExternalControllers()
     {
-        NotificationCenter.default().removeObserver(self, name: NSNotification.Name.GCControllerDidConnect, object: nil)
-        NotificationCenter.default().removeObserver(self, name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
         
         self.connectedControllers.removeAll()
     }
@@ -93,7 +93,7 @@ private extension ExternalControllerManager
         
         self.connectedControllers.append(controller)
         
-        NotificationCenter.default().post(name: .externalControllerDidConnect, object: controller)
+        NotificationCenter.default.post(name: .externalControllerDidConnect, object: controller)
     }
     
     func remove(_ controller: ExternalController)
@@ -102,7 +102,7 @@ private extension ExternalControllerManager
         {
             self.connectedControllers.remove(at: index)
             
-            NotificationCenter.default().post(name: .externalControllerDidDisconnect, object: controller)
+            NotificationCenter.default.post(name: .externalControllerDidDisconnect, object: controller)
         }
     }
 }

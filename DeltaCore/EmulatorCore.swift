@@ -207,7 +207,7 @@ public extension EmulatorCore
 {
     func save(withCompletion completion: ((SaveStateProtocol) -> Void))
     {
-        FileManager.default().prepareTemporaryURL { URL in
+        FileManager.default.prepareTemporaryURL { URL in
             
             self.deltaCore.emulatorBridge.saveSaveState(to: URL)
             
@@ -218,7 +218,7 @@ public extension EmulatorCore
     
     func load(_ saveState: SaveStateProtocol) throws
     {
-        guard let path = saveState.fileURL.path where FileManager.default().fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
+        guard let path = saveState.fileURL.path where FileManager.default.fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
         self.deltaCore.emulatorBridge.loadSaveState(from: saveState.fileURL)
     }

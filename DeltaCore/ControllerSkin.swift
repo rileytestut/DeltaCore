@@ -154,6 +154,21 @@ public struct ControllerSkin
 
 public extension ControllerSkin
 {
+    static func standardControllerSkin(for gameType: GameType) -> ControllerSkin?
+    {
+        guard
+            let deltaCore = Delta.core(for: gameType),
+            let bundle = Bundle(identifier: deltaCore.bundleIdentifier),
+            let fileURL = bundle.urlForResource("Standard", withExtension: "deltaskin")
+        else { return nil }
+        
+        let controllerSkin = ControllerSkin(fileURL: fileURL)
+        return controllerSkin
+    }
+}
+
+public extension ControllerSkin
+{
     func supports(_ traits: Traits) -> Bool
     {
         let representation = self.representations[traits]

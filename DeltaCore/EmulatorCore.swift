@@ -168,12 +168,12 @@ public extension EmulatorCore
         
         self.state = .running
         
+        self.audioManager.enabled = true
+        self.deltaCore.emulatorBridge.resume()
+        
         self.runGameLoop()
         
         self.emulationSemaphore.wait()
-        
-        self.audioManager.enabled = true
-        self.deltaCore.emulatorBridge.resume()
         
         return true
     }

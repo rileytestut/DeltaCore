@@ -8,15 +8,6 @@
 
 import Foundation
 
-// Cannot nest type in Cheat namespace due to Swift bug :(
-@objc public enum CheatType: Int
-{
-    case actionReplay
-    case gameGenie
-    case gameShark
-    case codeBreaker
-}
-
 public protocol CheatProtocol
 {
     var code: String { get }

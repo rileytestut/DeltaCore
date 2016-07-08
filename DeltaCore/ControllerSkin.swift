@@ -87,7 +87,7 @@ public struct ControllerSkin
             let gameType = info["gameTypeIdentifier"] as? GameType,
             let debugModeEnabled = info["debug"] as? Bool,
             let representationsDictionary = info["representations"] as? RepresentationDictionary
-            else { return nil }
+        else { return nil }
         
         self.name = name
         self.identifier = identifier
@@ -102,6 +102,8 @@ public struct ControllerSkin
             representations[representation.traits] = representation
         }
         self.representations = representations
+        
+        guard self.representations.count > 0 else { return nil }
     }
     
     // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
@@ -301,7 +303,7 @@ private extension ControllerSkin
         guard
             let archive = try? ZZArchive(url: self.fileURL),
             let index = archive.entries.index(where: { $0.fileName == filename })
-            else { return nil }
+        else { return nil }
         
         let entry = archive.entries[index]
         return entry
@@ -474,7 +476,7 @@ private extension ControllerSkin
                 let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
                 let itemsArray = dictionary["items"] as? [[String: AnyObject]],
                 let assetsDictionary = dictionary["assets"] as? [String: String]
-                else { return nil }
+            else { return nil }
             
             self.traits = traits
             

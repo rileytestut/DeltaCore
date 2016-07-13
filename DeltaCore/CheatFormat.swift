@@ -20,7 +20,7 @@ public struct CheatFormat
     
     public let allowedCodeCharacters: CharacterSet
     
-    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: CharacterSet = CharacterSet.hexadecimalCharacterSet())
+    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: CharacterSet = CharacterSet.hexadecimals())
     {
         self.name = name
         self.format = format
@@ -31,7 +31,7 @@ public struct CheatFormat
 
 public extension CharacterSet
 {
-    static func hexadecimalCharacterSet() -> CharacterSet
+    static func hexadecimals() -> CharacterSet
     {
         let characterSet = CharacterSet(charactersIn: "0123456789ABCDEFabcdef")
         return characterSet

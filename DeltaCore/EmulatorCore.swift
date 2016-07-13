@@ -41,8 +41,8 @@ public final class EmulatorCore
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.deltaCore.emulatorConfiguration.audioBufferInfo)
-    public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.deltaCore.emulatorConfiguration.videoBufferInfo)
+    public private(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.configuration.audioBufferInfo)
+    public private(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.configuration.videoBufferInfo)
     
     // KVO-Compliant
     public private(set) dynamic var state = State.stopped
@@ -50,16 +50,17 @@ public final class EmulatorCore
     {
         didSet
         {
-            if !self.deltaCore.emulatorConfiguration.supportedRates.contains(self.rate)
+            if !self.configuration.supportedRates.contains(self.rate)
             {
-                self.rate = min(max(self.rate, self.deltaCore.emulatorConfiguration.supportedRates.lowerBound), self.deltaCore.emulatorConfiguration.supportedRates.upperBound)
+                self.rate = min(max(self.rate, self.configuration.supportedRates.lowerBound), self.configuration.supportedRates.upperBound)
             }
             
             self.audioManager.rate = self.rate
         }
     }
     
-    public var preferredRenderingSize: CGSize { return self.deltaCore.emulatorConfiguration.videoBufferInfo.outputDimensions }
+    public var configuration: EmulatorConfiguration { return self.deltaCore.emulatorConfiguration }
+    public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.outputDimensions }
     
     //MARK: - Private Properties
     private let deltaCore: DeltaCoreProtocol
@@ -73,7 +74,7 @@ public final class EmulatorCore
     
     private var gameSaveURL: URL {
         let gameURL = (try? self.game.fileURL.deletingPathExtension()) ?? self.game.fileURL
-        let gameSaveURL = try! gameURL.appendingPathExtension(self.deltaCore.emulatorConfiguration.gameSaveFileExtension)
+        let gameSaveURL = try! gameURL.appendingPathExtension(self.configuration.gameSaveFileExtension)
         return gameSaveURL
     }
     
@@ -83,8 +84,8 @@ public final class EmulatorCore
     {
         // These MUST be set in start(), because it's possible the same emulator core might be stopped, another one started, and then resumed back to this one
         // AKA, these need to always be set at start to ensure it points to the correct managers
-        // self.deltaCore.emulatorConfiguration.bridge.audioRenderer = self.audioManager
-        // self.deltaCore.emulatorConfiguration.bridge.videoRenderer = self.videoManager
+        // self.configuration.bridge.audioRenderer = self.audioManager
+        // self.configuration.bridge.videoRenderer = self.videoManager
         
         guard let deltaCore = Delta.core(for: game.type) else {
             print(game.type.rawValue + " is not a supported game type.")
@@ -94,7 +95,7 @@ public final class EmulatorCore
         self.deltaCore = deltaCore
         
         self.game = game
-        self.rate = self.deltaCore.emulatorConfiguration.supportedRates.lowerBound
+        self.rate = self.configuration.supportedRates.lowerBound
     }
 }
 
@@ -389,7 +390,7 @@ private extension EmulatorCore
                 if framesToSkip > 0
                 {
                     // Only actually skip frames if we're running at normal speed
-                    if self.rate == self.deltaCore.emulatorConfiguration.supportedRates.lowerBound
+                    if self.rate == self.configuration.supportedRates.lowerBound
                     {
                         for _ in 0 ..< framesToSkip
                         {

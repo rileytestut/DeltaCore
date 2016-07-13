@@ -17,7 +17,7 @@ public extension Notification.Name
 
 public class ExternalControllerManager
 {
-    public static let sharedManager = ExternalControllerManager()
+    public static let shared = ExternalControllerManager()
     
     //MARK: - Properties -
     /** Properties **/

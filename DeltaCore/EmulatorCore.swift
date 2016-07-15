@@ -29,7 +29,7 @@ public extension EmulatorCore
     }
 }
 
-public final class EmulatorCore
+public final class EmulatorCore: NSObject
 {
     //MARK: - Properties -
     /** Properties **/
@@ -99,6 +99,8 @@ public final class EmulatorCore
         
         // Stored separately in case self.game is an NSManagedObject subclass, and we need to access .type on a different thread than it's NSManagedObjectContext
         self.gameType = self.game.type
+        
+        super.init()
         
         self.rate = self.configuration.supportedRates.lowerBound        
     }

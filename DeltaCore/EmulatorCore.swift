@@ -64,6 +64,7 @@ public final class EmulatorCore
     
     //MARK: - Private Properties
     private let deltaCore: DeltaCoreProtocol
+    private let gameType: GameType
     
     private let emulationSemaphore = DispatchSemaphore(value: 0)
     private var gameControllersDictionary = [Int: GameController]()
@@ -95,7 +96,11 @@ public final class EmulatorCore
         self.deltaCore = deltaCore
         
         self.game = game
-        self.rate = self.configuration.supportedRates.lowerBound
+        
+        // Stored separately in case self.game is an NSManagedObject subclass, and we need to access .type on a different thread than it's NSManagedObjectContext
+        self.gameType = self.game.type
+        
+        self.rate = self.configuration.supportedRates.lowerBound        
     }
 }
 
@@ -212,7 +217,7 @@ public extension EmulatorCore
             
             self.deltaCore.emulatorBridge.saveSaveState(to: URL)
             
-            let saveState = SaveState(fileURL: URL, gameType: self.game.type)
+            let saveState = SaveState(fileURL: URL, gameType: self.gameType)
             completion(saveState)
         }
     }

@@ -160,6 +160,11 @@ public extension GameViewController
         case .paused: self.resumeEmulation()
         case .running: break
         }
+        
+        // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
+        // This is especially noticeable when peeking a game
+        self.emulatorCore?.audioManager.enabled = false
+        self.emulatorCore?.audioManager.enabled = true
     }
     
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)

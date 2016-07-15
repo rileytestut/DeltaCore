@@ -56,8 +56,9 @@ public class GameViewController: UIViewController
         {
             oldValue?.stop()
             
-            self.emulatorCore?.updateHandler = { [unowned self] core in
-                self.delegate?.gameViewControllerDidUpdate(gameViewController: self)
+            self.emulatorCore?.updateHandler = { [weak self] core in
+                guard let strongSelf = self else { return }
+                strongSelf.delegate?.gameViewControllerDidUpdate(gameViewController: strongSelf)
             }
             
             self.prepareForGame()
@@ -99,6 +100,7 @@ public class GameViewController: UIViewController
     
     deinit
     {
+        self.controllerView.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
         self.emulatorCore?.stop()
     }
 }

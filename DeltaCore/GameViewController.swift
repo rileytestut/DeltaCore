@@ -152,19 +152,35 @@ public extension GameViewController
     {
         super.viewDidAppear(animated)
         
-        guard let emulatorCore = self.emulatorCore else { return }
-        
-        switch emulatorCore.state
+        if let emulatorCore = self.emulatorCore
         {
-        case .stopped: emulatorCore.start()
-        case .paused: self.resumeEmulation()
-        case .running: break
+            func startEmulation()
+            {
+                switch emulatorCore.state
+                {
+                case .stopped: emulatorCore.start()
+                case .paused: self.resumeEmulation()
+                case .running: break
+                }
+                
+                // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
+                // This is especially noticeable when peeking a game
+                emulatorCore.audioManager.enabled = false
+                emulatorCore.audioManager.enabled = true
+            }
+            
+            if let transitionCoordinator = self.transitionCoordinator()
+            {
+                // Delay emulation start until after transition animation to prevent dropped frames
+                transitionCoordinator.animate(alongsideTransition: nil, completion: { (context) in
+                    startEmulation()
+                })
+            }
+            else
+            {
+                startEmulation()
+            }
         }
-        
-        // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
-        // This is especially noticeable when peeking a game
-        self.emulatorCore?.audioManager.enabled = false
-        self.emulatorCore?.audioManager.enabled = true
     }
     
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)

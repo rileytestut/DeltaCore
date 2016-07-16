@@ -31,7 +31,7 @@ public extension GameViewControllerDelegate
 
 private var kvoContext = 0
 
-public class GameViewController: UIViewController
+public class GameViewController: UIViewController, GameControllerReceiver
 {
     public var game: GameProtocol?
     {
@@ -104,27 +104,9 @@ public class GameViewController: UIViewController
         self.emulatorCore?.stop()
     }
     
-    // MARK: GameControllerReceiver
-    // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
-    
-    public func gameController(_ gameController: GameController, didActivate input: Input)
-    {
-        guard let input = input as? ControllerInput where input == .menu else { return }
-        self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
-    }
-    
-    public func gameController(_ gameController: GameController, didDeactivate input: Input)
-    {
-        // This method intentionally left blank
-    }
-}
-
-extension GameViewController: GameControllerReceiver {}
-
-// MARK: UIViewController
-/// UIViewController
-public extension GameViewController
-{
+    // MARK: - UIViewController -
+    /// UIViewController
+    // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     public override func prefersStatusBarHidden() -> Bool
     {
         return true
@@ -248,6 +230,8 @@ public extension GameViewController
         }
     }
     
+    // MARK: - KVO -
+    /// KVO
     public override func observeValue(forKeyPath keyPath: String?, of object: AnyObject?, change: [NSKeyValueChangeKey : AnyObject]?, context: UnsafeMutablePointer<Void>?)
     {
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
@@ -255,14 +239,28 @@ public extension GameViewController
         self.view.setNeedsLayout()
         self.view.layoutIfNeeded()
     }
-
+    
     public override func didReceiveMemoryWarning()
     {
         super.didReceiveMemoryWarning()
     }
+    
+    // MARK: - GameControllerReceiver -
+    /// GameControllerReceiver
+    // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
+    public func gameController(_ gameController: GameController, didActivate input: Input)
+    {
+        guard let input = input as? ControllerInput where input == .menu else { return }
+        self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
+    }
+    
+    public func gameController(_ gameController: GameController, didDeactivate input: Input)
+    {
+        // This method intentionally left blank
+    }
 }
 
-// MARK: Emulation
+// MARK: - Emulation -
 /// Emulation
 public extension GameViewController
 {
@@ -279,7 +277,7 @@ public extension GameViewController
     }
 }
 
-// MARK: Preparation
+// MARK: - Preparation -
 private extension GameViewController
 {
     func prepareForGame()
@@ -301,7 +299,7 @@ private extension GameViewController
     }
 }
 
-// MARK: Notifications
+// MARK: - Notifications - 
 private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)

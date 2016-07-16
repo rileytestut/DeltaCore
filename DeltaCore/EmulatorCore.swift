@@ -97,7 +97,7 @@ public final class EmulatorCore: NSObject
         
         self.game = game
         
-        // Stored separately in case self.game is an NSManagedObject subclass, and we need to access .type on a different thread than it's NSManagedObjectContext
+        // Stored separately in case self.game is an NSManagedObject subclass, and we need to access .type on a different thread than its NSManagedObjectContext
         self.gameType = self.game.type
         
         super.init()

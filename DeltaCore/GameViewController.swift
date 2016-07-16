@@ -72,8 +72,8 @@ public class GameViewController: UIViewController
     
     public weak var delegate: GameViewControllerDelegate?
     
-    public var gameView: GameView!
-    public var controllerView: ControllerView!
+    public private(set) var gameView: GameView!
+    public private(set) var controllerView: ControllerView!
     
     private var controllerViewHeightConstraint: NSLayoutConstraint!
     private var gameViewHeightConstraint: NSLayoutConstraint!

@@ -103,7 +103,23 @@ public class GameViewController: UIViewController
         self.controllerView.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
         self.emulatorCore?.stop()
     }
+    
+    // MARK: GameControllerReceiver
+    // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
+    
+    public func gameController(_ gameController: GameController, didActivate input: Input)
+    {
+        guard let input = input as? ControllerInput where input == .menu else { return }
+        self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
+    }
+    
+    public func gameController(_ gameController: GameController, didDeactivate input: Input)
+    {
+        // This method intentionally left blank
+    }
 }
+
+extension GameViewController: GameControllerReceiver {}
 
 // MARK: UIViewController
 /// UIViewController
@@ -260,21 +276,6 @@ public extension GameViewController
     {
         guard let emulatorCore = self.emulatorCore where self.delegate?.gameViewControllerShouldResumeEmulation(gameViewController: self) ?? true else { return false }
         return emulatorCore.resume()
-    }
-}
-
-// MARK: GameControllerReceiver
-extension GameViewController: GameControllerReceiver
-{
-    public func gameController(_ gameController: GameController, didActivate input: Input)
-    {
-        guard let input = input as? ControllerInput where input == .menu else { return }
-        self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
-    }
-    
-    public func gameController(_ gameController: GameController, didDeactivate input: Input)
-    {
-        // This method intentionally left blank
     }
 }
 

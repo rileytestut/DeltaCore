@@ -126,7 +126,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         self.controllerView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(self.controllerView)
         
-        self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
+        self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
         
         self.prepareForGame()
         
@@ -235,6 +235,9 @@ public class GameViewController: UIViewController, GameControllerReceiver
     public override func observeValue(forKeyPath keyPath: String?, of object: AnyObject?, change: [NSKeyValueChangeKey : AnyObject]?, context: UnsafeMutablePointer<Void>?)
     {
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
+
+        // Ensures the value is actually different, or else we might potentially run into an infinite loop if subclasses hide/show controllerView in viewDidLayoutSubviews()
+        guard (change?[.newKey] as? Bool) != (change?[.oldKey] as? Bool) else { return }
         
         self.view.setNeedsLayout()
         self.view.layoutIfNeeded()

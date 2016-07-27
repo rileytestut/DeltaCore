@@ -63,6 +63,10 @@ public final class EmulatorCore: NSObject
     public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.outputDimensions }
     
     //MARK: - Private Properties
+    
+    // We privately set this first to clean up before setting self.state, which notifies KVO observers
+    private var _state = State.stopped
+    
     private let deltaCore: DeltaCoreProtocol
     private let gameType: GameType
     
@@ -112,9 +116,11 @@ public extension EmulatorCore
 {
     @discardableResult func start() -> Bool
     {
-        guard self.state == .stopped else { return false }
+        guard self._state == .stopped else { return false }
         
-        self.state = .running
+        self._state = .running
+        defer { self.state = self._state }
+        
         self.audioManager.start()
         
         self.deltaCore.emulatorBridge.audioRenderer = self.audioManager
@@ -135,11 +141,12 @@ public extension EmulatorCore
     
     @discardableResult func stop() -> Bool
     {
-        guard self.state != .stopped else { return false }
+        guard self._state != .stopped else { return false }
         
         let isRunning = self.state == .running
         
-        self.state = .stopped
+        self._state = .stopped
+        defer { self.state = self._state }
         
         if isRunning
         {
@@ -156,9 +163,10 @@ public extension EmulatorCore
     
     @discardableResult func pause() -> Bool
     {
-        guard self.state == .running else { return false }
+        guard self._state == .running else { return false }
         
-        self.state = .paused
+        self._state = .paused
+        defer { self.state = self._state }
         
         self.emulationSemaphore.wait()
         
@@ -172,9 +180,10 @@ public extension EmulatorCore
     
     @discardableResult func resume() -> Bool
     {
-        guard self.state == .paused else { return false }
+        guard self._state == .paused else { return false }
         
-        self.state = .running
+        self._state = .running
+        defer { self.state = self._state }
         
         self.audioManager.enabled = true
         self.deltaCore.emulatorBridge.resume()
@@ -410,7 +419,7 @@ private extension EmulatorCore
                 }
                 
                 // Prevent race conditions
-                let state = self.state
+                let state = self._state
                 
                 if self.previousState != state
                 {

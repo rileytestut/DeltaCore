@@ -253,7 +253,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
     // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
-        guard let input = input as? ControllerInput where input == .menu else { return }
+        guard let input = input as? ControllerInput, input == .menu else { return }
         self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
     }
     
@@ -269,13 +269,13 @@ public extension GameViewController
 {
     @discardableResult func pauseEmulation() -> Bool
     {
-        guard let emulatorCore = self.emulatorCore where self.delegate?.gameViewControllerShouldPauseEmulation(gameViewController: self) ?? true else { return false }
+        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(gameViewController: self) ?? true else { return false }
         return emulatorCore.pause()
     }
     
     @discardableResult func resumeEmulation() -> Bool
     {
-        guard let emulatorCore = self.emulatorCore where self.delegate?.gameViewControllerShouldResumeEmulation(gameViewController: self) ?? true else { return false }
+        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldResumeEmulation(gameViewController: self) ?? true else { return false }
         return emulatorCore.resume()
     }
 }

@@ -235,7 +235,7 @@ public extension EmulatorCore
     
     func load(_ saveState: SaveStateProtocol) throws
     {
-        guard let path = saveState.fileURL.path where FileManager.default.fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
+        guard let path = saveState.fileURL.path, FileManager.default.fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
         
         self.deltaCore.emulatorBridge.loadSaveState(from: saveState.fileURL)
     }
@@ -312,7 +312,7 @@ public extension EmulatorCore
         gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
         
-        if let gameController = gameController as? MFiExternalController where gameController.inputTransformationHandler == nil
+        if let gameController = gameController as? MFiExternalController, gameController.inputTransformationHandler == nil
         {
             gameController.inputTransformationHandler = { (gameController, input) in
                 return self.deltaCore.inputTransformer.inputs(for: gameController as! MFiExternalController, input: input as! MFiExternalControllerInput)

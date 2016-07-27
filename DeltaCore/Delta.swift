@@ -34,7 +34,7 @@ public struct Delta
         
         for gameType in gameTypes
         {
-            if let core = core where !core.supportedGameTypes.contains(gameType)
+            if let core = core, !core.supportedGameTypes.contains(gameType)
             {
                 // Core doesn't support this gameType, so we ignore it
                 continue

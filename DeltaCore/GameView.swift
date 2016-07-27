@@ -90,7 +90,7 @@ extension GameView: GLKViewDelegate
 {
     public func glkView(_ view: GLKView, drawIn rect: CGRect)
     {        
-        guard let window = self.window where !self.bounds.isEmpty else { return }
+        guard let window = self.window, !self.bounds.isEmpty else { return }
         
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))

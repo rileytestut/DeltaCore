@@ -87,7 +87,7 @@ public extension String
             scanner.scanCharacters(from: characterSet, into: &string)
             
             // Might start with separator characters, in which case scannedString would be nil/empty
-            if let scannedString = string where scannedString.length > 0
+            if let scannedString = string, scannedString.length > 0
             {
                 let range = NSRange(location: 0, length: min(scannedString.length, codeBuffer.length))
                 
@@ -106,7 +106,7 @@ public extension String
             scanner.scanUpToCharacters(from: characterSet, into: &separatorString)
             
             // If no separator characters, we're done!
-            guard let tempString = separatorString as? String where separatorString?.length > 0 else { break }
+            guard let tempString = separatorString as? String, separatorString?.length > 0 else { break }
             
             formattedString += tempString
         }

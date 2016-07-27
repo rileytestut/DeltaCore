@@ -21,8 +21,8 @@
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
 		BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFEE12D11B602CCA00156A2C /* ZipZap.framework */; };
-		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; };
-		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
+		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
@@ -592,6 +592,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = DeltaCore;
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "\"${SRCROOT}/External/Modules\"";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -635,6 +636,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = DeltaCore;
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "\"${SRCROOT}/External/Modules\"";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

@@ -16,9 +16,6 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <DeltaCore/PublicHeader.h>
 
-// C-Libraries
-#import <DeltaCore/TPCircularBuffer.h>
-
 // HACK: Needed because the generated DeltaCore-Swift header file doesn't include this import
 #import <GLKit/GLKit.h>
 

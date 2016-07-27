@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import TPCircularBuffer
 
 @objc(DLTARingBuffer)
 public class RingBuffer: NSObject

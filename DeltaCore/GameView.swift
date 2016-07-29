@@ -74,6 +74,7 @@ public class GameView: UIView
         if let window = self.window
         {
             self.glkView.contentScaleFactor = window.screen.scale
+            self.update()
         }
     }
 }

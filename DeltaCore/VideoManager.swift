@@ -78,8 +78,8 @@ public class VideoManager: NSObject, VideoRendering
     
     deinit
     {
-        self.videoBuffer.deallocateCapacity(self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer.deallocateCapacity(self.bufferInfo.outputBufferSize)
+        self.videoBuffer.deallocate(capacity: self.bufferInfo.inputBufferSize)
+        self.convertedVideoBuffer.deallocate(capacity: self.bufferInfo.outputBufferSize)
     }
 }
 

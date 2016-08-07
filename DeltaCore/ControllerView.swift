@@ -29,7 +29,7 @@ public class ControllerView: UIView, GameController
             }
             
             // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
-            let orientation: ControllerSkin.Orientation = (UIScreen.main().bounds.width > UIScreen.main().bounds.height) ? .landscape : .portrait
+            let orientation: ControllerSkin.Orientation = (UIScreen.main.bounds.width > UIScreen.main.bounds.height) ? .landscape : .portrait
             
             // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
             // 99% of the time, won't make a difference ¯\_(ツ)_/¯
@@ -39,7 +39,7 @@ public class ControllerView: UIView, GameController
             
             if let window = self.window
             {
-                if deviceType == .iphone || window.bounds.equalTo(UIScreen.main().bounds)
+                if deviceType == .iphone || window.bounds.equalTo(UIScreen.main.bounds)
                 {
                     traits.displayMode = .fullScreen
                 }
@@ -58,7 +58,7 @@ public class ControllerView: UIView, GameController
         set { self.overrideSize = newValue }
         get
         {
-            let size = self.overrideSize ?? UIScreen.main().defaultControllerSkinSize
+            let size = self.overrideSize ?? UIScreen.main.defaultControllerSkinSize
             return size
         }
     }
@@ -82,7 +82,7 @@ public class ControllerView: UIView, GameController
     private var touchInputsMappingDictionary: [UITouch: Set<InputBox>] = [:]
     private var previousTouchInputs = Set<InputBox>()
     private var touchInputs: Set<InputBox> {
-        return self.touchInputsMappingDictionary.values.reduce(Set<InputBox>(), combine: { $0.union($1) })
+        return self.touchInputsMappingDictionary.values.reduce(Set<InputBox>(), { $0.union($1) })
     }
     
     //MARK: - Initializers -
@@ -103,7 +103,7 @@ public class ControllerView: UIView, GameController
     
     private func initialize()
     {
-        self.backgroundColor = UIColor.clear()
+        self.backgroundColor = UIColor.clear
         
         self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
         self.imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -124,7 +124,7 @@ public class ControllerView: UIView, GameController
     /// UIView
     public override func intrinsicContentSize() -> CGSize
     {
-        return self.imageView.intrinsicContentSize()
+        return self.imageView.intrinsicContentSize
     }
     
     public override func layoutSubviews()

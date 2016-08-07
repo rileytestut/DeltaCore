@@ -30,7 +30,7 @@ internal extension UIImage
         destinationFrame.origin = CGPoint.zero
         
         let format = UIGraphicsImageRendererFormat()
-        format.scale = UIScreen.main().scale
+        format.scale = UIScreen.main.scale
         let imageRenderer = UIGraphicsImageRenderer(bounds: destinationFrame, format: format)
         
         let image = imageRenderer.image { (imageRendererContext) in

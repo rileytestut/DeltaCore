@@ -11,22 +11,22 @@ import UIKit
 
 public protocol GameViewControllerDelegate: class
 {
-    func gameViewControllerShouldPauseEmulation(gameViewController: GameViewController) -> Bool
-    func gameViewControllerShouldResumeEmulation(gameViewController: GameViewController) -> Bool
+    func gameViewControllerShouldPauseEmulation(_ gameViewController: GameViewController) -> Bool
+    func gameViewControllerShouldResumeEmulation(_ gameViewController: GameViewController) -> Bool
     
-    func gameViewController(gameViewController: GameViewController, handleMenuInputFrom gameController: GameController)
+    func gameViewController(_ gameViewController: GameViewController, handleMenuInputFrom gameController: GameController)
     
-    func gameViewControllerDidUpdate(gameViewController: GameViewController)
+    func gameViewControllerDidUpdate(_ gameViewController: GameViewController)
 }
 
 public extension GameViewControllerDelegate
 {
-    func gameViewControllerShouldPauseEmulation(gameViewController: GameViewController) -> Bool { return true }
-    func gameViewControllerShouldResumeEmulation(gameViewController: GameViewController) -> Bool { return true }
+    func gameViewControllerShouldPauseEmulation(_ gameViewController: GameViewController) -> Bool { return true }
+    func gameViewControllerShouldResumeEmulation(_ gameViewController: GameViewController) -> Bool { return true }
     
-    func gameViewController(gameViewController: GameViewController, handleMenuInputFrom gameController: GameController) {}
+    func gameViewController(_ gameViewController: GameViewController, handleMenuInputFrom gameController: GameController) {}
     
-    func gameViewControllerDidUpdate(gameViewController: GameViewController) {}
+    func gameViewControllerDidUpdate(_ gameViewController: GameViewController) {}
 }
 
 private var kvoContext = 0
@@ -58,7 +58,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
             
             self.emulatorCore?.updateHandler = { [weak self] core in
                 guard let strongSelf = self else { return }
-                strongSelf.delegate?.gameViewControllerDidUpdate(gameViewController: strongSelf)
+                strongSelf.delegate?.gameViewControllerDidUpdate(strongSelf)
             }
             
             self.prepareForGame()
@@ -116,7 +116,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLoad()
         
-        self.view.backgroundColor = UIColor.black()
+        self.view.backgroundColor = UIColor.black
         
         self.gameView = GameView(frame: CGRect.zero)
         self.gameView.translatesAutoresizingMaskIntoConstraints = false
@@ -167,7 +167,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
                 emulatorCore.audioManager.enabled = true
             }
             
-            if let transitionCoordinator = self.transitionCoordinator()
+            if let transitionCoordinator = self.transitionCoordinator
             {
                 // Delay emulation start until after transition animation to prevent dropped frames
                 transitionCoordinator.animate(alongsideTransition: nil, completion: { (context) in
@@ -254,7 +254,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
         guard let input = input as? ControllerInput, input == .menu else { return }
-        self.delegate?.gameViewController(gameViewController: self, handleMenuInputFrom: gameController)
+        self.delegate?.gameViewController(self, handleMenuInputFrom: gameController)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
@@ -269,13 +269,13 @@ public extension GameViewController
 {
     @discardableResult func pauseEmulation() -> Bool
     {
-        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(gameViewController: self) ?? true else { return false }
+        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(self) ?? true else { return false }
         return emulatorCore.pause()
     }
     
     @discardableResult func resumeEmulation() -> Bool
     {
-        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldResumeEmulation(gameViewController: self) ?? true else { return false }
+        guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldResumeEmulation(self) ?? true else { return false }
         return emulatorCore.resume()
     }
 }

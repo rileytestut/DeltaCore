@@ -18,12 +18,12 @@ public extension EmulatorCore
         case paused
     }
     
-    enum CheatError: ErrorProtocol
+    enum CheatError: Error
     {
         case invalid
     }
     
-    enum SaveStateError: ErrorProtocol
+    enum SaveStateError: Error
     {
         case doesNotExist
     }

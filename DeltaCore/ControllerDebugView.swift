@@ -33,7 +33,7 @@ internal class ControllerDebugView: UIView
     
     private func initialize()
     {
-        self.backgroundColor = UIColor.clear()
+        self.backgroundColor = UIColor.clear
         self.isUserInteractionEnabled = false
     }
     
@@ -49,7 +49,7 @@ internal class ControllerDebugView: UIView
             frame.size.width *= self.bounds.width
             frame.size.height *= self.bounds.height
             
-            UIColor.red().withAlphaComponent(0.75).setFill()
+            UIColor.red.withAlphaComponent(0.75).setFill()
             UIRectFill(frame)
             
             var text = ""
@@ -66,7 +66,7 @@ internal class ControllerDebugView: UIView
                 }
             }
             
-            let attributes = [NSForegroundColorAttributeName: UIColor.white(), NSFontAttributeName: UIFont.boldSystemFont(ofSize: 16)]
+            let attributes = [NSForegroundColorAttributeName: UIColor.white, NSFontAttributeName: UIFont.boldSystemFont(ofSize: 16)]
             let textSize = (text as NSString).size(attributes: attributes)
             
             let point = CGPoint(x: frame.midX - textSize.width / 2.0, y: frame.midY - textSize.height / 2.0)

@@ -14,7 +14,7 @@ internal extension UIScreen
     {
         let fixedBounds = self.fixedCoordinateSpace.convert(self.bounds, from: self.coordinateSpace)
         
-        if UIDevice.current().userInterfaceIdiom == .pad
+        if UIDevice.current.userInterfaceIdiom == .pad
         {
             switch fixedBounds.width
             {

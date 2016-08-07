@@ -38,12 +38,12 @@ public protocol EmulatorBridging: NSObjectProtocol
     func deactivateInput(_ input: Int)
     
     /// Save States
-    @objc(saveSaveStateToURL:) func saveSaveState(to: URL)
-    @objc(loadSaveStateFromURL:) func loadSaveState(from: URL)
+    @objc(saveSaveStateToURL:) func saveSaveState(to url: URL)
+    @objc(loadSaveStateFromURL:) func loadSaveState(from url: URL)
     
     /// Game Games
-    @objc(saveGameSaveToURL:) func saveGameSave(to: URL)
-    @objc(loadGameSaveFromURL:) func loadGameSave(from: URL)
+    @objc(saveGameSaveToURL:) func saveGameSave(to url: URL)
+    @objc(loadGameSaveFromURL:) func loadGameSave(from url: URL)
     
     /// Cheats
     @discardableResult func addCheatCode(_ cheatCode: String, type: String) -> Bool

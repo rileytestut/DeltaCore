@@ -78,8 +78,8 @@ public final class EmulatorCore: NSObject
     private var previousRate: Double? = nil
     
     private var gameSaveURL: URL {
-        let gameURL = (try? self.game.fileURL.deletingPathExtension()) ?? self.game.fileURL
-        let gameSaveURL = try! gameURL.appendingPathExtension(self.configuration.gameSaveFileExtension)
+        let gameURL = self.game.fileURL.deletingPathExtension()
+        let gameSaveURL = gameURL.appendingPathExtension(self.configuration.gameSaveFileExtension)
         return gameSaveURL
     }
     
@@ -235,7 +235,7 @@ public extension EmulatorCore
     
     func load(_ saveState: SaveStateProtocol) throws
     {
-        guard let path = saveState.fileURL.path, FileManager.default.fileExists(atPath: path) else { throw SaveStateError.doesNotExist }
+        guard FileManager.default.fileExists(atPath: saveState.fileURL.path) else { throw SaveStateError.doesNotExist }
         
         self.deltaCore.emulatorBridge.loadSaveState(from: saveState.fileURL)
     }
@@ -360,7 +360,7 @@ private extension EmulatorCore
 {
     func runGameLoop()
     {
-        let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", attributes: [.serial, .qosUserInitiated])
+        let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", qos: .userInitiated)
         emulationQueue.async {
             
             let screenRefreshRate = 1.0 / 60.0

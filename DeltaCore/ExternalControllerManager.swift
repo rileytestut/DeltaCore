@@ -85,7 +85,7 @@ private extension ExternalControllerManager
     
     func add(_ controller: ExternalController)
     {
-        if let playerIndex = controller.playerIndex, self.connectedControllers.contains({ $0.playerIndex == playerIndex })
+        if let playerIndex = controller.playerIndex, self.connectedControllers.contains(where: { $0.playerIndex == playerIndex })
         {
             // Reset the player index if there is another connected controller with the same player index
             controller.playerIndex = nil

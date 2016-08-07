@@ -78,6 +78,11 @@ public class GameViewController: UIViewController, GameControllerReceiver
     private var controllerViewHeightConstraint: NSLayoutConstraint!
     private var gameViewHeightConstraint: NSLayoutConstraint!
     
+    /// UIViewController
+    public override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
     public required init()
     {
         super.init(nibName: nil, bundle: nil)
@@ -107,10 +112,6 @@ public class GameViewController: UIViewController, GameControllerReceiver
     // MARK: - UIViewController -
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
-    public override func prefersStatusBarHidden() -> Bool
-    {
-        return true
-    }
     
     public override func viewDidLoad()
     {
@@ -211,8 +212,8 @@ public class GameViewController: UIViewController, GameControllerReceiver
             }
             else
             {
-                let scale = self.view.bounds.width / self.controllerView.intrinsicContentSize().width
-                self.controllerViewHeightConstraint.constant = self.controllerView.intrinsicContentSize().height * scale
+                let scale = self.view.bounds.width / self.controllerView.intrinsicContentSize.width
+                self.controllerViewHeightConstraint.constant = self.controllerView.intrinsicContentSize.height * scale
             }
         }
         else

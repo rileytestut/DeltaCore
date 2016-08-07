@@ -41,22 +41,22 @@ internal extension UIImage
             context.saveGState()
             
             // Flip coordinate system to match Quartz system
-            let transform = CGAffineTransform.identity.scaleBy(x: 1.0, y: -1.0).translateBy(x: 0.0, y: -targetSize.height)
-            context.concatCTM(transform)
+            let transform = CGAffineTransform.identity.scaledBy(x: 1.0, y: -1.0).translatedBy(x: 0.0, y: -targetSize.height)
+            context.concatenate(transform)
             
             // Calculate rendering frames
-            destinationFrame = destinationFrame.apply(transform: transform)
+            destinationFrame = destinationFrame.applying(transform)
             
             let aspectScale = min(destinationFrame.width / pageFrame.width, destinationFrame.height / pageFrame.height)
             
             // Ensure aspect ratio is preserved
-            var drawingFrame = pageFrame.apply(transform: CGAffineTransform(scaleX: aspectScale, y: aspectScale))
+            var drawingFrame = pageFrame.applying(CGAffineTransform(scaleX: aspectScale, y: aspectScale))
             drawingFrame.origin.x = destinationFrame.midX - (drawingFrame.width / 2.0)
             drawingFrame.origin.y = destinationFrame.midY - (drawingFrame.height / 2.0)
             
             // Scale the context
-            context.translate(x: destinationFrame.minX, y: destinationFrame.minY)
-            context.scale(x: aspectScale, y: aspectScale)
+            context.translateBy(x: destinationFrame.minX, y: destinationFrame.minY)
+            context.scaleBy(x: aspectScale, y: aspectScale)
             
             // Render the PDF
             context.drawPDFPage(page)

@@ -70,8 +70,8 @@ public class VideoManager: NSObject, VideoRendering
     {
         self.bufferInfo = bufferInfo
         
-        self.videoBuffer = UnsafeMutablePointer<UInt8>(allocatingCapacity: self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer = UnsafeMutablePointer<UInt8>(allocatingCapacity: self.bufferInfo.outputBufferSize)
+        self.videoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.bufferInfo.inputBufferSize)
+        self.convertedVideoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.bufferInfo.outputBufferSize)
         
         super.init()
     }

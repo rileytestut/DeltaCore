@@ -53,7 +53,7 @@ public struct ControllerSkin
     public let fileURL: URL
     
     private let representations: [Traits: Representation]
-    private let imageCache = Cache<NSString, UIImage>()
+    private let imageCache = NSCache<NSString, UIImage>()
     
     public init?(fileURL: URL)
     {
@@ -161,7 +161,7 @@ public extension ControllerSkin
         guard
             let deltaCore = Delta.core(for: gameType),
             let bundle = Bundle(identifier: deltaCore.bundleIdentifier),
-            let fileURL = bundle.urlForResource("Standard", withExtension: "deltaskin")
+            let fileURL = bundle.url(forResource: "Standard", withExtension: "deltaskin")
         else { return nil }
         
         let controllerSkin = ControllerSkin(fileURL: fileURL)

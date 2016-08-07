@@ -85,6 +85,10 @@ public class ControllerView: UIView, GameController
         return self.touchInputsMappingDictionary.values.reduce(Set<InputBox>(), { $0.union($1) })
     }
     
+    public override var intrinsicContentSize: CGSize {
+        return self.imageView.intrinsicContentSize
+    }
+    
     //MARK: - Initializers -
     /** Initializers **/
     public override init(frame: CGRect)
@@ -122,10 +126,6 @@ public class ControllerView: UIView, GameController
     
     //MARK: - UIView
     /// UIView
-    public override func intrinsicContentSize() -> CGSize
-    {
-        return self.imageView.intrinsicContentSize
-    }
     
     public override func layoutSubviews()
     {

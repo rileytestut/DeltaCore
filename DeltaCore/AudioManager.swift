@@ -165,8 +165,8 @@ private extension AudioManager
             }
         }        
         
-        self.audioPlayerNode.scheduleBuffer(outputBuffer) {
-            self.render(inputBuffer, into: outputBuffer)
+        self.audioPlayerNode.scheduleBuffer(outputBuffer) { [weak self] in
+            self?.render(inputBuffer, into: outputBuffer)
         }
     }
     

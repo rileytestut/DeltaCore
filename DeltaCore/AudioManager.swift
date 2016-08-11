@@ -29,15 +29,15 @@ public class AudioManager: NSObject, AudioRendering
 {
     public let bufferInfo: BufferInfo
     
-    public var enabled = true {
+    public var isEnabled = true {
         didSet
         {
-            self.audioBuffer.enabled = self.enabled
-            self.audioEngine.mainMixerNode.outputVolume = self.enabled ? 1.0 : 0.0
+            self.audioBuffer.isEnabled = self.isEnabled
+            self.audioEngine.mainMixerNode.outputVolume = self.isEnabled ? 1.0 : 0.0
             
             do
             {
-                if self.enabled
+                if self.isEnabled
                 {
                     try self.audioEngine.start()
                 }
@@ -138,7 +138,7 @@ public extension AudioManager
         self.audioPlayerNode.stop()
         self.audioEngine.stop()
         
-        self.audioBuffer.enabled = false
+        self.audioBuffer.isEnabled = false
         self.audioBuffer.reset()
     }
 }

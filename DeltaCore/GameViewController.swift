@@ -164,8 +164,8 @@ public class GameViewController: UIViewController, GameControllerReceiver
                 
                 // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
                 // This is especially noticeable when peeking a game
-                emulatorCore.audioManager.enabled = false
-                emulatorCore.audioManager.enabled = true
+                emulatorCore.audioManager.isEnabled = false
+                emulatorCore.audioManager.isEnabled = true
             }
             
             if let transitionCoordinator = self.transitionCoordinator

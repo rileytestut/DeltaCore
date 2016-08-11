@@ -172,7 +172,7 @@ public extension EmulatorCore
         
         self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
         
-        self.audioManager.enabled = false
+        self.audioManager.isEnabled = false
         self.deltaCore.emulatorBridge.pause()
         
         return true
@@ -185,7 +185,7 @@ public extension EmulatorCore
         self._state = .running
         defer { self.state = self._state }
         
-        self.audioManager.enabled = true
+        self.audioManager.isEnabled = true
         self.deltaCore.emulatorBridge.resume()
         
         self.runGameLoop()

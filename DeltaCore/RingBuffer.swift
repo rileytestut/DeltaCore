@@ -12,7 +12,7 @@ import TPCircularBuffer
 @objc(DLTARingBuffer)
 public class RingBuffer: NSObject
 {
-    public var enabled: Bool = true
+    public var isEnabled: Bool = true
     
     public var availableBytesForWriting: Int {
         return Int(self.circularBuffer.length - self.circularBuffer.fillCount)
@@ -46,7 +46,7 @@ public extension RingBuffer
     @objc(writeBuffer:size:)
     func write(_ buffer: UnsafePointer<UInt8>, size: Int)
     {
-        guard self.enabled else { return }
+        guard self.isEnabled else { return }
         
         let size = min(size, self.availableBytesForWriting)
         TPCircularBufferProduceBytes(&self.circularBuffer, buffer, Int32(size))
@@ -61,7 +61,7 @@ public extension RingBuffer
         
         let size = min(preferredSize, Int(availableBytes))
         
-        if self.enabled
+        if self.isEnabled
         {
             memcpy(buffer, ringBuffer, size)
         }

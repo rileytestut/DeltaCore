@@ -59,7 +59,7 @@ public class VideoManager: NSObject, VideoRendering
 {
     public private(set) var gameViews = [GameView]()
     
-    public var enabled = true
+    public var isEnabled = true
     
     public let bufferInfo: BufferInfo
     
@@ -103,7 +103,7 @@ internal extension VideoManager
 {
     func didUpdateVideoBuffer()
     {
-        guard self.enabled else { return }
+        guard self.isEnabled else { return }
         
         autoreleasepool {
             

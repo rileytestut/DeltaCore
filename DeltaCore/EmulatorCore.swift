@@ -222,15 +222,12 @@ public extension EmulatorCore
 /// Save States
 public extension EmulatorCore
 {
-    func save(withCompletion completion: ((SaveStateProtocol) -> Void))
+    @discardableResult func saveSaveState(to url: URL) -> SaveStateProtocol
     {
-        FileManager.default.prepareTemporaryURL { URL in
-            
-            self.deltaCore.emulatorBridge.saveSaveState(to: URL)
-            
-            let saveState = SaveState(fileURL: URL, gameType: self.gameType)
-            completion(saveState)
-        }
+        self.deltaCore.emulatorBridge.saveSaveState(to: url)
+        
+        let saveState = SaveState(fileURL: url, gameType: self.gameType)
+        return saveState
     }
     
     func load(_ saveState: SaveStateProtocol) throws

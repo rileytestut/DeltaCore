@@ -62,11 +62,6 @@ public class GameViewController: UIViewController, GameControllerReceiver
             }
             
             self.prepareForGame()
-            
-            if self.viewIfLoaded?.window != nil
-            {
-                self.emulatorCore?.start()
-            }
         }
     }
     

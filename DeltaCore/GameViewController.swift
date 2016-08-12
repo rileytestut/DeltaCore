@@ -78,6 +78,8 @@ public class GameViewController: UIViewController, GameControllerReceiver
     private var controllerViewHeightConstraint: NSLayoutConstraint!
     private var gameViewHeightConstraint: NSLayoutConstraint!
     
+    private let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
+    
     /// UIViewController
     public override var prefersStatusBarHidden: Bool {
         return true
@@ -147,14 +149,14 @@ public class GameViewController: UIViewController, GameControllerReceiver
         self.controllerViewHeightConstraint.isActive = true
     }
     
-    public override func viewDidAppear(_ animated: Bool)
+    public override func viewWillAppear(_ animated: Bool)
     {
-        super.viewDidAppear(animated)
+        super.viewWillAppear(animated)
         
         if let emulatorCore = self.emulatorCore
         {
-            func startEmulation()
-            {
+            self.emulatorCoreQueue.async {
+                
                 switch emulatorCore.state
                 {
                 case .stopped: emulatorCore.start()
@@ -166,18 +168,20 @@ public class GameViewController: UIViewController, GameControllerReceiver
                 // This is especially noticeable when peeking a game
                 emulatorCore.audioManager.isEnabled = false
                 emulatorCore.audioManager.isEnabled = true
+                
+                self.emulatorCore?.start()
             }
-            
-            if let transitionCoordinator = self.transitionCoordinator
-            {
-                // Delay emulation start until after transition animation to prevent dropped frames
-                transitionCoordinator.animate(alongsideTransition: nil, completion: { (context) in
-                    startEmulation()
-                })
-            }
-            else
-            {
-                startEmulation()
+        }
+    }
+    
+    public override func viewDidDisappear(_ animated: Bool)
+    {
+        super.viewDidDisappear(animated)
+        
+        if let emulatorCore = self.emulatorCore
+        {
+            self.emulatorCoreQueue.async {
+                emulatorCore.pause()
             }
         }
     }

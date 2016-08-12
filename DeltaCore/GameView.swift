@@ -83,6 +83,8 @@ private extension GameView
 {
     func update()
     {
+        guard self.window != nil, !self.bounds.isEmpty else { return }
+        
         self.glkView.display()
     }
 }

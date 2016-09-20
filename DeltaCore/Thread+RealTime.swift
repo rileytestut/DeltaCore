@@ -30,11 +30,11 @@ internal extension Thread
         policy.preemptible = 0
         
         let threadport = pthread_mach_thread_np(pthread_self())
-        let count = mach_msg_type_number_t(sizeof(thread_time_constraint_policy_data_t.self) / sizeof(integer_t.self))
+        let count = mach_msg_type_number_t(MemoryLayout<thread_time_constraint_policy_data_t>.size / MemoryLayout<integer_t>.size)
         
         var result = KERN_SUCCESS
         
-        withUnsafePointer(&policy) { (pointer) in
+        withUnsafePointer(to: &policy) { (pointer) in
             let policyPointer = UnsafeMutablePointer<integer_t>(pointer)
             result = thread_policy_set(threadport, UInt32(THREAD_TIME_CONSTRAINT_POLICY), policyPointer, count)
         }

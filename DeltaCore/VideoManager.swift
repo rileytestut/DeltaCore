@@ -57,14 +57,14 @@ public extension VideoManager.BufferInfo
 
 public class VideoManager: NSObject, VideoRendering
 {
-    public private(set) var gameViews = [GameView]()
+    public fileprivate(set) var gameViews = [GameView]()
     
     public var isEnabled = true
     
     public let bufferInfo: BufferInfo
     
     public let videoBuffer: UnsafeMutablePointer<UInt8>
-    private let convertedVideoBuffer: UnsafeMutablePointer<UInt8>
+    fileprivate let convertedVideoBuffer: UnsafeMutablePointer<UInt8>
     
     public init(bufferInfo: BufferInfo)
     {

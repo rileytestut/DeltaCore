@@ -75,9 +75,9 @@ public class MFiExternalController: ExternalController
         }
     }
     
-    private var previousDPadInput: MFiExternalControllerInput? = nil
-    private var previousLeftThumbstickInput: MFiExternalControllerInput?
-    private var previousRightThumbstickInput: MFiExternalControllerInput?
+    fileprivate var previousDPadInput: MFiExternalControllerInput? = nil
+    fileprivate var previousLeftThumbstickInput: MFiExternalControllerInput?
+    fileprivate var previousRightThumbstickInput: MFiExternalControllerInput?
     
     //MARK: - Initializers -
     /** Initializers **/
@@ -119,7 +119,7 @@ public class MFiExternalController: ExternalController
         
         // Standard Buttons
         let gamepad = self.controller.gamepad
-                
+        
         gamepad?.buttonA.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.a, pressed: pressed) }
         gamepad?.buttonB.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.b, pressed: pressed) }
         gamepad?.buttonX.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.x, pressed: pressed) }

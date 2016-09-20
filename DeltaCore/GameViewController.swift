@@ -31,9 +31,9 @@ public extension GameViewControllerDelegate
 
 private var kvoContext = 0
 
-public class GameViewController: UIViewController, GameControllerReceiver
+open class GameViewController: UIViewController, GameControllerReceiver
 {
-    public var game: GameProtocol?
+    open var game: GameProtocol?
     {
         didSet
         {
@@ -50,7 +50,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    public private(set) var emulatorCore: EmulatorCore?
+    open fileprivate(set) var emulatorCore: EmulatorCore?
     {
         didSet
         {
@@ -65,18 +65,18 @@ public class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    public weak var delegate: GameViewControllerDelegate?
+    open weak var delegate: GameViewControllerDelegate?
     
-    public private(set) var gameView: GameView!
-    public private(set) var controllerView: ControllerView!
+    open fileprivate(set) var gameView: GameView!
+    open fileprivate(set) var controllerView: ControllerView!
     
-    private var controllerViewHeightConstraint: NSLayoutConstraint!
-    private var gameViewHeightConstraint: NSLayoutConstraint!
+    fileprivate var controllerViewHeightConstraint: NSLayoutConstraint!
+    fileprivate var gameViewHeightConstraint: NSLayoutConstraint!
     
-    private let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
+    fileprivate let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
     
     /// UIViewController
-    public override var prefersStatusBarHidden: Bool {
+    open override var prefersStatusBarHidden: Bool {
         return true
     }
     
@@ -110,7 +110,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
-    public override func viewDidLoad()
+    open override func viewDidLoad()
     {
         super.viewDidLoad()
         
@@ -144,7 +144,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         self.controllerViewHeightConstraint.isActive = true
     }
     
-    public override func viewWillAppear(_ animated: Bool)
+    open override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         
@@ -169,7 +169,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    public override func viewDidDisappear(_ animated: Bool)
+    open override func viewDidDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
         
@@ -181,7 +181,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
     {
         super.viewWillTransition(to: size, with: coordinator)
         
@@ -199,7 +199,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    public override func viewDidLayoutSubviews()
+    open override func viewDidLayoutSubviews()
     {
         super.viewDidLayoutSubviews()
         
@@ -232,7 +232,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
     
     // MARK: - KVO -
     /// KVO
-    public override func observeValue(forKeyPath keyPath: String?, of object: AnyObject?, change: [NSKeyValueChangeKey : AnyObject]?, context: UnsafeMutablePointer<Void>?)
+    open override func observeValue(forKeyPath keyPath: String?, of object: AnyObject?, change: [NSKeyValueChangeKey : AnyObject]?, context: UnsafeMutablePointer<Void>?)
     {
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
 
@@ -243,7 +243,7 @@ public class GameViewController: UIViewController, GameControllerReceiver
         self.view.layoutIfNeeded()
     }
     
-    public override func didReceiveMemoryWarning()
+    open override func didReceiveMemoryWarning()
     {
         super.didReceiveMemoryWarning()
     }

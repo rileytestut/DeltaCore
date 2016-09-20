@@ -70,18 +70,18 @@ public class ControllerView: UIView, GameController
     public let _stateManager = GameControllerStateManager()
     
     //MARK: - Private Properties
-    private let imageView = UIImageView(frame: CGRect.zero)
-    private var transitionImageView: UIImageView? = nil
-    private let controllerDebugView = ControllerDebugView()
+    fileprivate let imageView = UIImageView(frame: CGRect.zero)
+    fileprivate var transitionImageView: UIImageView? = nil
+    fileprivate let controllerDebugView = ControllerDebugView()
     
-    private var overrideTraits: ControllerSkin.Traits?
-    private var overrideSize: ControllerSkin.Size?
+    fileprivate var overrideTraits: ControllerSkin.Traits?
+    fileprivate var overrideSize: ControllerSkin.Size?
     
-    private var _performedInitialLayout = false
+    fileprivate var _performedInitialLayout = false
     
-    private var touchInputsMappingDictionary: [UITouch: Set<InputBox>] = [:]
-    private var previousTouchInputs = Set<InputBox>()
-    private var touchInputs: Set<InputBox> {
+    fileprivate var touchInputsMappingDictionary: [UITouch: Set<InputBox>] = [:]
+    fileprivate var previousTouchInputs = Set<InputBox>()
+    fileprivate var touchInputs: Set<InputBox> {
         return self.touchInputsMappingDictionary.values.reduce(Set<InputBox>(), { $0.union($1) })
     }
     

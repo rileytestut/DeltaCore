@@ -34,9 +34,9 @@ public class GameView: UIView
         return outputImage
     }
     
-    private let glkView: GLKView
+    fileprivate let glkView: GLKView
     
-    private let context: CIContext
+    fileprivate let context: CIContext
     
     public override init(frame: CGRect)
     {

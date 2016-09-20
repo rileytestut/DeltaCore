@@ -21,7 +21,7 @@ public class ExternalControllerManager
     
     //MARK: - Properties -
     /** Properties **/
-    public private(set) var connectedControllers: [ExternalController] = []
+    public fileprivate(set) var connectedControllers: [ExternalController] = []
 }
 
 //MARK: - Discovery -

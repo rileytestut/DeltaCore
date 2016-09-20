@@ -22,7 +22,7 @@ public class RingBuffer: NSObject
         return Int(self.circularBuffer.fillCount)
     }
     
-    private var circularBuffer = TPCircularBuffer()
+    fileprivate var circularBuffer = TPCircularBuffer()
     
     /// Initialize with `preferredBufferSize` bytes.
     public init?(preferredBufferSize: Int)

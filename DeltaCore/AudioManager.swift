@@ -71,7 +71,7 @@ public class AudioManager: NSObject, AudioRendering
     public let audioConverter: AVAudioConverter
     public let timePitchEffect: AVAudioUnitTimePitch
     
-    private var audioBuffers = [AVAudioPCMBuffer]()
+    fileprivate var audioBuffers = [AVAudioPCMBuffer]()
     
     public init(bufferInfo: BufferInfo)
     {

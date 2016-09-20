@@ -19,7 +19,7 @@ extension ControllerSkin
         public let frame: CGRect
         public let extendedFrame: CGRect
         
-        private init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
+        fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
             guard
                 let keys = dictionary["keys"] as? [String],
@@ -183,7 +183,7 @@ public extension ControllerSkin
         
         let cacheKey = self.cacheKey(for: traits, size: preferredSize)
         
-        if let image = self.imageCache.object(forKey: cacheKey)
+        if let image = self.imageCache.object(forKey: cacheKey as NSString)
         {
             return image
         }
@@ -221,7 +221,7 @@ public extension ControllerSkin
         
         if let image = returnedImage
         {
-            self.imageCache.setObject(image, forKey: cacheKey)
+            self.imageCache.setObject(image, forKey: cacheKey as NSString)
         }
         
         return returnedImage
@@ -311,7 +311,7 @@ private extension ControllerSkin
     
     func cacheKey(for traits: Traits, size: Size) -> String
     {
-        return String(traits) + "-" + String(size)
+        return String(describing: traits) + "-" + String(describing: size)
     }
 }
 
@@ -333,7 +333,7 @@ private extension ControllerSkin
         }
     }
     
-    private enum AssetSize: RawRepresentable, Hashable
+    enum AssetSize: RawRepresentable, Hashable
     {
         case small
         case medium

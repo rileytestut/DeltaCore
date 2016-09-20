@@ -23,10 +23,10 @@ public class GameControllerStateManager
         return objects.map({ $0 as! GameControllerReceiver })
     }
 
-    private let _receivers = NSHashTable<AnyObject>.weakObjects()
+    fileprivate let _receivers = NSHashTable<AnyObject>.weakObjects()
     
     // Used to synchronize access to _receivers to prevent race conditions (yay ObjC)
-    private let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
+    fileprivate let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
 }
 
 public extension GameControllerStateManager

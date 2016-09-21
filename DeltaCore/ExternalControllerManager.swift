@@ -11,8 +11,8 @@ import GameController
 
 public extension Notification.Name
 {
-    public static let externalControllerDidConnect = "ExternalControllerDidConnectNotification" as Notification.Name
-    public static let externalControllerDidDisconnect = "ExternalControllerDidDisconnectNotification" as Notification.Name
+    public static let externalControllerDidConnect = Notification.Name("ExternalControllerDidConnectNotification")
+    public static let externalControllerDidDisconnect = Notification.Name("ExternalControllerDidDisconnectNotification")
 }
 
 public class ExternalControllerManager

@@ -106,7 +106,7 @@ public extension String
             scanner.scanUpToCharacters(from: characterSet, into: &separatorString)
             
             // If no separator characters, we're done!
-            guard let tempString = separatorString as? String, separatorString?.length > 0 else { break }
+            guard let tempString = separatorString as? String, separatorString?.length ?? 0 > 0 else { break }
             
             formattedString += tempString
         }

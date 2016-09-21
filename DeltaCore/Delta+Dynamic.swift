@@ -14,7 +14,7 @@ public extension Delta
     {
         public let handler: ((DeltaCoreProtocol) -> Void)
         
-        private init(handler: @escaping ((DeltaCoreProtocol) -> Void))
+        fileprivate init(handler: @escaping ((DeltaCoreProtocol) -> Void))
         {
             self.handler = handler
             

@@ -52,8 +52,8 @@ public struct ControllerSkin
     
     public let fileURL: URL
     
-    private let representations: [Traits: Representation]
-    private let imageCache = NSCache<NSString, UIImage>()
+    fileprivate let representations: [Traits: Representation]
+    fileprivate let imageCache = NSCache<NSString, UIImage>()
     
     public init?(fileURL: URL)
     {

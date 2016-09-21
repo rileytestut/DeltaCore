@@ -151,9 +151,9 @@ private extension AudioManager
         
         if self.audioEngine.isRunning
         {
-            let uint8Buffer = UnsafeMutablePointer<UInt8>(buffer[0])
-            
-            self.audioBuffer.read(into: uint8Buffer, preferredSize: Int(Double(self.bufferInfo.preferredSize) * self.rate))
+            buffer[0].withMemoryRebound(to: UInt8.self, capacity: 1) { (uint8Buffer) in
+                self.audioBuffer.read(into: uint8Buffer, preferredSize: Int(Double(self.bufferInfo.preferredSize) * self.rate))
+            }
             
             do
             {

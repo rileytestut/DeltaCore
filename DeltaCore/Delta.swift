@@ -17,7 +17,7 @@ extension GameType: CustomStringConvertible
 
 public extension GameType
 {
-    public static let delta = "com.rileytestut.delta.game" as GameType
+    public static let delta = GameType("com.rileytestut.delta.game")
 }
 
 public struct Delta

@@ -35,8 +35,9 @@ internal extension Thread
         var result = KERN_SUCCESS
         
         withUnsafePointer(to: &policy) { (pointer) in
-            let policyPointer = UnsafeMutablePointer<integer_t>(pointer)
-            result = thread_policy_set(threadport, UInt32(THREAD_TIME_CONSTRAINT_POLICY), policyPointer, count)
+            pointer.withMemoryRebound(to: integer_t.self, capacity: 1) { (policyPointer) in
+                result = thread_policy_set(threadport, UInt32(THREAD_TIME_CONSTRAINT_POLICY), policyPointer, count)
+            }
         }
         
         if result != KERN_SUCCESS

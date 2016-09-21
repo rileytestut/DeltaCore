@@ -232,8 +232,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     // MARK: - KVO -
     /// KVO
-    open override func observeValue(forKeyPath keyPath: String?, of object: AnyObject?, change: [NSKeyValueChangeKey : AnyObject]?, context: UnsafeMutablePointer<Void>?)
-    {
+    
+    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
+    {        
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
 
         // Ensures the value is actually different, or else we might potentially run into an infinite loop if subclasses hide/show controllerView in viewDidLayoutSubviews()
@@ -251,13 +252,13 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // MARK: - GameControllerReceiver -
     /// GameControllerReceiver
     // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
-    public func gameController(_ gameController: GameController, didActivate input: Input)
+    open func gameController(_ gameController: GameController, didActivate input: Input)
     {
         guard let input = input as? ControllerInput, input == .menu else { return }
         self.delegate?.gameViewController(self, handleMenuInputFrom: gameController)
     }
     
-    public func gameController(_ gameController: GameController, didDeactivate input: Input)
+    open func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
         // This method intentionally left blank
     }

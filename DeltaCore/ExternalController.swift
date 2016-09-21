@@ -9,12 +9,12 @@
 import Foundation
 import GameController
 
-public class ExternalController: GameController, Hashable
+open class ExternalController: GameController, Hashable
 {
     //MARK: - Properties -
     /** Properties **/
     
-    public var name: String {
+    open var name: String {
         return NSLocalizedString("External Controller", comment: "")
     }
     

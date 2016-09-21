@@ -105,7 +105,7 @@ public class MFiExternalController: ExternalController
             
         }
         
-        let buttonInputPressedChangedHandler: (input: MFiExternalControllerInput, pressed: Bool) -> Void = { (input, pressed) in
+        let buttonInputPressedChangedHandler: (_ input: MFiExternalControllerInput, _ pressed: Bool) -> Void = { (input, pressed) in
             
             if pressed
             {
@@ -120,12 +120,12 @@ public class MFiExternalController: ExternalController
         // Standard Buttons
         let gamepad = self.controller.gamepad
         
-        gamepad?.buttonA.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.a, pressed: pressed) }
-        gamepad?.buttonB.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.b, pressed: pressed) }
-        gamepad?.buttonX.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.x, pressed: pressed) }
-        gamepad?.buttonY.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.y, pressed: pressed) }
-        gamepad?.leftShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.l, pressed: pressed) }
-        gamepad?.rightShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.r, pressed: pressed) }
+        gamepad?.buttonA.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.a, pressed) }
+        gamepad?.buttonB.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.b, pressed) }
+        gamepad?.buttonX.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.x, pressed) }
+        gamepad?.buttonY.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.y, pressed) }
+        gamepad?.leftShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.l, pressed) }
+        gamepad?.rightShoulder.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.r, pressed) }
         
         gamepad?.dpad.valueChangedHandler = { (button, value, pressed) in
             
@@ -151,8 +151,8 @@ public class MFiExternalController: ExternalController
         
         let extendedGamepad = self.controller.extendedGamepad
         
-        extendedGamepad?.leftTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.leftTrigger, pressed: pressed) }
-        extendedGamepad?.rightTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(input: MFiExternalControllerInput.rightTrigger, pressed: pressed) }
+        extendedGamepad?.leftTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.leftTrigger, pressed) }
+        extendedGamepad?.rightTrigger.pressedChangedHandler =  { (button, value, pressed) in buttonInputPressedChangedHandler(MFiExternalControllerInput.rightTrigger, pressed) }
         
         extendedGamepad?.leftThumbstick.valueChangedHandler = { (button, value, pressed) in
             

@@ -8,7 +8,7 @@
 
 import UIKit
 
-internal extension UIScreen
+public extension UIScreen
 {
     var defaultControllerSkinSize: ControllerSkin.Size
     {

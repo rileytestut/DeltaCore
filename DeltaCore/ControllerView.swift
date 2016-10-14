@@ -12,7 +12,7 @@ public class ControllerView: UIView, GameController
 {
     //MARK: - Properties -
     /** Properties **/
-    public var controllerSkin: ControllerSkin? {
+    public var controllerSkin: ControllerSkinProtocol? {
         didSet {
             self.setNeedsLayout()
         }
@@ -202,9 +202,9 @@ public extension ControllerView
     {
         guard self._performedInitialLayout else { return }
         
-        if let debugModeEnabled = self.controllerSkin?.debugModeEnabled
+        if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
         {
-            self.controllerDebugView.isHidden = !debugModeEnabled
+            self.controllerDebugView.isHidden = !isDebugModeEnabled
         }
         
         self.controllerDebugView.items = self.controllerSkin?.items(for: self.controllerSkinTraits)

@@ -43,12 +43,12 @@ extension ControllerSkin
     }
 }
 
-public struct ControllerSkin
+public struct ControllerSkin: ControllerSkinProtocol
 {
     public let name: String
     public let identifier: String
     public let gameType: GameType
-    public let debugModeEnabled: Bool
+    public let isDebugModeEnabled: Bool
     
     public let fileURL: URL
     
@@ -85,14 +85,14 @@ public struct ControllerSkin
             let name = info["name"] as? String,
             let identifier = info["identifier"] as? String,
             let gameType = info["gameTypeIdentifier"] as? GameType,
-            let debugModeEnabled = info["debug"] as? Bool,
+            let isDebugModeEnabled = info["debug"] as? Bool,
             let representationsDictionary = info["representations"] as? RepresentationDictionary
         else { return nil }
         
         self.name = name
         self.identifier = identifier
         self.gameType = gameType
-        self.debugModeEnabled = debugModeEnabled
+        self.isDebugModeEnabled = isDebugModeEnabled
         
         let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
         
@@ -227,7 +227,6 @@ public extension ControllerSkin
         return returnedImage
     }
     
-    /// Provided point should be normalized [0,1] for both axies.
     func inputs(for traits: Traits,  point: CGPoint) -> [Input]?
     {
         guard let representation = self.representations[traits], let core = Delta.core(for: self.gameType) else { return nil }

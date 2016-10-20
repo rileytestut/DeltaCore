@@ -9,6 +9,8 @@
 import UIKit
 import ZipZap
 
+public let kUTTypeDeltaControllerSkin: CFString = "com.rileytestut.delta.skin" as CFString
+
 private typealias RepresentationDictionary = [String: [String: AnyObject]]
 
 extension ControllerSkin

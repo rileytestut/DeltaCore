@@ -26,7 +26,7 @@ extension ControllerSkin
             guard
                 let keys = dictionary["keys"] as? [String],
                 let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
-                else { return nil }
+            else { return nil }
             
             self.keys = Set(keys)
             
@@ -264,6 +264,12 @@ public extension ControllerSkin
         guard let representation = self.representations[traits] else { return nil }
         return representation.gameScreenFrame
     }
+    
+    public func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
+    {
+        guard let representation = self.representations[traits] else { return nil }
+        return representation.aspectRatio
+    }
 }
 
 private extension ControllerSkin
@@ -458,6 +464,7 @@ private extension ControllerSkin
         let assets: [AssetSize: String]
         let isTranslucent: Bool
         let gameScreenFrame: CGRect?
+        let aspectRatio: CGSize
         
         let items: [Item]
         
@@ -478,6 +485,8 @@ private extension ControllerSkin
                 let itemsArray = dictionary["items"] as? [[String: AnyObject]],
                 let assetsDictionary = dictionary["assets"] as? [String: String]
             else { return nil }
+            
+            self.aspectRatio = mappingSize
             
             self.traits = traits
             

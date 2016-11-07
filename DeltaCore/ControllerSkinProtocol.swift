@@ -27,4 +27,6 @@ public protocol ControllerSkinProtocol
     func isTranslucent(for traits: ControllerSkin.Traits) -> Bool?
     
     func gameScreenFrame(for traits: ControllerSkin.Traits) -> CGRect?
+    
+    func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
 }

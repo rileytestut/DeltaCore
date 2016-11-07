@@ -18,7 +18,7 @@ public class ControllerView: UIView, GameController
         }
     }
     
-    public var controllerSkinTraits: ControllerSkin.Traits!
+    public var controllerSkinTraits: ControllerSkin.Traits?
     {
         set { self.overrideTraits = newValue }
         get
@@ -28,27 +28,9 @@ public class ControllerView: UIView, GameController
                 return traits
             }
             
-            // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
-            let orientation: ControllerSkin.Orientation = (UIScreen.main.bounds.width > UIScreen.main.bounds.height) ? .landscape : .portrait
+            guard let superview = self.superview else { return nil }
             
-            // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
-            // 99% of the time, won't make a difference ¯\_(ツ)_/¯
-            let deviceType: ControllerSkin.DeviceType = (self.traitCollection.userInterfaceIdiom == .pad) ? .ipad : .iphone
-            
-            var traits = ControllerSkin.Traits(deviceType: deviceType, displayMode: .fullScreen, orientation: orientation)
-            
-            if let window = self.window
-            {
-                if deviceType == .iphone || window.bounds.equalTo(UIScreen.main.bounds)
-                {
-                    traits.displayMode = .fullScreen
-                }
-                else
-                {
-                    traits.displayMode = .splitView
-                }
-            }
-            
+            let traits = ControllerSkin.Traits.defaults(for: superview)
             return traits
         }
     }
@@ -207,10 +189,13 @@ public extension ControllerView
             self.controllerDebugView.isHidden = !isDebugModeEnabled
         }
         
-        self.controllerDebugView.items = self.controllerSkin?.items(for: self.controllerSkinTraits)
-        
-        let image = self.controllerSkin?.image(for: self.controllerSkinTraits, preferredSize: self.controllerSkinSize)
-        self.imageView.image = image
+        if let traits = self.controllerSkinTraits
+        {
+            self.controllerDebugView.items = self.controllerSkin?.items(for: traits)
+            
+            let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
+            self.imageView.image = image
+        }        
         
         self.invalidateIntrinsicContentSize()
         
@@ -258,10 +243,13 @@ private extension ControllerView
             point.x /= self.bounds.width
             point.y /= self.bounds.height
             
-            let inputs = controllerSkin.inputs(for: self.controllerSkinTraits, point: point) ?? []
-            let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputBox(input: $0) }
-            
-            self.touchInputsMappingDictionary[touch] = Set(boxedInputs)
+            if let traits = self.controllerSkinTraits
+            {
+                let inputs = controllerSkin.inputs(for: traits, point: point) ?? []
+                let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?(self, $0) ?? [$0] }.map { InputBox(input: $0) }
+                
+                self.touchInputsMappingDictionary[touch] = Set(boxedInputs)
+            }
         }
         
         let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)

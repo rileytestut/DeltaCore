@@ -58,6 +58,29 @@ extension ControllerSkin
             self.displayMode = displayMode
             self.orientation = orientation
         }
+        
+        public static func defaults(for view: UIView) -> ControllerSkin.Traits
+        {
+            var traits = ControllerSkin.Traits(deviceType: .iphone, displayMode: .fullScreen, orientation: .portrait)
+            
+            // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
+            // 99% of the time, won't make a difference ¯\_(ツ)_/¯
+            traits.deviceType = (view.traitCollection.userInterfaceIdiom == .pad) ? .ipad : .iphone
+            
+            if traits.deviceType == .ipad, let window = view.window, !window.bounds.equalTo(window.screen.bounds)
+            {
+                // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
+                traits.orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
+                
+                traits.displayMode = .splitView
+            }
+            else
+            {
+                traits.orientation = (view.bounds.width > view.bounds.height) ? .landscape : .portrait
+            }
+            
+            return traits
+        }
     }
 }
 

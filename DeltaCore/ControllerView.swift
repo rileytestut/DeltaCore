@@ -14,7 +14,7 @@ public class ControllerView: UIView, GameController
     /** Properties **/
     public var controllerSkin: ControllerSkinProtocol? {
         didSet {
-            self.setNeedsLayout()
+            self.updateControllerSkin()
         }
     }
     
@@ -93,7 +93,6 @@ public class ControllerView: UIView, GameController
         
         self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
         self.imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        self.imageView.contentMode = .scaleAspectFit
         self.addSubview(self.imageView)
         
         self.controllerDebugView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
@@ -171,7 +170,6 @@ public extension ControllerView
         let transitionImageView = UIImageView(image: self.imageView.image)
         transitionImageView.frame = self.imageView.frame
         transitionImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        transitionImageView.contentMode = .scaleAspectFit
         transitionImageView.alpha = 1.0
         self.addSubview(transitionImageView)
         

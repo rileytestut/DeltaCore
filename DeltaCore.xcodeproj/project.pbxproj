@@ -31,6 +31,7 @@
 		BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */; };
 		BF9279541D2B53E2003084F3 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9279521D2B53E2003084F3 /* GameViewController.swift */; };
 		BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9873C01AB6C8BF0001D8C9 /* GameView.swift */; };
+		BFA352471DEC19D70085A0BD /* UIDevice+Vibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA352461DEC19D70085A0BD /* UIDevice+Vibration.swift */; };
 		BFAA1FEA1B8A971000495943 /* ExternalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAA1FE91B8A971000495943 /* ExternalController.swift */; };
 		BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */; };
 		BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */; };
@@ -128,6 +129,7 @@
 		BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinTraits.swift; sourceTree = "<group>"; };
 		BF9279521D2B53E2003084F3 /* GameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		BF9873C01AB6C8BF0001D8C9 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		BFA352461DEC19D70085A0BD /* UIDevice+Vibration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIDevice+Vibration.swift"; sourceTree = "<group>"; };
 		BFAA1FE91B8A971000495943 /* ExternalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ExternalController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerDebugView.swift; sourceTree = "<group>"; };
 		BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGGeometry+Dictionary.swift"; sourceTree = "<group>"; };
@@ -303,6 +305,7 @@
 				BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */,
 				BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */,
 				BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */,
+				BFA352461DEC19D70085A0BD /* UIDevice+Vibration.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -542,6 +545,7 @@
 				BF9279541D2B53E2003084F3 /* GameViewController.swift in Sources */,
 				BFB8F0D81D18D01D00D9CD05 /* EmulatorConfiguration.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,
+				BFA352471DEC19D70085A0BD /* UIDevice+Vibration.swift in Sources */,
 				BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */,
 				BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */,
 			);

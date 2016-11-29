@@ -59,6 +59,8 @@ public class ControllerView: UIView, GameController
     fileprivate var overrideTraits: ControllerSkin.Traits?
     fileprivate var overrideSize: ControllerSkin.Size?
     
+    fileprivate var feedbackGenerator: UIImpactFeedbackGenerator?
+    
     fileprivate var _performedInitialLayout = false
     
     fileprivate var touchInputsMappingDictionary: [UITouch: Set<InputBox>] = [:]
@@ -121,6 +123,12 @@ public class ControllerView: UIView, GameController
     /// UIResponder
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
+        if self.touchInputsMappingDictionary.count == 0
+        {
+            self.feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+            self.feedbackGenerator?.prepare()
+        }
+        
         for touch in touches
         {
             self.touchInputsMappingDictionary[touch] = []
@@ -139,6 +147,11 @@ public class ControllerView: UIView, GameController
         for touch in touches
         {
             self.touchInputsMappingDictionary[touch] = nil
+        }
+        
+        if self.touchInputsMappingDictionary.count == 0
+        {
+            self.feedbackGenerator = nil
         }
         
         self.updateInputs(forTouches: touches)
@@ -260,6 +273,15 @@ private extension ControllerView
         for inputBox in deactivatedInputs
         {
             self.deactivate(inputBox.input)
+        }
+        
+        if activatedInputs.count > 0
+        {
+            switch UIDevice.current.feedbackSupportLevel
+            {
+            case .feedbackGenerator: self.feedbackGenerator?.impactOccurred()
+            case .basic, .unsupported: UIDevice.current.vibrate()
+            }
         }
         
         self.previousTouchInputs = self.touchInputs

@@ -1,0 +1,84 @@
+//
+//  UIDevice+Vibration.swift
+//  DeltaCore
+//
+//  Created by Riley Testut on 11/28/16.
+//  Copyright © 2016 Riley Testut. All rights reserved.
+//
+
+import UIKit
+import AudioToolbox
+
+@_silgen_name("AudioServicesStopSystemSound")
+func AudioServicesStopSystemSound(_ soundID: SystemSoundID)
+
+@_silgen_name("AudioServicesPlaySystemSoundWithVibration")
+func AudioServicesPlaySystemSoundWithVibration(_ soundID: SystemSoundID, _ idk: Any?, _ vibrationPattern: [String: Any])
+
+public extension UIDevice
+{
+    enum FeedbackSupportLevel: Int
+    {
+        case unsupported
+        case basic
+        case feedbackGenerator
+    }
+}
+
+public extension UIDevice
+{
+    var feedbackSupportLevel: FeedbackSupportLevel
+    {
+        guard let rawValue = self.value(forKey: "_feedbackSupportLevel") as? Int else { return .unsupported }
+        
+        let feedbackSupportLevel = FeedbackSupportLevel(rawValue: rawValue)
+        return feedbackSupportLevel ?? .feedbackGenerator // We'll assume raw values greater than 2 still support UIFeedbackGenerator ¯\_(ツ)_/¯
+    }
+    
+    var isVibrationSupported: Bool {
+        // All iPhones support some form of vibration, and potentially future non-iPhone devices will support taptic feedback
+        return self.model.hasPrefix("iPhone") || self.feedbackSupportLevel != .unsupported
+    }
+    
+    func vibrate()
+    {
+        switch self.feedbackSupportLevel
+        {
+        case .unsupported:
+            AudioServicesStopSystemSound(kSystemSoundID_Vibrate)
+            
+            var vibrationLength = 30
+            
+            if self.modelGeneration.hasPrefix("iPhone6")
+            {
+                // iPhone 5S has a weaker vibration motor, so we vibrate for 10ms longer to compensate
+                vibrationLength = 40;
+            }
+            
+            let pattern: [Any] = [false, 0, true, vibrationLength]
+            let dictionary: [String: Any] = ["VibePattern": pattern, "Intensity": 1]
+            
+            AudioServicesPlaySystemSoundWithVibration(kSystemSoundID_Vibrate, nil, dictionary)
+        
+        case .basic, .feedbackGenerator: AudioServicesPlaySystemSound(1519) // "peek" vibration
+        }
+    }
+}
+
+private extension UIDevice
+{
+    var modelGeneration: String {
+        var sysinfo = utsname()
+        uname(&sysinfo)
+        
+        var modelGeneration: String!
+        
+        withUnsafePointer(to: &sysinfo.machine) { pointer in
+            pointer.withMemoryRebound(to: UInt8.self, capacity: Int(Mirror(reflecting: sysinfo.machine).children.count), { (pointer) in
+                modelGeneration = String(cString: pointer)
+            })
+        }
+        
+        return modelGeneration
+    }
+}

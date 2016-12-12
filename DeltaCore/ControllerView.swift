@@ -59,7 +59,7 @@ public class ControllerView: UIView, GameController
     fileprivate var overrideTraits: ControllerSkin.Traits?
     fileprivate var overrideSize: ControllerSkin.Size?
     
-    fileprivate var feedbackGenerator: UIImpactFeedbackGenerator?
+    fileprivate var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
     
     fileprivate var _performedInitialLayout = false
     
@@ -102,6 +102,8 @@ public class ControllerView: UIView, GameController
         self.addSubview(self.controllerDebugView)
         
         self.isMultipleTouchEnabled = true
+        
+        self.feedbackGenerator.prepare()
     }
     
     //MARK: - Overrides -
@@ -123,12 +125,6 @@ public class ControllerView: UIView, GameController
     /// UIResponder
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        if self.touchInputsMappingDictionary.count == 0
-        {
-            self.feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
-            self.feedbackGenerator?.prepare()
-        }
-        
         for touch in touches
         {
             self.touchInputsMappingDictionary[touch] = []
@@ -147,11 +143,6 @@ public class ControllerView: UIView, GameController
         for touch in touches
         {
             self.touchInputsMappingDictionary[touch] = nil
-        }
-        
-        if self.touchInputsMappingDictionary.count == 0
-        {
-            self.feedbackGenerator = nil
         }
         
         self.updateInputs(forTouches: touches)
@@ -279,7 +270,7 @@ private extension ControllerView
         {
             switch UIDevice.current.feedbackSupportLevel
             {
-            case .feedbackGenerator: self.feedbackGenerator?.impactOccurred()
+            case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
             case .basic, .unsupported: UIDevice.current.vibrate()
             }
         }

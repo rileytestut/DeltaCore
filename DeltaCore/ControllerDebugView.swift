@@ -13,9 +13,11 @@ internal class ControllerDebugView: UIView
 {
     var items: [ControllerSkin.Item]? {
         didSet {
-            self.setNeedsDisplay()
+            self.updateItems()
         }
     }
+    
+    private var itemViews = [ItemView]()
     
     override init(frame: CGRect)
     {
@@ -37,41 +39,87 @@ internal class ControllerDebugView: UIView
         self.isUserInteractionEnabled = false
     }
     
-    override func draw(_ rect: CGRect)
+    override func layoutSubviews()
     {
-        guard let items = self.items else { return }
+        super.layoutSubviews()
         
-        for item in items
+        for view in self.itemViews
         {
-            var frame = item.extendedFrame
+            var frame = view.item.extendedFrame
             frame.origin.x *= self.bounds.width
             frame.origin.y *= self.bounds.height
             frame.size.width *= self.bounds.width
             frame.size.height *= self.bounds.height
             
-            UIColor.red.withAlphaComponent(0.75).setFill()
-            UIRectFill(frame)
-            
-            var text = ""
-            
-            for key in item.keys
-            {
-                if text.isEmpty
-                {
-                    text = key
-                }
-                else
-                {
-                    text = text + "," + key
-                }
-            }
-            
-            let attributes = [NSForegroundColorAttributeName: UIColor.white, NSFontAttributeName: UIFont.boldSystemFont(ofSize: 16)]
-            let textSize = (text as NSString).size(attributes: attributes)
-            
-            let point = CGPoint(x: frame.midX - textSize.width / 2.0, y: frame.midY - textSize.height / 2.0)
-            (text as NSString).draw(at: point, withAttributes: attributes)
+            view.frame = frame
         }
     }
     
+    private func updateItems()
+    {
+        self.itemViews.forEach { $0.removeFromSuperview() }
+        
+        var itemViews = [ItemView]()
+        
+        for item in (self.items ?? [])
+        {
+            let itemView = ItemView(item: item)
+            self.addSubview(itemView)
+            
+            itemViews.append(itemView)
+        }
+        
+        self.itemViews = itemViews
+        
+        self.setNeedsLayout()
+    }
+}
+
+fileprivate class ItemView: UIView
+{
+    fileprivate let item: ControllerSkin.Item
+    
+    private let label: UILabel
+    
+    init(item: ControllerSkin.Item)
+    {
+        self.item = item
+        
+        self.label = UILabel()
+        self.label.translatesAutoresizingMaskIntoConstraints = false
+        self.label.textColor = UIColor.white
+        self.label.font = UIFont.boldSystemFont(ofSize: 16)
+        
+        var text = ""
+        
+        for key in item.keys
+        {
+            if text.isEmpty
+            {
+                text = key
+            }
+            else
+            {
+                text = text + "," + key
+            }
+        }
+        
+        self.label.text = text
+        
+        self.label.sizeToFit()
+        
+        super.init(frame: CGRect.zero)
+        
+        self.addSubview(self.label)
+        
+        self.label.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
+        self.label.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+        
+        self.backgroundColor = UIColor.red.withAlphaComponent(0.75)
+    }
+    
+    required init?(coder aDecoder: NSCoder)
+    {
+        fatalError()
+    }
 }

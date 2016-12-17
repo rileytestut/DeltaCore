@@ -36,6 +36,7 @@ public protocol EmulatorBridging: NSObjectProtocol
     /// Inputs
     func activateInput(_ input: Int)
     func deactivateInput(_ input: Int)
+    func resetInputs()
     
     /// Save States
     @objc(saveSaveStateToURL:) func saveSaveState(to url: URL)

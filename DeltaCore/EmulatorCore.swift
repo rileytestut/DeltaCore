@@ -235,6 +235,9 @@ public extension EmulatorCore
         guard FileManager.default.fileExists(atPath: saveState.fileURL.path) else { throw SaveStateError.doesNotExist }
         
         self.deltaCore.emulatorBridge.loadSaveState(from: saveState.fileURL)
+        
+        self.updateCheats()
+        self.deltaCore.emulatorBridge.resetInputs()
     }
 }
 
@@ -279,7 +282,7 @@ public extension EmulatorCore
         self.updateCheats()
     }
     
-    private func updateCheats()
+    fileprivate func updateCheats()
     {
         self.deltaCore.emulatorBridge.resetCheats()
         

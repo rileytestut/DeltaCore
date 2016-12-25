@@ -1,6 +1,6 @@
 [submodule "External/ZipZap"]
 	path = External/ZipZap
-	url = git@github.com:pixelglow/ZipZap.git
+	url = git@github.com:rileytestut/ZipZap.git
 [submodule "External/TPCircularBuffer"]
 	path = External/TPCircularBuffer
 	url = git@github.com:michaeltyson/TPCircularBuffer.git

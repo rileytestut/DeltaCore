@@ -196,14 +196,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.controllerView.beginAnimatingUpdateControllerSkin()
         
-        coordinator.animate(alongsideTransition: { (context) in
-            if self.emulatorCore?.state == .paused
-            {
-                // WORKAROUND
-                // We need to manually "refresh" the game screen, otherwise the system tries to cache the rendered image, but skews it incorrectly when rotating b/c of UIVisualEffectView
-                self.gameView.inputImage = self.gameView.outputImage
-            }
-        }) { (context) in
+        coordinator.animate(alongsideTransition: nil) { (context) in
             self.controllerView.finishAnimatingUpdateControllerSkin()
         }
     }
@@ -236,6 +229,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
         else
         {
             self.gameViewHeightConstraint.constant = self.view.bounds.height - self.controllerViewHeightConstraint.constant
+        }
+        
+        if self.emulatorCore?.state != .running
+        {
+            // WORKAROUND
+            // Sometimes, iOS will cache the rendered image (such as when covered by a UIVisualEffectView), and as a result the game view might appear skewed
+            // To compensate, we manually "refresh" the game screen
+            self.gameView.inputImage = self.gameView.outputImage
         }
     }
     

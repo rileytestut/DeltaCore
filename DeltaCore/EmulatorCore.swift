@@ -312,7 +312,7 @@ public extension EmulatorCore
         gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
         
-        if let gameController = gameController as? MFiExternalController, gameController.inputTransformationHandler == nil
+        if let gameController = gameController as? MFiExternalController
         {
             gameController.inputTransformationHandler = { (gameController, input) in
                 return self.deltaCore.inputTransformer.inputs(for: gameController as! MFiExternalController, input: input as! MFiExternalControllerInput)

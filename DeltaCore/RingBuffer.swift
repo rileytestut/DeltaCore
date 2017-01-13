@@ -27,8 +27,10 @@ public class RingBuffer: NSObject
     /// Initialize with `preferredBufferSize` bytes.
     public init?(preferredBufferSize: Int)
     {
-        // 32 = size of C TPCircularBuffer struct
-        if !_TPCircularBufferInit(&self.circularBuffer, Int32(preferredBufferSize), 32)
+        // For 32-bit systems, the TPCircularBuffer struct is 24 bytes.
+        // For 64-bit systems, the TPCircularBuffer struct is 32 bytes.
+        let structSize = (MemoryLayout<Int>.size == MemoryLayout<Int32>.size) ? 24 : 32
+        if !_TPCircularBufferInit(&self.circularBuffer, Int32(preferredBufferSize), structSize)
         {
             return nil
         }

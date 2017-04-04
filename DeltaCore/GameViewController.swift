@@ -110,7 +110,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
-    open override func viewDidLoad()
+    open dynamic override func viewDidLoad()
     {
         super.viewDidLoad()
         
@@ -144,7 +144,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         self.controllerViewHeightConstraint.isActive = true
     }
     
-    open override func viewWillAppear(_ animated: Bool)
+    open dynamic override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         
@@ -169,14 +169,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    open override func viewDidAppear(_ animated: Bool)
+    open dynamic override func viewDidAppear(_ animated: Bool)
     {
         super.viewDidAppear(animated)
         
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
-    open override func viewDidDisappear(_ animated: Bool)
+    open dynamic override func viewDidDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
         
@@ -190,7 +190,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    open dynamic override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
     {
         super.viewWillTransition(to: size, with: coordinator)
         
@@ -201,7 +201,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    open override func viewDidLayoutSubviews()
+    open dynamic override func viewDidLayoutSubviews()
     {
         super.viewDidLayoutSubviews()
         
@@ -243,7 +243,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // MARK: - KVO -
     /// KVO
     
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
+    open dynamic override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
     {        
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
 
@@ -254,7 +254,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         self.view.layoutIfNeeded()
     }
     
-    open override func didReceiveMemoryWarning()
+    open dynamic override func didReceiveMemoryWarning()
     {
         super.didReceiveMemoryWarning()
     }

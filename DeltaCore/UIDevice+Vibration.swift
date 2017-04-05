@@ -36,12 +36,19 @@ public extension UIDevice
     }
     
     var isVibrationSupported: Bool {
-        // All iPhones support some form of vibration, and potentially future non-iPhone devices will support taptic feedback
-        return self.model.hasPrefix("iPhone") || self.feedbackSupportLevel != .unsupported
+        #if (arch(i386) || arch(x86_64))
+            // Return false for iOS simulator
+            return false
+        #else
+            // All iPhones support some form of vibration, and potentially future non-iPhone devices will support taptic feedback
+            return (self.model.hasPrefix("iPhone")) || self.feedbackSupportLevel != .unsupported
+        #endif
     }
     
     func vibrate()
     {
+        guard self.isVibrationSupported else { return }
+        
         switch self.feedbackSupportLevel
         {
         case .unsupported:

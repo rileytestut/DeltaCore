@@ -14,26 +14,17 @@ public extension VideoManager
 {
     public struct BufferInfo
     {
-        public let inputFormat: Format
-        public let outputFormat: Format
+        public let format: Format
+        public let dimensions: CGSize
         
-        public let inputDimensions: CGSize
-        public let outputDimensions: CGSize
-        
-        public var inputBufferSize: Int {
-            return Int(self.inputDimensions.width * self.inputDimensions.height) * self.inputFormat.bytesPerPixel
+        public var size: Int {
+            return Int(self.dimensions.width * self.dimensions.height) * self.format.bytesPerPixel
         }
-        public var outputBufferSize: Int {
-            return Int(self.inputDimensions.width * self.inputDimensions.height) * self.outputFormat.bytesPerPixel
-        }
-        
-        public init(inputFormat: Format, inputDimensions: CGSize, outputDimensions: CGSize)
+
+        public init(format: Format, dimensions: CGSize)
         {
-            self.inputFormat = inputFormat
-            self.inputDimensions = inputDimensions
-            
-            self.outputFormat = .bgra8
-            self.outputDimensions = outputDimensions
+            self.format = format
+            self.dimensions = dimensions
         }
     }
 }
@@ -44,12 +35,23 @@ public extension VideoManager.BufferInfo
     {
         case rgb565
         case bgra8
+        case rgba8
 
         public var bytesPerPixel: Int {
             switch self
             {
             case .rgb565: return 2
             case .bgra8: return 4
+            case .rgba8: return 4
+            }
+        }
+        
+        fileprivate var nativeCIFormat: CIFormat? {
+            switch self
+            {
+            case .rgb565: return nil
+            case .bgra8: return kCIFormatBGRA8
+            case .rgba8: return kCIFormatRGBA8
             }
         }
     }
@@ -62,24 +64,31 @@ public class VideoManager: NSObject, VideoRendering
     public var isEnabled = true
     
     public let bufferInfo: BufferInfo
-    
     public let videoBuffer: UnsafeMutablePointer<UInt8>
-    fileprivate let convertedVideoBuffer: UnsafeMutablePointer<UInt8>
+    
+    fileprivate let outputBufferInfo: BufferInfo
+    fileprivate let outputVideoBuffer: UnsafeMutablePointer<UInt8>
     
     public init(bufferInfo: BufferInfo)
     {
         self.bufferInfo = bufferInfo
         
-        self.videoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.bufferInfo.outputBufferSize)
+        switch self.bufferInfo.format
+        {
+        case .rgb565: self.outputBufferInfo = BufferInfo(format: .bgra8, dimensions: self.bufferInfo.dimensions)
+        case .bgra8, .rgba8: self.outputBufferInfo = self.bufferInfo
+        }
+        
+        self.videoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.bufferInfo.size)
+        self.outputVideoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.outputBufferInfo.size)
         
         super.init()
     }
     
     deinit
     {
-        self.videoBuffer.deallocate(capacity: self.bufferInfo.inputBufferSize)
-        self.convertedVideoBuffer.deallocate(capacity: self.bufferInfo.outputBufferSize)
+        self.videoBuffer.deallocate(capacity: self.bufferInfo.size)
+        self.outputVideoBuffer.deallocate(capacity: self.outputBufferInfo.size)
     }
 }
 
@@ -99,44 +108,41 @@ public extension VideoManager
     }
 }
 
+private let colorSpace = CGColorSpaceCreateDeviceRGB()
+
 internal extension VideoManager
 {
     func didUpdateVideoBuffer()
     {
         guard self.isEnabled else { return }
         
+        guard let ciFormat = self.outputBufferInfo.format.nativeCIFormat else {
+            print("VideoManager output format is not supported.")
+            return
+        }
+        
         autoreleasepool {
             
-            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.inputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
+            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.bufferInfo.dimensions.height), width: vImagePixelCount(self.bufferInfo.dimensions.width), rowBytes: self.bufferInfo.format.bytesPerPixel * Int(self.bufferInfo.dimensions.width))
+            var outputVImageBuffer = vImage_Buffer(data: self.outputVideoBuffer, height: vImagePixelCount(self.outputBufferInfo.dimensions.height), width: vImagePixelCount(self.outputBufferInfo.dimensions.width), rowBytes: self.outputBufferInfo.format.bytesPerPixel * Int(self.outputBufferInfo.dimensions.width))
             
-            let bitmapBuffer: UnsafeMutablePointer<UInt8>
-            var convertedVImageBuffer: vImage_Buffer
-            
-            if self.bufferInfo.inputFormat == .bgra8
+            switch self.bufferInfo.format
             {
-                bitmapBuffer = self.videoBuffer
-                convertedVImageBuffer = inputVImageBuffer
-            }
-            else
-            {
-                bitmapBuffer = self.convertedVideoBuffer
-                convertedVImageBuffer = vImage_Buffer(data: self.convertedVideoBuffer, height: vImagePixelCount(self.bufferInfo.inputDimensions.height), width: vImagePixelCount(self.bufferInfo.inputDimensions.width), rowBytes: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width))
-            }
-                        
-            switch self.bufferInfo.inputFormat
-            {
-            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &convertedVImageBuffer, 0)
-            case .bgra8: break
+            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &outputVImageBuffer, 0)
+            case .bgra8, .rgba8:
+                // Ensure alpha value is 255, not 0.
+                // 0x1 refers to the Blue channel in ARGB, which corresponds to the Alpha channel in BGRA and RGBA.
+                vImageOverwriteChannelsWithScalar_ARGB8888(255, &inputVImageBuffer, &outputVImageBuffer, 0x1, vImage_Flags(kvImageNoFlags))
             }
             
-            let bitmapData = Data(bytes: bitmapBuffer, count: self.bufferInfo.outputBufferSize)
-            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.bufferInfo.outputFormat.bytesPerPixel * Int(self.bufferInfo.inputDimensions.width), size: self.bufferInfo.outputDimensions, format: kCIFormatBGRA8, colorSpace: nil)
+            let bitmapData = Data(bytes: self.outputVideoBuffer, count: self.outputBufferInfo.size)
+            
+            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputBufferInfo.format.bytesPerPixel * Int(self.outputBufferInfo.dimensions.width), size: self.outputBufferInfo.dimensions, format: ciFormat, colorSpace: nil)
             
             for gameView in self.gameViews
             {
                 gameView.inputImage = image
             }
-            
         }
     }
 }

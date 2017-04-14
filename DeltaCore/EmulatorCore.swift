@@ -60,7 +60,7 @@ public final class EmulatorCore: NSObject
     }
     
     public var configuration: EmulatorConfiguration { return self.deltaCore.emulatorConfiguration }
-    public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.outputDimensions }
+    public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.dimensions }
     
     //MARK: - Private Properties
     

@@ -13,29 +13,31 @@ import AVFoundation
 
 public class GameView: UIView
 {
-    @NSCopying public var filter: CIFilter? {
-        didSet
-        {
-            self.filter?.setValue(self.inputImage, forKey: kCIInputImageKey)
-            self.update()
+    @NSCopying public var inputImage: CIImage? {
+        didSet {
+            self.updateFilterChain()
         }
     }
     
-    public var inputImage: CIImage? {
-        didSet
-        {
-            self.filter?.setValue(self.inputImage, forKey: kCIInputImageKey)
-            self.update()
+    @NSCopying public var filter: CIFilter? {
+        didSet {
+            self.updateFilterChain()
         }
+    }
+    
+    public var samplerMode: SamplerMode {
+        get { return self.samplerFilter.inputMode }
+        set { self.samplerFilter.inputMode = newValue }
     }
     
     public var outputImage: CIImage? {
-        let outputImage = self.filter?.outputImage ?? self.inputImage
-        return outputImage
+        return self.filterChain.outputImage
     }
     
-    fileprivate let glkView: GLKView
+    fileprivate let filterChain = FilterChain(filters: [])
+    fileprivate let samplerFilter = SamplerFilter()
     
+    fileprivate let glkView: GLKView
     fileprivate let context: CIContext
     
     public override init(frame: CGRect)
@@ -81,6 +83,13 @@ public class GameView: UIView
 
 private extension GameView
 {
+    func updateFilterChain()
+    {
+        self.filterChain.inputImage = self.inputImage
+        self.filterChain.inputFilters = [self.samplerFilter, self.filter].flatMap { $0 }
+        self.update()
+    }
+    
     func update()
     {
         guard self.window != nil, !self.bounds.isEmpty else { return }

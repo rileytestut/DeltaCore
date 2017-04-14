@@ -17,6 +17,8 @@
 		BF425A951D23BD8500F48ED9 /* EmulatorBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A941D23BD8500F48ED9 /* EmulatorBridging.swift */; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameProtocol.swift */; };
+		BF5996881E9F673C00595F8D /* SamplerFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5996871E9F673C00595F8D /* SamplerFilter.swift */; };
+		BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5996911EA01DC000595F8D /* FilterChain.swift */; };
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
@@ -116,6 +118,8 @@
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
 		BF4689811AAD703500A2586D /* GameProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameProtocol.swift; sourceTree = "<group>"; };
+		BF5996871E9F673C00595F8D /* SamplerFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SamplerFilter.swift; sourceTree = "<group>"; };
+		BF5996911EA01DC000595F8D /* FilterChain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterChain.swift; sourceTree = "<group>"; };
 		BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatProtocol.swift; sourceTree = "<group>"; };
 		BF65E86D1CEE68F300CD3247 /* Cheat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cheat.swift; sourceTree = "<group>"; };
 		BF6834011C459C250052249F /* AudioManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -229,6 +233,7 @@
 				BF9873BF1AB6C8AE0001D8C9 /* UI */,
 				BF4689801AAD702D00A2586D /* Model */,
 				BFAA1FE61B8A722F00495943 /* External Controllers */,
+				BF5996901E9FF47B00595F8D /* Filters */,
 				BF3273CE1B86426600494CFC /* Managers */,
 				BFE4380E1AF606660095A5F1 /* Protocols */,
 				BFB355D01C263C6700D2F25F /* Extensions */,
@@ -259,6 +264,15 @@
 				BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */,
 			);
 			name = Model;
+			sourceTree = "<group>";
+		};
+		BF5996901E9FF47B00595F8D /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				BF5996911EA01DC000595F8D /* FilterChain.swift */,
+				BF5996871E9F673C00595F8D /* SamplerFilter.swift */,
+			);
+			name = Filters;
 			sourceTree = "<group>";
 		};
 		BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */ = {
@@ -533,6 +547,8 @@
 				BF425A791D23925600F48ED9 /* InputTransforming.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF785CAE1B603E6900189DB8 /* MFiExternalController.swift in Sources */,
+				BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */,
+				BF5996881E9F673C00595F8D /* SamplerFilter.swift in Sources */,
 				BFE438101AF606980095A5F1 /* GameController.swift in Sources */,
 				BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */,
 				BFEC24131D24DAE800B3A6A9 /* Thread+RealTime.swift in Sources */,

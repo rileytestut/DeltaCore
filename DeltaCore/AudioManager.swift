@@ -10,24 +10,9 @@ import AVFoundation
 
 private let AudioBufferCount = 3
 
-public extension AudioManager
-{
-    public struct BufferInfo
-    {
-        public let inputFormat: AVAudioFormat
-        public let preferredSize: Int
-        
-        public init(inputFormat: AVAudioFormat, preferredSize: Int)
-        {
-            self.inputFormat = inputFormat
-            self.preferredSize = preferredSize
-        }
-    }
-}
-
 public class AudioManager: NSObject, AudioRendering
 {
-    public let bufferInfo: BufferInfo
+    public let bufferInfo: AudioBufferInfo
     
     public var isEnabled = true {
         didSet
@@ -73,7 +58,7 @@ public class AudioManager: NSObject, AudioRendering
     
     fileprivate var audioBuffers = [AVAudioPCMBuffer]()
     
-    public init(bufferInfo: BufferInfo)
+    public init(bufferInfo: AudioBufferInfo)
     {
         self.bufferInfo = bufferInfo
         

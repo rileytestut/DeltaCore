@@ -41,8 +41,8 @@ public final class EmulatorCore: NSObject
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.configuration.audioBufferInfo)
-    public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.configuration.videoBufferInfo)
+    public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.deltaCore.audioBufferInfo)
+    public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.deltaCore.videoBufferInfo)
     
     // KVO-Compliant
     public fileprivate(set) dynamic var state = State.stopped
@@ -50,17 +50,16 @@ public final class EmulatorCore: NSObject
     {
         didSet
         {
-            if !self.configuration.supportedRates.contains(self.rate)
+            if !self.deltaCore.supportedRates.contains(self.rate)
             {
-                self.rate = min(max(self.rate, self.configuration.supportedRates.lowerBound), self.configuration.supportedRates.upperBound)
+                self.rate = min(max(self.rate, self.deltaCore.supportedRates.lowerBound), self.deltaCore.supportedRates.upperBound)
             }
             
             self.audioManager.rate = self.rate
         }
     }
     
-    public var configuration: EmulatorConfiguration { return self.deltaCore.emulatorConfiguration }
-    public var preferredRenderingSize: CGSize { return self.configuration.videoBufferInfo.dimensions }
+    public var preferredRenderingSize: CGSize { return self.deltaCore.videoBufferInfo.dimensions }
     
     //MARK: - Private Properties
     
@@ -79,7 +78,7 @@ public final class EmulatorCore: NSObject
     
     fileprivate var gameSaveURL: URL {
         let gameURL = self.game.fileURL.deletingPathExtension()
-        let gameSaveURL = gameURL.appendingPathExtension(self.configuration.gameSaveFileExtension)
+        let gameSaveURL = gameURL.appendingPathExtension(self.deltaCore.gameSaveFileExtension)
         return gameSaveURL
     }
     
@@ -106,7 +105,7 @@ public final class EmulatorCore: NSObject
         
         super.init()
         
-        self.rate = self.configuration.supportedRates.lowerBound        
+        self.rate = self.deltaCore.supportedRates.lowerBound
     }
 }
 
@@ -370,7 +369,7 @@ private extension EmulatorCore
             
             while true
             {
-                let frameDuration = 1.0 / (self.rate * 60.0)
+                let frameDuration = self.deltaCore.frameDuration / self.rate
                 
                 if self.rate != self.previousRate
                 {
@@ -406,7 +405,7 @@ private extension EmulatorCore
                 if framesToSkip > 0
                 {
                     // Only actually skip frames if we're running at normal speed
-                    if self.rate == self.configuration.supportedRates.lowerBound
+                    if self.rate == self.deltaCore.supportedRates.lowerBound
                     {
                         for _ in 0 ..< framesToSkip
                         {

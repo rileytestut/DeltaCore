@@ -28,20 +28,16 @@ public struct Delta
     {
     }
     
-    public static func register(_ core: DeltaCoreProtocol?, for gameTypes: Set<GameType>? = nil)
+    public static func register(_ core: DeltaCoreProtocol)
     {
-        let gameTypes = gameTypes ?? core?.supportedGameTypes ?? []
-        
-        for gameType in gameTypes
-        {
-            if let core = core, !core.supportedGameTypes.contains(gameType)
-            {
-                // Core doesn't support this gameType, so we ignore it
-                continue
-            }
-            
-            self.registeredCores[gameType] = core
-        }
+        self.registeredCores[core.gameType] = core
+    }
+    
+    public static func unregister(_ core: DeltaCoreProtocol)
+    {
+        // Ensure another core has not been registered for core.gameType.
+        guard let registeredCore = self.registeredCores[core.gameType], registeredCore == core else { return }
+        self.registeredCores[core.gameType] = nil
     }
     
     public static func core(for gameType: GameType) -> DeltaCoreProtocol?

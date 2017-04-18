@@ -10,49 +10,14 @@ import Foundation
 import Accelerate
 import CoreImage
 
-public extension VideoManager
+private extension VideoBufferInfo.Format
 {
-    public struct BufferInfo
-    {
-        public let format: Format
-        public let dimensions: CGSize
-        
-        public var size: Int {
-            return Int(self.dimensions.width * self.dimensions.height) * self.format.bytesPerPixel
-        }
-
-        public init(format: Format, dimensions: CGSize)
+    var nativeCIFormat: CIFormat? {
+        switch self
         {
-            self.format = format
-            self.dimensions = dimensions
-        }
-    }
-}
-
-public extension VideoManager.BufferInfo
-{
-    public enum Format
-    {
-        case rgb565
-        case bgra8
-        case rgba8
-
-        public var bytesPerPixel: Int {
-            switch self
-            {
-            case .rgb565: return 2
-            case .bgra8: return 4
-            case .rgba8: return 4
-            }
-        }
-        
-        fileprivate var nativeCIFormat: CIFormat? {
-            switch self
-            {
-            case .rgb565: return nil
-            case .bgra8: return kCIFormatBGRA8
-            case .rgba8: return kCIFormatRGBA8
-            }
+        case .rgb565: return nil
+        case .bgra8: return kCIFormatBGRA8
+        case .rgba8: return kCIFormatRGBA8
         }
     }
 }
@@ -63,19 +28,19 @@ public class VideoManager: NSObject, VideoRendering
     
     public var isEnabled = true
     
-    public let bufferInfo: BufferInfo
+    public let bufferInfo: VideoBufferInfo
     public let videoBuffer: UnsafeMutablePointer<UInt8>
     
-    fileprivate let outputBufferInfo: BufferInfo
+    fileprivate let outputBufferInfo: VideoBufferInfo
     fileprivate let outputVideoBuffer: UnsafeMutablePointer<UInt8>
     
-    public init(bufferInfo: BufferInfo)
+    public init(bufferInfo: VideoBufferInfo)
     {
         self.bufferInfo = bufferInfo
         
         switch self.bufferInfo.format
         {
-        case .rgb565: self.outputBufferInfo = BufferInfo(format: .bgra8, dimensions: self.bufferInfo.dimensions)
+        case .rgb565: self.outputBufferInfo = VideoBufferInfo(format: .bgra8, dimensions: self.bufferInfo.dimensions)
         case .bgra8, .rgba8: self.outputBufferInfo = self.bufferInfo
         }
         

@@ -10,20 +10,35 @@ import Foundation
 
 public protocol DeltaCoreProtocol: CustomStringConvertible
 {
+    var gameType: GameType { get }
+    
     var bundleIdentifier: String { get }
     
-    var supportedGameTypes: Set<GameType> { get }
+    var gameSaveFileExtension: String { get }
+    
+    var frameDuration: TimeInterval { get }
+    
+    var supportedRates: ClosedRange<Double> { get }
+    
+    var supportedCheatFormats: [CheatFormat] { get }
+    
+    var audioBufferInfo: AudioBufferInfo { get }
+    
+    var videoBufferInfo: VideoBufferInfo { get }
     
     var emulatorBridge: EmulatorBridging { get }
-    
-    var emulatorConfiguration: EmulatorConfiguration { get }
     
     var inputTransformer: InputTransforming { get }
 }
 
-extension DeltaCoreProtocol
+public extension DeltaCoreProtocol
 {
-    public var description: String {
+    var description: String {
         return self.bundleIdentifier
     }
+}
+
+public func ==(lhs: DeltaCoreProtocol, rhs: DeltaCoreProtocol) -> Bool
+{
+    return lhs.bundleIdentifier == rhs.bundleIdentifier
 }

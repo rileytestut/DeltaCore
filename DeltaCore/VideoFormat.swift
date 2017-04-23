@@ -8,9 +8,9 @@
 
 import Foundation
 
-extension VideoBufferInfo
+extension VideoFormat
 {
-    public enum Format
+    public enum PixelFormat
     {
         case rgb565
         case bgra8
@@ -27,18 +27,18 @@ extension VideoBufferInfo
     }
 }
 
-public struct VideoBufferInfo
+public struct VideoFormat
 {
-    public let format: Format
+    public let pixelFormat: PixelFormat
     public let dimensions: CGSize
     
-    public var size: Int {
-        return Int(self.dimensions.width * self.dimensions.height) * self.format.bytesPerPixel
+    public var bufferSize: Int {
+        return Int(self.dimensions.width * self.dimensions.height) * self.pixelFormat.bytesPerPixel
     }
     
-    public init(format: Format, dimensions: CGSize)
+    public init(pixelFormat: PixelFormat, dimensions: CGSize)
     {
-        self.format = format
+        self.pixelFormat = pixelFormat
         self.dimensions = dimensions
     }
 }

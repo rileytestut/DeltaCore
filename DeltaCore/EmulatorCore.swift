@@ -41,8 +41,8 @@ public final class EmulatorCore: NSObject
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.deltaCore.videoBufferInfo)
     public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat, frameDuration: self.deltaCore.frameDuration)
+    public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
     
     // KVO-Compliant
     public fileprivate(set) dynamic var state = State.stopped
@@ -59,14 +59,14 @@ public final class EmulatorCore: NSObject
         }
     }
     
-    public var preferredRenderingSize: CGSize { return self.deltaCore.videoBufferInfo.dimensions }
+    public let deltaCore: DeltaCoreProtocol
+    public var preferredRenderingSize: CGSize { return self.deltaCore.videoFormat.dimensions }
     
     //MARK: - Private Properties
     
     // We privately set this first to clean up before setting self.state, which notifies KVO observers
     fileprivate var _state = State.stopped
     
-    fileprivate let deltaCore: DeltaCoreProtocol
     fileprivate let gameType: GameType
     
     fileprivate let emulationSemaphore = DispatchSemaphore(value: 0)

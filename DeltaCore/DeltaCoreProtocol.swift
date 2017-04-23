@@ -24,7 +24,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     
     var audioFormat: AVAudioFormat { get }
     
-    var videoBufferInfo: VideoBufferInfo { get }
+    var videoFormat: VideoFormat { get }
     
     var emulatorBridge: EmulatorBridging { get }
     

@@ -41,8 +41,8 @@ public final class EmulatorCore: NSObject
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(bufferInfo: self.deltaCore.audioBufferInfo)
     public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(bufferInfo: self.deltaCore.videoBufferInfo)
+    public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat, frameDuration: self.deltaCore.frameDuration)
     
     // KVO-Compliant
     public fileprivate(set) dynamic var state = State.stopped

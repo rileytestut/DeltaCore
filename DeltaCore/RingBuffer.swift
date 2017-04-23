@@ -56,10 +56,10 @@ public extension RingBuffer
     
     /// Copies `size` bytes from ring buffer to `buffer` if possible. Otherwise, copies as many as possible.
     @objc(readIntoBuffer:preferredSize:)
-    func read(into buffer: UnsafeMutablePointer<UInt8>, preferredSize: Int)
+    func read(into buffer: UnsafeMutablePointer<UInt8>, preferredSize: Int) -> Int
     {
         var availableBytes: Int32 = 0
-        guard let ringBuffer = TPCircularBufferTail(&self.circularBuffer, &availableBytes) else { return }
+        guard let ringBuffer = TPCircularBufferTail(&self.circularBuffer, &availableBytes) else { return 0 }
         
         let size = min(preferredSize, Int(availableBytes))
         
@@ -69,6 +69,7 @@ public extension RingBuffer
         }
         
         TPCircularBufferConsume(&self.circularBuffer, Int32(size))
+        return size
     }
     
     /// Resets buffer to clean state.

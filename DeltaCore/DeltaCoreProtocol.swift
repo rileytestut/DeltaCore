@@ -6,7 +6,7 @@
 //  Copyright © 2016 Riley Testut. All rights reserved.
 //
 
-import Foundation
+import AVFoundation
 
 public protocol DeltaCoreProtocol: CustomStringConvertible
 {
@@ -22,7 +22,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     
     var supportedCheatFormats: [CheatFormat] { get }
     
-    var audioBufferInfo: AudioBufferInfo { get }
+    var audioFormat: AVAudioFormat { get }
     
     var videoBufferInfo: VideoBufferInfo { get }
     

@@ -164,7 +164,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 emulatorCore.audioManager.isEnabled = false
                 emulatorCore.audioManager.isEnabled = true
                 
-                self.emulatorCore?.start()
+                emulatorCore.start()
             }
         }
     }
@@ -252,11 +252,6 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.view.setNeedsLayout()
         self.view.layoutIfNeeded()
-    }
-    
-    open dynamic override func didReceiveMemoryWarning()
-    {
-        super.didReceiveMemoryWarning()
     }
     
     // MARK: - GameControllerReceiver -

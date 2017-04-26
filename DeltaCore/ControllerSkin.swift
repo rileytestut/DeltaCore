@@ -32,11 +32,17 @@ extension ControllerSkin
             
             let overrideExtendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
+            var extendedEdges = extendedEdges
+            extendedEdges.top = overrideExtendedEdges.top ?? extendedEdges.top
+            extendedEdges.bottom = overrideExtendedEdges.bottom ?? extendedEdges.bottom
+            extendedEdges.left = overrideExtendedEdges.left ?? extendedEdges.left
+            extendedEdges.right = overrideExtendedEdges.right ?? extendedEdges.right
+            
             var extendedFrame = frame
-            extendedFrame.origin.x -= overrideExtendedEdges.left ?? extendedEdges.left ?? 0
-            extendedFrame.origin.y -= overrideExtendedEdges.top ?? extendedEdges.top ?? 0
-            extendedFrame.size.width += (overrideExtendedEdges.left ?? extendedEdges.left ?? 0) + (overrideExtendedEdges.right ?? extendedEdges.right ?? 0)
-            extendedFrame.size.height += (overrideExtendedEdges.top ?? extendedEdges.top ?? 0) + (overrideExtendedEdges.bottom ?? extendedEdges.bottom ?? 0)
+            extendedFrame.origin.x -= extendedEdges.left ?? 0
+            extendedFrame.origin.y -= extendedEdges.top ?? 0
+            extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
+            extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
             
             // Convert frames to relative values
             self.frame = CGRect(x: frame.minX / mappingSize.width, y: frame.minY / mappingSize.height, width: frame.width / mappingSize.width, height: frame.height / mappingSize.height)

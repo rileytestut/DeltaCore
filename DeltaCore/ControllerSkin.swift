@@ -44,9 +44,10 @@ extension ControllerSkin
             extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
             extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
             
-            // Convert frames to relative values
-            self.frame = CGRect(x: frame.minX / mappingSize.width, y: frame.minY / mappingSize.height, width: frame.width / mappingSize.width, height: frame.height / mappingSize.height)
-            self.extendedFrame = CGRect(x: extendedFrame.minX / mappingSize.width, y: extendedFrame.minY / mappingSize.height, width: extendedFrame.width / mappingSize.width, height: extendedFrame.height / mappingSize.height)
+            // Convert frames to relative values.
+            let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+            self.frame = frame.applying(scaleTransform)
+            self.extendedFrame = extendedFrame.applying(scaleTransform)
         }
     }
 }
@@ -526,7 +527,8 @@ private extension ControllerSkin
                 let gameScreenFrameDictionary = dictionary["gameScreenFrame"] as? [String: CGFloat],
                 let gameScreenFrame = CGRect(dictionary: gameScreenFrameDictionary)
             {
-                self.gameScreenFrame = gameScreenFrame
+                let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+                self.gameScreenFrame = gameScreenFrame.applying(scaleTransform)
             }
             else
             {

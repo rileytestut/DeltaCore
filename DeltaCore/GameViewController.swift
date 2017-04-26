@@ -8,6 +8,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 public protocol GameViewControllerDelegate: class
 {
@@ -70,8 +71,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     open fileprivate(set) var gameView: GameView!
     open fileprivate(set) var controllerView: ControllerView!
     
-    fileprivate var controllerViewHeightConstraint: NSLayoutConstraint!
-    fileprivate var gameViewHeightConstraint: NSLayoutConstraint!
+    private var gameViewContainerView: UIView!
     
     fileprivate let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
     
@@ -116,32 +116,18 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.view.backgroundColor = UIColor.black
         
+        self.gameViewContainerView = UIView(frame: CGRect.zero)
+        self.view.addSubview(self.gameViewContainerView)
+        
         self.gameView = GameView(frame: CGRect.zero)
-        self.gameView.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(self.gameView)
+        self.gameViewContainerView.addSubview(self.gameView)
         
         self.controllerView = ControllerView(frame: CGRect.zero)
-        self.controllerView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(self.controllerView)
         
         self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
         
         self.prepareForGame()
-        
-        // Auto Layout
-        self.gameView.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-        self.gameView.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
-        self.gameView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
-        
-        self.controllerView.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-        self.controllerView.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
-        self.controllerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
-        
-        self.gameViewHeightConstraint = self.gameView.heightAnchor.constraint(equalToConstant: 0)
-        self.gameViewHeightConstraint.isActive = true
-        
-        self.controllerViewHeightConstraint = self.controllerView.heightAnchor.constraint(equalToConstant: 0)
-        self.controllerViewHeightConstraint.isActive = true
     }
     
     open dynamic override func viewWillAppear(_ animated: Bool)
@@ -205,31 +191,81 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
-        if !self.controllerView.isHidden && self.controllerView.controllerSkin != nil
+        let viewBounds = CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.bounds.height)
+        
+        
+        // Layout ControllerView
+        if
+            let controllerSkin = self.controllerView.controllerSkin,
+            let traits = self.controllerView.controllerSkinTraits,
+            let aspectRatio = controllerSkin.aspectRatio(for: traits)
         {
-            if self.view.bounds.width > self.view.bounds.height
+            var frame = AVMakeRect(aspectRatio: aspectRatio, insideRect: viewBounds)
+            
+            if self.view.bounds.height > self.view.bounds.width
             {
-                self.controllerViewHeightConstraint.constant = self.view.bounds.height
+                // The CGRect returned by AVMakeRect is centered inside the parent frame.
+                // This is fine for landscape, but when in portrait, we want controllerView to be pinned to the bottom of the parent frame instead.
+                frame.origin.y = self.view.bounds.height - frame.height
+            }
+            
+            self.controllerView.frame = frame
+        }
+        else
+        {
+            self.controllerView.frame = CGRect.zero
+        }
+        
+        
+        // Layout GameViewContainerView
+        if self.controllerView.isHidden || self.controllerView.frame.isEmpty
+        {
+            // controllerView is hidden, so gameViewContainerView should match bounds of parent view.
+            self.gameViewContainerView.frame = viewBounds
+        }
+        else
+        {
+            if
+                let controllerSkin = self.controllerView.controllerSkin,
+                let traits = self.controllerView.controllerSkinTraits,
+                let gameScreenFrame = controllerSkin.gameScreenFrame(for: traits)
+            {
+                // controllerSkin specifies a specific frame for the game screen, so we'll use that to position gameViewContainerView.
+                
+                let scaleTransform = CGAffineTransform(scaleX: self.controllerView.bounds.width, y: self.controllerView.bounds.height)
+                
+                let frame = gameScreenFrame.applying(scaleTransform)
+                self.gameViewContainerView.frame = frame
             }
             else
             {
-                let scale = self.view.bounds.width / self.controllerView.intrinsicContentSize.width
-                self.controllerViewHeightConstraint.constant = self.controllerView.intrinsicContentSize.height * scale
+                // controllerSkin doesn't specify a specific frame for the game screen, so we'll use the default frames.
+                
+                var frame: CGRect
+                
+                if self.view.bounds.height > self.view.bounds.width
+                {
+                    // Portrait. Frame is the area above controllerSkin.
+                    frame = CGRect(x: 0, y: 0, width: viewBounds.width, height: viewBounds.height - self.controllerView.bounds.height)
+                }
+                else
+                {
+                    // Landscape. Frame is equal to viewBounds.
+                    frame = viewBounds
+                }
+                
+                self.gameViewContainerView.frame = frame
             }
         }
-        else
-        {
-            self.controllerViewHeightConstraint.constant = 0
-        }
         
-        if self.view.bounds.width > self.view.bounds.height
-        {
-            self.gameViewHeightConstraint.constant = self.view.bounds.height
-        }
-        else
-        {
-            self.gameViewHeightConstraint.constant = self.view.bounds.height - self.controllerViewHeightConstraint.constant
-        }
+        
+        // Layout GameView
+        let preferredRenderingSize = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 256, height: 224)
+        let containerBounds = CGRect(x: 0, y: 0, width: self.gameViewContainerView.bounds.width, height: self.gameViewContainerView.bounds.height)
+        
+        let frame = AVMakeRect(aspectRatio: preferredRenderingSize, insideRect:containerBounds)
+        self.gameView.frame = frame
+        
         
         if self.emulatorCore?.state != .running
         {

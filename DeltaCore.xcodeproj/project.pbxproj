@@ -169,7 +169,7 @@
 			children = (
 				BF3273D41B86428200494CFC /* ExternalControllerManager.swift */,
 			);
-			name = Managers;
+			path = Managers;
 			sourceTree = "<group>";
 		};
 		BF425A6D1D23922000F48ED9 /* Inputs */ = {
@@ -178,7 +178,7 @@
 				BFF703D31B4888100098561C /* Input.swift */,
 				BFE4380F1AF606980095A5F1 /* GameController.swift */,
 			);
-			name = Inputs;
+			path = Inputs;
 			sourceTree = "<group>";
 		};
 		BF425A751D23922800F48ED9 /* Model */ = {
@@ -189,7 +189,7 @@
 				BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */,
 				BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */,
 			);
-			name = Model;
+			path = Model;
 			sourceTree = "<group>";
 		};
 		BF425A931D23BD2D00F48ED9 /* Cores */ = {
@@ -199,7 +199,7 @@
 				BF425A781D23925600F48ED9 /* InputTransforming.swift */,
 				BF425A941D23BD8500F48ED9 /* EmulatorBridging.swift */,
 			);
-			name = Cores;
+			path = Cores;
 			sourceTree = "<group>";
 		};
 		BF4689531AACF36800A2586D = {
@@ -244,7 +244,7 @@
 			children = (
 				BF4689611AACF36800A2586D /* Info.plist */,
 			);
-			name = "Supporting Files";
+			path = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		BF4689801AAD702D00A2586D /* Model */ = {
@@ -259,7 +259,7 @@
 				BFAA1FE91B8A971000495943 /* ExternalController.swift */,
 				BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */,
 			);
-			name = Model;
+			path = Model;
 			sourceTree = "<group>";
 		};
 		BF5996901E9FF47B00595F8D /* Filters */ = {
@@ -268,7 +268,7 @@
 				BF5996911EA01DC000595F8D /* FilterChain.swift */,
 				BF5996871E9F673C00595F8D /* SamplerFilter.swift */,
 			);
-			name = Filters;
+			path = Filters;
 			sourceTree = "<group>";
 		};
 		BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */ = {
@@ -286,7 +286,7 @@
 				BF6834011C459C250052249F /* AudioManager.swift */,
 				BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */,
 			);
-			name = Audio;
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		BF9873BF1AB6C8AE0001D8C9 /* UI */ = {
@@ -297,7 +297,7 @@
 				BFE438111AF60CDA0095A5F1 /* ControllerView.swift */,
 				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
 			);
-			name = UI;
+			path = UI;
 			sourceTree = "<group>";
 		};
 		BFAA1FE61B8A722F00495943 /* External Controllers */ = {
@@ -305,7 +305,7 @@
 			children = (
 				BF785CAD1B603E6900189DB8 /* MFiExternalController.swift */,
 			);
-			name = "External Controllers";
+			path = "External Controllers";
 			sourceTree = "<group>";
 		};
 		BFB355D01C263C6700D2F25F /* Extensions */ = {
@@ -317,7 +317,7 @@
 				BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */,
 				BFA352461DEC19D70085A0BD /* UIDevice+Vibration.swift */,
 			);
-			name = Extensions;
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		BFD78F591C994587000441FC /* Video */ = {
@@ -326,7 +326,7 @@
 				BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */,
 				BFD78F611C994596000441FC /* VideoManager.swift */,
 			);
-			name = Video;
+			path = Video;
 			sourceTree = "<group>";
 		};
 		BFE4380E1AF606660095A5F1 /* Protocols */ = {
@@ -334,18 +334,18 @@
 			children = (
 				BF425A751D23922800F48ED9 /* Model */,
 				BF425A6D1D23922000F48ED9 /* Inputs */,
-				BFEC23CE1D247FAC00B3A6A9 /* Audio/Video */,
+				BFEC23CE1D247FAC00B3A6A9 /* Rendering */,
 			);
-			name = Protocols;
+			path = Protocols;
 			sourceTree = "<group>";
 		};
-		BFEC23CE1D247FAC00B3A6A9 /* Audio/Video */ = {
+		BFEC23CE1D247FAC00B3A6A9 /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
 				BFEC23CC1D247E4A00B3A6A9 /* AudioRendering.swift */,
 				BFEC23C31D247D1F00B3A6A9 /* VideoRendering.swift */,
 			);
-			name = Audio/Video;
+			path = Rendering;
 			sourceTree = "<group>";
 		};
 		BFEE12C71B602CBF00156A2C /* External */ = {
@@ -378,7 +378,7 @@
 				BFD78F591C994587000441FC /* Video */,
 				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
-			name = "Emulator Core";
+			path = "Emulator Core";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -606,7 +606,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = DeltaCore/Info.plist;
+				INFOPLIST_FILE = "DeltaCore/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -653,7 +653,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = DeltaCore/Info.plist;
+				INFOPLIST_FILE = "DeltaCore/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = DeltaCore;

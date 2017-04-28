@@ -47,7 +47,7 @@ public protocol EmulatorBridging: NSObjectProtocol
     @objc(loadGameSaveFromURL:) func loadGameSave(from url: URL)
     
     /// Cheats
-    @discardableResult func addCheatCode(_ cheatCode: String, type: String) -> Bool
+    @discardableResult func addCheatCode(_ cheatCode: String, type: CheatType) -> Bool
     func resetCheats()
     func updateCheats()
 }

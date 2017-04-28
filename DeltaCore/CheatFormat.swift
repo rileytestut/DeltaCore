@@ -20,7 +20,7 @@ public struct CheatFormat
     
     public let allowedCodeCharacters: CharacterSet
     
-    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: CharacterSet = CharacterSet.hexadecimals())
+    public init(name: String, format: String, type: CheatType, allowedCodeCharacters: CharacterSet = CharacterSet.hexadecimals)
     {
         self.name = name
         self.format = format
@@ -31,9 +31,29 @@ public struct CheatFormat
 
 public extension CharacterSet
 {
-    static func hexadecimals() -> CharacterSet
+    static var hexadecimals: CharacterSet
     {
-        let characterSet = CharacterSet(charactersIn: "0123456789ABCDEFabcdef")
+        return NSCharacterSet.hexadecimals as CharacterSet
+    }
+}
+
+// Extend NSCharacterSet for Objective-C interopability.
+public extension NSCharacterSet
+{
+    @objc(hexadecimalCharacterSet)
+    class var hexadecimals: NSCharacterSet
+    {
+        let characterSet = NSCharacterSet(charactersIn: "0123456789ABCDEFabcdef")
+        return characterSet
+    }
+}
+
+public extension NSMutableCharacterSet
+{
+    @objc(hexadecimalCharacterSet)
+    override class var hexadecimals: NSMutableCharacterSet
+    {
+        let characterSet = NSCharacterSet.hexadecimals.mutableCopy() as! NSMutableCharacterSet
         return characterSet
     }
 }

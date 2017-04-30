@@ -46,15 +46,8 @@ public final class EmulatorCore: NSObject
     
     // KVO-Compliant
     public fileprivate(set) dynamic var state = State.stopped
-    public dynamic var rate = 1.0
-    {
-        didSet
-        {
-            if !self.deltaCore.supportedRates.contains(self.rate)
-            {
-                self.rate = min(max(self.rate, self.deltaCore.supportedRates.lowerBound), self.deltaCore.supportedRates.upperBound)
-            }
-            
+    public dynamic var rate = 1.0 {
+        didSet {
             self.audioManager.rate = self.rate
         }
     }
@@ -104,8 +97,6 @@ public final class EmulatorCore: NSObject
         self.gameType = self.game.type
         
         super.init()
-        
-        self.rate = self.deltaCore.supportedRates.lowerBound
     }
 }
 
@@ -405,7 +396,7 @@ private extension EmulatorCore
                 if framesToSkip > 0
                 {
                     // Only actually skip frames if we're running at normal speed
-                    if self.rate == self.deltaCore.supportedRates.lowerBound
+                    if self.rate == 1.0
                     {
                         for _ in 0 ..< framesToSkip
                         {

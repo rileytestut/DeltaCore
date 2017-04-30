@@ -17,12 +17,12 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     var gameSaveFileExtension: String { get }
     
     var frameDuration: TimeInterval { get }
-        
-    var supportedCheatFormats: [CheatFormat] { get }
     
     var audioFormat: AVAudioFormat { get }
     
     var videoFormat: VideoFormat { get }
+    
+    var supportedCheatFormats: Set<CheatFormat> { get }
     
     var emulatorBridge: EmulatorBridging { get }
     

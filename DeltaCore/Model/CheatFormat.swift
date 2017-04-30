@@ -29,32 +29,15 @@ public struct CheatFormat
     }
 }
 
-public extension CharacterSet
+extension CheatFormat: Hashable
 {
-    static var hexadecimals: CharacterSet
-    {
-        return NSCharacterSet.hexadecimals as CharacterSet
+    public var hashValue: Int {
+        return self.type.hashValue
     }
-}
-
-// Extend NSCharacterSet for Objective-C interopability.
-public extension NSCharacterSet
-{
-    @objc(hexadecimalCharacterSet)
-    class var hexadecimals: NSCharacterSet
+    
+    public static func ==(lhs: CheatFormat, rhs: CheatFormat) -> Bool
     {
-        let characterSet = NSCharacterSet(charactersIn: "0123456789ABCDEFabcdef")
-        return characterSet
-    }
-}
-
-public extension NSMutableCharacterSet
-{
-    @objc(hexadecimalCharacterSet)
-    override class var hexadecimals: NSMutableCharacterSet
-    {
-        let characterSet = NSCharacterSet.hexadecimals.mutableCopy() as! NSMutableCharacterSet
-        return characterSet
+        return lhs.type == rhs.type
     }
 }
 

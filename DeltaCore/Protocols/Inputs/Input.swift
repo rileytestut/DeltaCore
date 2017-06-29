@@ -6,50 +6,36 @@
 //  Copyright © 2015 Riley Testut. All rights reserved.
 //
 
-/// Used by delta cores to declare appropriate form of representing emulator inputs
 public protocol Input
 {
-    /// Used internally to conform to Hashable
-    /// We cannot have Input itself conform to Hashable due to the Self requirement of Equatable
-    /// Implemented by the Input protocol extension. Should not need to be overriden by conforming types.
-    var _hashValue: Int { get }
-    
-    /// Convenience method used for implementing Equatable. Default implementation via protocol extension
-    func isEqual<T>(_ input: T) -> Bool
-    
-    /// So we can pass into generic Objective-C method
-    var rawValue: Int { get }
+    var identifier: Int { get }
 }
 
-/// Provide default implementatation for Input.isEqual()
-public extension Input where Self: Hashable
+extension Input where Self: RawRepresentable, Self.RawValue == Int
 {
-    var _hashValue: Int {
-        return self.hashValue
-    }
-    
-    func isEqual<T>(_ input: T) -> Bool
-    {
-        if let input = input as? Self
-        {
-            return self == input
-        }
-        
-        return false
+    public var identifier: Int {
+        return self.rawValue
     }
 }
 
-/// Workaround for current inability to declare Set values and Dictionary keys as Input types
-internal struct InputBox: Hashable
+struct AnyInput
 {
     let input: Input
-    var hashValue: Int { return input._hashValue }
+    
+    init(_ input: Input)
+    {
+        self.input = input
+    }
 }
 
-internal func ==(x: InputBox, y: InputBox) -> Bool
+extension AnyInput: Hashable
 {
-    return x.input.isEqual(y.input)
+    var hashValue: Int {
+        return self.input.identifier
+    }
+    
+    static func ==(lhs: AnyInput, rhs: AnyInput) -> Bool
+    {
+        return type(of: lhs.input) == type(of: rhs.input) && lhs.input.identifier == rhs.input.identifier
+    }
 }
-
-
-

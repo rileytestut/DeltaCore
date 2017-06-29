@@ -21,18 +21,13 @@ public protocol GameControllerReceiver: class
     func gameController(_ gameController: GameController, didDeactivate input: Input)
 }
 
-public func ==(x: GameControllerReceiver, y: GameControllerReceiver) -> Bool
-{
-    return x === y
-}
-
 //MARK: - GameController -
 public protocol GameController: class
 {
     var playerIndex: Int? { get set }
     var receivers: [GameControllerReceiver] { get }
     
-    var inputTransformationHandler: ((GameController, Input) -> ([Input]))? { get set }
+    var inputTransformationHandler: ((Input) -> [Input])? { get set }
     
     var _stateManager: GameControllerStateManager { get }
     
@@ -43,6 +38,16 @@ public protocol GameController: class
     
     func activate(_ input: Input)
     func deactivate(_ input: Input)
+}
+
+extension GameController
+{
+    func isEqual<T>(to gameController: T) -> Bool
+    {
+        guard let gameController = gameController as? Self else { return false }
+        
+        return self === gameController
+    }
 }
 
 public extension GameController
@@ -63,13 +68,13 @@ public extension GameController
     
     func isInputActivated(_ input: Input) -> Bool
     {
-        let box = InputBox(input: input)
+        let box = AnyInput(input)
         return self._stateManager.activatedInputs.contains(box)
     }
     
     func activate(_ input: Input)
     {
-        let box = InputBox(input: input)
+        let box = AnyInput(input)
         self._stateManager.activatedInputs.insert(box)
         
         for receiver in self.receivers
@@ -83,7 +88,7 @@ public extension GameController
         // Unlike activate(_:), we don't allow an input to be deactivated multiple times
         guard self.isInputActivated(input) else { return }
         
-        let box = InputBox(input: input)
+        let box = AnyInput(input)
         self._stateManager.activatedInputs.remove(box)
         
         for receiver in self.receivers

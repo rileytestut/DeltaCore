@@ -21,7 +21,7 @@ public class ExternalControllerManager
     
     //MARK: - Properties -
     /** Properties **/
-    public fileprivate(set) var connectedControllers: [ExternalController] = []
+    public fileprivate(set) var connectedControllers: [GameController] = []
 }
 
 //MARK: - Discovery -
@@ -32,7 +32,7 @@ public extension ExternalControllerManager
     {
         for controller in GCController.controllers()
         {
-            let externalController = MFiExternalController(controller: controller)
+            let externalController = MFiGameController(controller: controller)
             self.add(externalController)
         }
                 
@@ -42,18 +42,18 @@ public extension ExternalControllerManager
     
     func stopMonitoringExternalControllers()
     {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidConnect, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
         
         self.connectedControllers.removeAll()
     }
     
-    func startWirelessControllerPairing(withCompletionHandler completionHandler: (() -> Void)?)
+    func startWirelessControllerDiscovery(withCompletionHandler completionHandler: (() -> Void)?)
     {
         GCController.startWirelessControllerDiscovery(completionHandler: completionHandler)
     }
     
-    func stopWirelessControllerPairing()
+    func stopWirelessControllerDiscovery()
     {
         GCController.stopWirelessControllerDiscovery()
     }
@@ -66,7 +66,7 @@ private extension ExternalControllerManager
     {        
         guard let controller = notification.object as? GCController else { return }
         
-        let externalController = MFiExternalController(controller: controller)
+        let externalController = MFiGameController(controller: controller)
         self.add(externalController)
     }
     
@@ -74,16 +74,18 @@ private extension ExternalControllerManager
     {
         guard let controller = notification.object as? GCController else { return }
         
-        for externalController in self.connectedControllers where externalController is MFiExternalController
+        for externalController in self.connectedControllers
         {
-            if (externalController as! MFiExternalController).controller == controller
+            guard let mfiController = externalController as? MFiGameController else { continue }
+            
+            if mfiController.controller == controller
             {
                 self.remove(externalController)
             }
         }
     }
     
-    func add(_ controller: ExternalController)
+    func add(_ controller: GameController)
     {
         if let playerIndex = controller.playerIndex, self.connectedControllers.contains(where: { $0.playerIndex == playerIndex })
         {
@@ -96,9 +98,9 @@ private extension ExternalControllerManager
         NotificationCenter.default.post(name: .externalControllerDidConnect, object: controller)
     }
     
-    func remove(_ controller: ExternalController)
+    func remove(_ controller: GameController)
     {
-        if let index = self.connectedControllers.index(of: controller)
+        if let index = self.connectedControllers.index(where: { $0.isEqual(to: controller) })
         {
             self.connectedControllers.remove(at: index)
             

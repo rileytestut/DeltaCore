@@ -10,7 +10,7 @@ import Foundation
 
 public class GameControllerStateManager
 {
-    internal var activatedInputs = Set<InputBox>()
+    internal var activatedInputs = Set<AnyInput>()
     
     internal var receivers: [GameControllerReceiver]
     {

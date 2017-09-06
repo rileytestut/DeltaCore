@@ -6,36 +6,67 @@
 //  Copyright © 2015 Riley Testut. All rights reserved.
 //
 
-public protocol Input
+public enum InputType: Codable
 {
-    var identifier: Int { get }
+    case controller(GameControllerInputType)
+    case game(GameType)
 }
 
-extension Input where Self: RawRepresentable, Self.RawValue == Int
+extension InputType: RawRepresentable
 {
-    public var identifier: Int {
-        return self.rawValue
-    }
-}
-
-struct AnyInput
-{
-    let input: Input
-    
-    init(_ input: Input)
-    {
-        self.input = input
-    }
-}
-
-extension AnyInput: Hashable
-{
-    var hashValue: Int {
-        return self.input.identifier
+    public var rawValue: String {
+        switch self
+        {
+        case .controller(let inputType): return inputType.rawValue
+        case .game(let gameType): return gameType.rawValue
+        }
     }
     
-    static func ==(lhs: AnyInput, rhs: AnyInput) -> Bool
+    public init(rawValue: String)
     {
-        return type(of: lhs.input) == type(of: rhs.input) && lhs.input.identifier == rhs.input.identifier
+        let gameType = GameType(rawValue)
+        
+        if Delta.core(for: gameType) != nil
+        {
+            self = .game(gameType)
+        }
+        else
+        {
+            let inputType = GameControllerInputType(rawValue)
+            self = .controller(inputType)
+        }
     }
+}
+
+extension InputType: Hashable
+{
+    public var hashValue: Int {
+        return self.rawValue.hashValue
+    }
+}
+
+// Conformance to CodingKey allows compiler to automatically generate intValue/stringValue logic for enums.
+public protocol Input: CodingKey
+{
+    var type: InputType { get }
+}
+
+public extension Input
+{
+    init?(input: Input)
+    {
+        self.init(stringValue: input.stringValue)
+        
+        guard self.type == input.type else { return nil }
+    }
+}
+
+public func ==(lhs: Input, rhs: Input) -> Bool
+{
+    return lhs.type == rhs.type && lhs.stringValue == rhs.stringValue
+}
+
+public func ~=(pattern: Input, value: Input) -> Bool
+{
+    return pattern == value
 }

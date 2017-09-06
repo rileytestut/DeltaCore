@@ -10,23 +10,29 @@ import AVFoundation
 
 public protocol DeltaCoreProtocol: CustomStringConvertible
 {
+    /* Bundle */
+    var bundleIdentifier: String { get }
+    
+    /* Game */
     var gameType: GameType { get }
     
-    var bundleIdentifier: String { get }
+    // Should be associated type, but Swift type system makes this difficult, so ¯\_(ツ)_/¯
+    var gameInputType: Input.Type { get }
     
     var gameSaveFileExtension: String { get }
     
+    /* Rendering */
     var frameDuration: TimeInterval { get }
     
     var audioFormat: AVAudioFormat { get }
     
     var videoFormat: VideoFormat { get }
     
+    /* Cheats */
     var supportedCheatFormats: Set<CheatFormat> { get }
     
+    /* Emulation */
     var emulatorBridge: EmulatorBridging { get }
-    
-    var inputTransformer: InputTransforming { get }
 }
 
 public extension DeltaCoreProtocol

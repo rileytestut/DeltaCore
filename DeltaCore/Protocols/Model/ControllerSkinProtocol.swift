@@ -20,7 +20,7 @@ public protocol ControllerSkinProtocol
     func image(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     
     /// Provided point should be normalized [0,1] for both axies.
-    func inputs(for traits: ControllerSkin.Traits, point: CGPoint) -> [Input]?
+    func inputs(for traits: ControllerSkin.Traits, at point: CGPoint) -> [Input]?
     
     func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
     

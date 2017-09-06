@@ -8,12 +8,12 @@
 
 import Foundation
 
-public class GameControllerStateManager
+internal class GameControllerStateManager
 {
     internal var activatedInputs = Set<AnyInput>()
+    internal var activatedMappedInputs = NSCountedSet()
     
-    internal var receivers: [GameControllerReceiver]
-    {
+    internal var receivers: [GameControllerReceiver] {
         var objects: [AnyObject]!
         
         self.dispatchQueue.sync {
@@ -29,7 +29,7 @@ public class GameControllerStateManager
     fileprivate let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
 }
 
-public extension GameControllerStateManager
+internal extension GameControllerStateManager
 {
     func addReceiver(_ receiver: GameControllerReceiver)
     {

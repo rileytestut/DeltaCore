@@ -1,5 +1,5 @@
 //
-//  ExternalControllerManager.swift
+//  ExternalGameControllerManager.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 8/20/15.
@@ -11,13 +11,13 @@ import GameController
 
 public extension Notification.Name
 {
-    public static let externalControllerDidConnect = Notification.Name("ExternalControllerDidConnectNotification")
-    public static let externalControllerDidDisconnect = Notification.Name("ExternalControllerDidDisconnectNotification")
+    public static let externalGameControllerDidConnect = Notification.Name("ExternalGameControllerDidConnectNotification")
+    public static let externalGameControllerDidDisconnect = Notification.Name("ExternalGameControllerDidDisconnectNotification")
 }
 
-public class ExternalControllerManager
+public class ExternalGameControllerManager
 {
-    public static let shared = ExternalControllerManager()
+    public static let shared = ExternalGameControllerManager()
     
     //MARK: - Properties -
     /** Properties **/
@@ -26,9 +26,9 @@ public class ExternalControllerManager
 
 //MARK: - Discovery -
 /** Discovery **/
-public extension ExternalControllerManager
+public extension ExternalGameControllerManager
 {
-    func startMonitoringExternalControllers()
+    func startMonitoring()
     {
         for controller in GCController.controllers()
         {
@@ -36,11 +36,11 @@ public extension ExternalControllerManager
             self.add(externalController)
         }
                 
-        NotificationCenter.default.addObserver(self, selector: #selector(ExternalControllerManager.controllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(ExternalControllerManager.controllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.mfiGameControllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.mfiGameControllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
     }
     
-    func stopMonitoringExternalControllers()
+    func stopMonitoring()
     {
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
@@ -60,9 +60,9 @@ public extension ExternalControllerManager
 }
 
 //MARK: - Managing Controllers -
-private extension ExternalControllerManager
+private extension ExternalGameControllerManager
 {
-    @objc func controllerDidConnect(_ notification: Notification)
+    @objc func mfiGameControllerDidConnect(_ notification: Notification)
     {        
         guard let controller = notification.object as? GCController else { return }
         
@@ -70,7 +70,7 @@ private extension ExternalControllerManager
         self.add(externalController)
     }
     
-    @objc func controllerDidDisconnect(_ notification: Notification)
+    @objc func mfiGameControllerDidDisconnect(_ notification: Notification)
     {
         guard let controller = notification.object as? GCController else { return }
         
@@ -95,16 +95,15 @@ private extension ExternalControllerManager
         
         self.connectedControllers.append(controller)
         
-        NotificationCenter.default.post(name: .externalControllerDidConnect, object: controller)
+        NotificationCenter.default.post(name: .externalGameControllerDidConnect, object: controller)
     }
     
     func remove(_ controller: GameController)
     {
-        if let index = self.connectedControllers.index(where: { $0.isEqual(to: controller) })
-        {
-            self.connectedControllers.remove(at: index)
-            
-            NotificationCenter.default.post(name: .externalControllerDidDisconnect, object: controller)
-        }
+        guard let index = self.connectedControllers.index(where: { $0.isEqual(controller) }) else { return }
+        
+        self.connectedControllers.remove(at: index)
+        
+        NotificationCenter.default.post(name: .externalGameControllerDidDisconnect, object: controller)
     }
 }

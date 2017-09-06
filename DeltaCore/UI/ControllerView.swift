@@ -8,6 +8,36 @@
 
 import UIKit
 
+private struct ControllerViewInputMapping: GameControllerInputMappingProtocol
+{
+    let controllerView: ControllerView
+    
+    var name: String {
+        return self.controllerView.name
+    }
+    
+    var gameControllerInputType: GameControllerInputType {
+        return self.controllerView.inputType
+    }
+    
+    func input(forControllerInput controllerInput: Input) -> Input?
+    {
+        guard let gameType = self.controllerView.controllerSkin?.gameType, let deltaCore = Delta.core(for: gameType) else { return nil }
+        
+        if let gameInput = deltaCore.gameInputType.init(stringValue: controllerInput.stringValue)
+        {
+            return gameInput
+        }
+        
+        if let standardInput = StandardGameControllerInput(stringValue: controllerInput.stringValue)
+        {
+            return standardInput
+        }
+        
+        return nil
+    }
+}
+
 public class ControllerView: UIView, GameController
 {
     //MARK: - Properties -
@@ -47,9 +77,15 @@ public class ControllerView: UIView, GameController
     
     //MARK: - <GameControllerType>
     /// <GameControllerType>
+    public var name: String {
+        return self.controllerSkin?.name ?? NSLocalizedString("Game Controller", comment: "")
+    }
+    
     public var playerIndex: Int?
-    public var inputTransformationHandler: ((Input) -> [Input])?
-    public let _stateManager = GameControllerStateManager()
+    
+    public let inputType: GameControllerInputType = .controllerSkin
+    
+    public lazy var inputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
     //MARK: - Private Properties
     fileprivate let imageView = UIImageView(frame: CGRect.zero)
@@ -130,12 +166,12 @@ public class ControllerView: UIView, GameController
             self.touchInputsMappingDictionary[touch] = []
         }
         
-        self.updateInputs(forTouches: touches)
+        self.updateInputs(for: touches)
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        self.updateInputs(forTouches: touches)
+        self.updateInputs(for: touches)
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -145,7 +181,7 @@ public class ControllerView: UIView, GameController
             self.touchInputsMappingDictionary[touch] = nil
         }
         
-        self.updateInputs(forTouches: touches)
+        self.updateInputs(for: touches)
     }
     
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -193,11 +229,12 @@ public extension ControllerView
         
         if let traits = self.controllerSkinTraits
         {
-            self.controllerDebugView.items = self.controllerSkin?.items(for: traits)
+            let items = self.controllerSkin?.items(for: traits)
+            self.controllerDebugView.items = items
             
             let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
             self.imageView.image = image
-        }        
+        }
         
         self.invalidateIntrinsicContentSize()
         
@@ -234,7 +271,7 @@ public extension ControllerView
 private extension ControllerView
 {
     //MARK: - Activating/Deactivating Inputs
-    func updateInputs(forTouches touches: Set<UITouch>)
+    func updateInputs(for touches: Set<UITouch>)
     {
         guard let controllerSkin = self.controllerSkin else { return }
         
@@ -247,23 +284,21 @@ private extension ControllerView
             
             if let traits = self.controllerSkinTraits
             {
-                let inputs = controllerSkin.inputs(for: traits, point: point) ?? []
-                let boxedInputs = inputs.lazy.flatMap { self.inputTransformationHandler?($0) ?? [$0] }.map { AnyInput($0) }
-                
-                self.touchInputsMappingDictionary[touch] = Set(boxedInputs)
+                let inputs = (controllerSkin.inputs(for: traits, at: point) ?? []).map { AnyInput($0) }
+                self.touchInputsMappingDictionary[touch] = Set(inputs)
             }
         }
         
         let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)
-        for inputBox in activatedInputs
+        for input in activatedInputs
         {
-            self.activate(inputBox.input)
+            self.activate(input)
         }
-        
+
         let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
-        for inputBox in deactivatedInputs
+        for input in deactivatedInputs
         {
-            self.deactivate(inputBox.input)
+            self.deactivate(input)
         }
         
         if activatedInputs.count > 0

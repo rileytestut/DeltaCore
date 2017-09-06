@@ -13,22 +13,62 @@ public let kUTTypeDeltaControllerSkin: CFString = "com.rileytestut.delta.skin" a
 
 private typealias RepresentationDictionary = [String: [String: AnyObject]]
 
+public extension GameControllerInputType
+{
+    static let controllerSkin = GameControllerInputType("controllerSkin")
+}
+
 extension ControllerSkin
 {
     public struct Item
     {
-        public let keys: Set<String>
+        public enum Inputs
+        {
+            case standard([Input])
+            case directional(up: Input, down: Input, left: Input, right: Input)
+            
+            public var allInputs: [Input] {
+                switch self
+                {
+                case .standard(let inputs): return inputs
+                case let .directional(up, down, left, right): return [up, down, left, right]
+                }
+            }
+        }
+        
+        public let inputs: Inputs
+        
         public let frame: CGRect
         public let extendedFrame: CGRect
         
         fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
             guard
-                let keys = dictionary["keys"] as? [String],
                 let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
             else { return nil }
             
-            self.keys = Set(keys)
+            if let inputs = dictionary["inputs"] as? [String]
+            {
+                self.inputs = .standard(inputs.map { AnyInput(stringValue: $0, intValue: nil, type: .controller(.controllerSkin)) })
+            }
+            else if let inputs = dictionary["inputs"] as? [String: String]
+            {
+                if let up = inputs["up"], let down = inputs["down"], let left = inputs["left"], let right = inputs["right"]
+                {
+                    self.inputs = .directional(up: AnyInput(stringValue: up, intValue: nil, type: .controller(.controllerSkin)),
+                                               down: AnyInput(stringValue: down, intValue: nil, type: .controller(.controllerSkin)),
+                                               left: AnyInput(stringValue: left, intValue: nil, type: .controller(.controllerSkin)),
+                                               right: AnyInput(stringValue: right, intValue: nil, type: .controller(.controllerSkin)))
+                }
+                else
+                {
+                    return nil
+                }
+            }
+            else
+            {
+                return nil
+            }
             
             let overrideExtendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
@@ -236,18 +276,44 @@ public extension ControllerSkin
         return returnedImage
     }
     
-    func inputs(for traits: Traits,  point: CGPoint) -> [Input]?
+    func inputs(for traits: Traits, at point: CGPoint) -> [Input]?
     {
-        guard let representation = self.representations[traits], let core = Delta.core(for: self.gameType) else { return nil }
+        guard let representation = self.representations[traits] else { return nil }
         
         var inputs: [Input] = []
+        
         for item in representation.items
         {
             guard item.extendedFrame.contains(point) else { continue }
             
-            for input in core.inputTransformer.inputs(for: self, item: item, point: point)
+            switch item.inputs
             {
-                inputs.append(input)
+            case .standard(let itemInputs): inputs.append(contentsOf: itemInputs)
+            case let .directional(up, down, left, right):
+                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / 3.0) + (item.frame.minY - item.extendedFrame.minY))
+                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / 3.0, width: item.extendedFrame.width, height: (item.frame.height / 3.0) + (item.extendedFrame.maxY - item.frame.maxY))
+                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / 3.0) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
+                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / 3.0, y: item.extendedFrame.minY, width: (item.frame.width / 3.0) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
+                
+                if topRect.contains(point)
+                {
+                    inputs.append(up)
+                }
+                
+                if bottomRect.contains(point)
+                {
+                    inputs.append(down)
+                }
+                
+                if leftRect.contains(point)
+                {
+                    inputs.append(left)
+                }
+                
+                if rightRect.contains(point)
+                {
+                    inputs.append(right)
+                }
             }
         }
         

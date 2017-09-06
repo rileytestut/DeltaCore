@@ -6,10 +6,9 @@
 //  Copyright (c) 2015 Riley Testut. All rights reserved.
 //
 
-public enum ControllerInput: Int, Input
-{
-    case menu
-}
+import ObjectiveC
+
+private var gameControllerStateManagerKey = 0
 
 //MARK: - GameControllerReceiver -
 public protocol GameControllerReceiver: class
@@ -22,78 +21,107 @@ public protocol GameControllerReceiver: class
 }
 
 //MARK: - GameController -
-public protocol GameController: class
+public protocol GameController: NSObjectProtocol
 {
-    var playerIndex: Int? { get set }
-    var receivers: [GameControllerReceiver] { get }
-    
-    var inputTransformationHandler: ((Input) -> [Input])? { get set }
-    
-    var _stateManager: GameControllerStateManager { get }
-    
-    func addReceiver(_ receiver: GameControllerReceiver)
-    func removeReceiver(_ receiver: GameControllerReceiver)
-    
-    func isInputActivated(_ input: Input) -> Bool
-    
-    func activate(_ input: Input)
-    func deactivate(_ input: Input)
-}
-
-extension GameController
-{
-    func isEqual<T>(to gameController: T) -> Bool
-    {
-        guard let gameController = gameController as? Self else { return false }
+    var name: String { get }
         
-        return self === gameController
-    }
+    var playerIndex: Int? { get set }
+    
+    var inputType: GameControllerInputType { get }
+    
+    var inputMapping: GameControllerInputMappingProtocol? { get set }
 }
 
 public extension GameController
 {
+    private var stateManager: GameControllerStateManager {
+        var stateManager = objc_getAssociatedObject(self, &gameControllerStateManagerKey) as? GameControllerStateManager
+        
+        if stateManager == nil
+        {
+            stateManager = GameControllerStateManager()
+            objc_setAssociatedObject(self, &gameControllerStateManagerKey, stateManager, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+        
+        return stateManager!
+    }
+    
     var receivers: [GameControllerReceiver] {
-        return self._stateManager.receivers
+        return self.stateManager.receivers
     }
     
     func addReceiver(_ receiver: GameControllerReceiver)
     {
-        self._stateManager.addReceiver(receiver)
+        self.stateManager.addReceiver(receiver)
     }
     
     func removeReceiver(_ receiver: GameControllerReceiver)
     {
-        self._stateManager.removeReceiver(receiver)
+        self.stateManager.removeReceiver(receiver)
     }
     
     func isInputActivated(_ input: Input) -> Bool
     {
-        let box = AnyInput(input)
-        return self._stateManager.activatedInputs.contains(box)
+        return self.stateManager.activatedInputs.contains(AnyInput(input))
     }
     
     func activate(_ input: Input)
     {
-        let box = AnyInput(input)
-        self._stateManager.activatedInputs.insert(box)
+        precondition(input.type == .controller(self.inputType), "input.type must match GameController.inputType")
         
-        for receiver in self.receivers
+        // An input may be "activated" multiple times, such as by pressing different buttons that map to same input, or moving an analog stick.
+        
+        self.stateManager.activatedInputs.insert(AnyInput(input))
+        
+        if let mappedInput = self.mappedInput(for: input)
         {
-            receiver.gameController(self, didActivate: input)
+            self.stateManager.activatedMappedInputs.add(AnyInput(input))
+            
+            for receiver in self.receivers
+            {
+                receiver.gameController(self, didActivate: mappedInput)
+            }
         }
     }
     
     func deactivate(_ input: Input)
     {
-        // Unlike activate(_:), we don't allow an input to be deactivated multiple times
+        precondition(input.type == .controller(self.inputType), "input.type must match GameController.inputType")
+        
+        // Unlike activate(_:), we don't allow an input to be deactivated multiple times.
         guard self.isInputActivated(input) else { return }
         
-        let box = AnyInput(input)
-        self._stateManager.activatedInputs.remove(box)
+        self.stateManager.activatedInputs.remove(AnyInput(input))
         
-        for receiver in self.receivers
+        if let mappedInput = self.mappedInput(for: input)
         {
-            receiver.gameController(self, didDeactivate: input)
+            self.stateManager.activatedMappedInputs.remove(AnyInput(input))
+            
+            if self.stateManager.activatedMappedInputs.count(for: AnyInput(input)) == 0
+            {
+                for receiver in self.receivers
+                {
+                    receiver.gameController(self, didDeactivate: mappedInput)
+                }
+            }
         }
     }
+    
+    private func mappedInput(for input: Input) -> Input?
+    {
+        guard let inputMapping = self.inputMapping else { return input }
+        
+        let mappedInput = inputMapping.input(forControllerInput: input)
+        return mappedInput
+    }
+}
+
+public func ==(lhs: GameController, rhs: GameController) -> Bool
+{
+    return lhs.isEqual(rhs)
+}
+
+public func ~=(pattern: GameController, value: GameController) -> Bool
+{
+    return pattern == value
 }

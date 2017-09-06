@@ -7,7 +7,6 @@
 //
 
 import AVFoundation
-import Roxas
 
 public extension EmulatorCore
 {
@@ -302,13 +301,6 @@ public extension EmulatorCore
         gameController?.addReceiver(self)
         self.gameControllersDictionary[index] = gameController
         
-        if let gameController = gameController as? MFiGameController
-        {
-            gameController.inputTransformationHandler = { [unowned gameController] (input) in
-                return self.deltaCore.inputTransformer.inputs(for: gameController, input: input as! MFiGameController.Input)
-            }
-        }
-        
         return previousGameController
     }
     
@@ -333,16 +325,24 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
-        guard type(of: input) == self.deltaCore.inputTransformer.gameInputType else { return }
+        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.activateInput(input.identifier)
+        self.deltaCore.emulatorBridge.activateInput(input.intValue!)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        guard type(of: input) == self.deltaCore.inputTransformer.gameInputType else { return }
+        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.deactivateInput(input.identifier)
+        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+    }
+    
+    private func mappedInput(for input: Input) -> Input?
+    {
+        guard let standardInput = StandardGameControllerInput(input: input) else { return input }
+        
+        let mappedInput = standardInput.input(for: self.gameType)
+        return mappedInput
     }
 }
 

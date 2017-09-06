@@ -92,15 +92,15 @@ fileprivate class ItemView: UIView
         
         var text = ""
         
-        for key in item.keys
+        for input in item.inputs.allInputs
         {
             if text.isEmpty
             {
-                text = key
+                text = input.stringValue
             }
             else
             {
-                text = text + "," + key
+                text = text + "," + input.stringValue
             }
         }
         

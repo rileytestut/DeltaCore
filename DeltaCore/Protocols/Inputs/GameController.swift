@@ -121,6 +121,11 @@ public func ==(lhs: GameController, rhs: GameController) -> Bool
     return lhs.isEqual(rhs)
 }
 
+public func !=(lhs: GameController, rhs: GameController) -> Bool
+{
+    return !(lhs == rhs)
+}
+
 public func ~=(pattern: GameController, value: GameController) -> Bool
 {
     return pattern == value

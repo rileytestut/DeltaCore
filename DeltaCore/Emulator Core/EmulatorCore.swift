@@ -62,11 +62,16 @@ public final class EmulatorCore: NSObject
     fileprivate let gameType: GameType
     
     fileprivate let emulationSemaphore = DispatchSemaphore(value: 0)
-    fileprivate var gameControllersDictionary = [Int: GameController]()
     fileprivate var cheatCodes = [String: CheatType]()
+    
+    fileprivate var gameControllersDictionary = [Int: GameController]()
+    fileprivate var activatedInputs = [Int: Set<AnyInput>]()
     
     fileprivate var previousState = State.stopped
     fileprivate var previousRate: Double? = nil
+    
+    fileprivate var reactivateInputsSemaphores = Set<DispatchSemaphore>()
+    fileprivate let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
     
     fileprivate var gameSaveURL: URL {
         let gameURL = self.game.fileURL.deletingPathExtension()
@@ -227,6 +232,15 @@ public extension EmulatorCore
         
         self.updateCheats()
         self.deltaCore.emulatorBridge.resetInputs()
+        
+        // Reactivate sustained inputs.
+        for gameController in self.gameControllers
+        {
+            for input in gameController.sustainedInputs
+            {
+                gameController.activate(input)
+            }
+        }
     }
 }
 
@@ -325,14 +339,48 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
+        guard let playerIndex = gameController.playerIndex else { return }
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.activateInput(input.intValue!)
+        if let activatedInputs = self.activatedInputs[playerIndex], activatedInputs.contains(AnyInput(input))
+        {
+            self.reactivateInputsQueue.async {
+                
+                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+                
+                let semaphore = DispatchSemaphore(value: 0)
+                self.reactivateInputsSemaphores.insert(semaphore)
+                
+                // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
+                // Unfortunately we cannot init DispatchSemaphore with value less than 0.
+                // To compensate, we simply wait twice; once the first wait returns, we wait again.
+                semaphore.wait()
+                semaphore.wait()
+                
+                self.reactivateInputsSemaphores.remove(semaphore)
+                
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!)
+            }
+        }
+        else
+        {
+            self.deltaCore.emulatorBridge.activateInput(input.intValue!)
+        }
+        
+        self.activatedInputs[playerIndex, default: []].insert(AnyInput(input))        
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
+        guard let playerIndex = gameController.playerIndex else { return }
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
+        
+        if var activatedInputs = self.activatedInputs[playerIndex], activatedInputs.contains(AnyInput(input))
+        {
+            activatedInputs.remove(AnyInput(input))
+            
+            self.activatedInputs[playerIndex] = activatedInputs
+        }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
     }
@@ -436,6 +484,11 @@ private extension EmulatorCore
         if renderGraphics
         {
             self.videoManager.didUpdateVideoBuffer()
+        }
+        
+        for semaphore in self.reactivateInputsSemaphores
+        {
+            semaphore.signal()
         }
         
         self.updateHandler?(self)

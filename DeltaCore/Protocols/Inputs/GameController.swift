@@ -34,12 +34,12 @@ public protocol GameController: NSObjectProtocol
 
 public extension GameController
 {
-    private var stateManager: GameControllerStateManager {
+    fileprivate var stateManager: GameControllerStateManager {
         var stateManager = objc_getAssociatedObject(self, &gameControllerStateManagerKey) as? GameControllerStateManager
         
         if stateManager == nil
         {
-            stateManager = GameControllerStateManager()
+            stateManager = GameControllerStateManager(gameController: self)
             objc_setAssociatedObject(self, &gameControllerStateManagerKey, stateManager, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
         
@@ -50,6 +50,17 @@ public extension GameController
         return self.stateManager.receivers
     }
     
+    var activatedInputs: [Input] {
+        return Array(self.stateManager.activatedInputs)
+    }
+    
+    var sustainedInputs: [Input] {
+        return Array(self.stateManager.sustainedInputs)
+    }
+}
+
+public extension GameController
+{
     func addReceiver(_ receiver: GameControllerReceiver)
     {
         self.stateManager.addReceiver(receiver)
@@ -60,59 +71,24 @@ public extension GameController
         self.stateManager.removeReceiver(receiver)
     }
     
-    func isInputActivated(_ input: Input) -> Bool
-    {
-        return self.stateManager.activatedInputs.contains(AnyInput(input))
-    }
-    
     func activate(_ input: Input)
     {
-        precondition(input.type == .controller(self.inputType), "input.type must match GameController.inputType")
-        
-        // An input may be "activated" multiple times, such as by pressing different buttons that map to same input, or moving an analog stick.
-        
-        self.stateManager.activatedInputs.insert(AnyInput(input))
-        
-        if let mappedInput = self.mappedInput(for: input)
-        {
-            self.stateManager.activatedMappedInputs.add(AnyInput(input))
-            
-            for receiver in self.receivers
-            {
-                receiver.gameController(self, didActivate: mappedInput)
-            }
-        }
+        self.stateManager.activate(input)
     }
     
     func deactivate(_ input: Input)
     {
-        precondition(input.type == .controller(self.inputType), "input.type must match GameController.inputType")
-        
-        // Unlike activate(_:), we don't allow an input to be deactivated multiple times.
-        guard self.isInputActivated(input) else { return }
-        
-        self.stateManager.activatedInputs.remove(AnyInput(input))
-        
-        if let mappedInput = self.mappedInput(for: input)
-        {
-            self.stateManager.activatedMappedInputs.remove(AnyInput(input))
-            
-            if self.stateManager.activatedMappedInputs.count(for: AnyInput(input)) == 0
-            {
-                for receiver in self.receivers
-                {
-                    receiver.gameController(self, didDeactivate: mappedInput)
-                }
-            }
-        }
+        self.stateManager.deactivate(input)
     }
     
-    private func mappedInput(for input: Input) -> Input?
+    func sustain(_ input: Input)
     {
-        guard let inputMapping = self.inputMapping else { return input }
-        
-        let mappedInput = inputMapping.input(forControllerInput: input)
-        return mappedInput
+        self.stateManager.sustain(input)
+    }
+    
+    func unsustain(_ input: Input)
+    {
+        self.stateManager.unsustain(input)
     }
 }
 

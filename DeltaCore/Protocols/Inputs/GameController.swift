@@ -29,7 +29,7 @@ public protocol GameController: NSObjectProtocol
     
     var inputType: GameControllerInputType { get }
     
-    var inputMapping: GameControllerInputMappingProtocol? { get set }
+    var defaultInputMapping: GameControllerInputMappingProtocol? { get }
 }
 
 public extension GameController
@@ -63,7 +63,12 @@ public extension GameController
 {
     func addReceiver(_ receiver: GameControllerReceiver)
     {
-        self.stateManager.addReceiver(receiver)
+        self.addReceiver(receiver, inputMapping: self.defaultInputMapping)
+    }
+    
+    func addReceiver(_ receiver: GameControllerReceiver, inputMapping: GameControllerInputMappingProtocol?)
+    {
+        self.stateManager.addReceiver(receiver, inputMapping: inputMapping)
     }
     
     func removeReceiver(_ receiver: GameControllerReceiver)

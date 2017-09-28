@@ -16,16 +16,16 @@ internal class GameControllerStateManager
     fileprivate(set) var sustainedInputs = Set<AnyInput>()
     
     var receivers: [GameControllerReceiver] {
-        var objects: [AnyObject]!
+        var objects: [GameControllerReceiver]!
         
         self.dispatchQueue.sync {
-            objects = self._receivers.allObjects
+            objects = self._receivers.keyEnumerator().allObjects as! [GameControllerReceiver]
         }
         
-        return objects as! [GameControllerReceiver]
+        return objects
     }
 
-    fileprivate let _receivers = NSHashTable<AnyObject>.weakObjects()
+    fileprivate let _receivers = NSMapTable<AnyObject, AnyObject>.weakToStrongObjects()
     
     // Used to synchronize access to _receivers to prevent race conditions (yay ObjC)
     fileprivate let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
@@ -39,17 +39,17 @@ internal class GameControllerStateManager
 
 extension GameControllerStateManager
 {
-    func addReceiver(_ receiver: GameControllerReceiver)
+    func addReceiver(_ receiver: GameControllerReceiver, inputMapping: GameControllerInputMappingProtocol?)
     {
         self.dispatchQueue.sync {
-            self._receivers.add(receiver)
+            self._receivers.setObject(inputMapping as AnyObject, forKey: receiver)
         }
     }
     
     func removeReceiver(_ receiver: GameControllerReceiver)
     {
         self.dispatchQueue.sync {
-            self._receivers.remove(receiver)
+            self._receivers.removeObject(forKey: receiver)
         }
     }
 }
@@ -64,9 +64,9 @@ extension GameControllerStateManager
         
         self.activatedInputs.insert(AnyInput(input))
         
-        if let mappedInput = self.mappedInput(for: input)
-        {            
-            for receiver in self.receivers
+        for receiver in self.receivers
+        {
+            if let mappedInput = self.mappedInput(for: input, receiver: receiver)
             {
                 receiver.gameController(self.gameController, didActivate: mappedInput)
             }
@@ -85,19 +85,18 @@ extension GameControllerStateManager
         
         self.activatedInputs.remove(AnyInput(input))
         
-        if let mappedInput = self.mappedInput(for: input)
+        for receiver in self.receivers
         {
-            let activatedMappedControllerInputs = self.activatedInputs.filter {
-                guard let input = self.mappedInput(for: $0) else { return false }
-                return input == mappedInput
-            }
-            
-            if activatedMappedControllerInputs.count == 0
+            if let mappedInput = self.mappedInput(for: input, receiver: receiver)
             {
-                // All controller inputs that map to this input have been deactivated, so we can deactivate the mapped input.
+                let hasActivatedMappedControllerInputs = self.activatedInputs.contains() {
+                    guard let input = self.mappedInput(for: $0, receiver: receiver) else { return false }
+                    return input == mappedInput
+                }
                 
-                for receiver in self.receivers
+                if !hasActivatedMappedControllerInputs
                 {
+                    // All controller inputs that map to this input have been deactivated, so we can deactivate the mapped input.
                     receiver.gameController(self.gameController, didDeactivate: mappedInput)
                 }
             }
@@ -126,9 +125,9 @@ extension GameControllerStateManager
         self.deactivate(AnyInput(input))
     }
     
-    private func mappedInput(for input: Input) -> Input?
+    private func mappedInput(for input: Input, receiver: GameControllerReceiver) -> Input?
     {
-        guard let inputMapping = self.gameController.inputMapping else { return input }
+        guard let inputMapping = self._receivers.object(forKey: receiver) as? GameControllerInputMappingProtocol else { return input }
         
         let mappedInput = inputMapping.input(forControllerInput: input)
         return mappedInput

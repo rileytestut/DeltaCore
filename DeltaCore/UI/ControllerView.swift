@@ -85,7 +85,7 @@ public class ControllerView: UIView, GameController
     
     public let inputType: GameControllerInputType = .controllerSkin
     
-    public lazy var inputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
+    public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
     //MARK: - Private Properties
     fileprivate let imageView = UIImageView(frame: CGRect.zero)

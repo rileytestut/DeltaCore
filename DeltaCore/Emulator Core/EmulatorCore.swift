@@ -34,9 +34,6 @@ public final class EmulatorCore: NSObject
     /** Properties **/
     public let game: GameProtocol
     public fileprivate(set) var gameViews: [GameView] = []
-    public var gameControllers: [GameController] {
-        return Array(self.gameControllersDictionary.values)
-    }
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
@@ -64,8 +61,8 @@ public final class EmulatorCore: NSObject
     fileprivate let emulationSemaphore = DispatchSemaphore(value: 0)
     fileprivate var cheatCodes = [String: CheatType]()
     
-    fileprivate var gameControllersDictionary = [Int: GameController]()
-    fileprivate var activatedInputs = [Int: Set<AnyInput>]()
+    fileprivate var gameControllers = NSHashTable<AnyObject>.weakObjects()
+    fileprivate var activatedInputs = [ObjectIdentifier: Set<AnyInput>]()
     
     fileprivate var previousState = State.stopped
     fileprivate var previousRate: Double? = nil
@@ -234,7 +231,7 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.resetInputs()
         
         // Reactivate sustained inputs.
-        for gameController in self.gameControllers
+        for gameController in self.gameControllers.allObjects as! [GameController]
         {
             for input in gameController.sustainedInputs
             {
@@ -302,47 +299,15 @@ public extension EmulatorCore
     }
 }
 
-//MARK: - Controllers -
-/// Controllers
-public extension EmulatorCore
-{
-    @discardableResult func setGameController(_ gameController: GameController?, at index: Int) -> GameController?
-    {
-        let previousGameController = self.gameController(at: index)
-        previousGameController?.playerIndex = nil
-        
-        gameController?.playerIndex = index
-        gameController?.addReceiver(self)
-        self.gameControllersDictionary[index] = gameController
-        
-        return previousGameController
-    }
-    
-    func removeAllGameControllers()
-    {
-        for controller in self.gameControllers
-        {
-            if let index = controller.playerIndex
-            {
-                self.setGameController(nil, at: index)
-            }
-        }
-    }
-    
-    func gameController(at index: Int) -> GameController?
-    {
-        return self.gameControllersDictionary[index]
-    }
-}
-
 extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input)
     {
-        guard let playerIndex = gameController.playerIndex else { return }
+        self.gameControllers.add(gameController)
+        
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        if let activatedInputs = self.activatedInputs[playerIndex], activatedInputs.contains(AnyInput(input))
+        if let activatedInputs = self.activatedInputs[ObjectIdentifier(gameController)], activatedInputs.contains(AnyInput(input))
         {
             self.reactivateInputsQueue.async {
                 
@@ -367,19 +332,18 @@ extension EmulatorCore: GameControllerReceiver
             self.deltaCore.emulatorBridge.activateInput(input.intValue!)
         }
         
-        self.activatedInputs[playerIndex, default: []].insert(AnyInput(input))        
+        self.activatedInputs[ObjectIdentifier(gameController), default: []].insert(AnyInput(input))
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        guard let playerIndex = gameController.playerIndex else { return }
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        if var activatedInputs = self.activatedInputs[playerIndex], activatedInputs.contains(AnyInput(input))
+        if var activatedInputs = self.activatedInputs[ObjectIdentifier(gameController)], activatedInputs.contains(AnyInput(input))
         {
             activatedInputs.remove(AnyInput(input))
             
-            self.activatedInputs[playerIndex] = activatedInputs
+            self.activatedInputs[ObjectIdentifier(gameController)] = activatedInputs
         }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)

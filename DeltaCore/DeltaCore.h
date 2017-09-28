@@ -21,7 +21,8 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 #import <AVFoundation/AVFoundation.h>
 
 // Extensible Enums
-typedef NSString *GameType NS_EXTENSIBLE_STRING_ENUM;
-typedef NSString *CheatType NS_EXTENSIBLE_STRING_ENUM;
+typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;
+typedef NSString *CheatType NS_TYPED_EXTENSIBLE_ENUM;
+typedef NSString *GameControllerInputType NS_TYPED_EXTENSIBLE_ENUM;
 
 extern NSNotificationName const DeltaRegistrationRequestNotification;

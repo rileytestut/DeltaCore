@@ -97,6 +97,19 @@ public extension GameController
     }
 }
 
+public extension GameController
+{
+    func inputMapping(for receiver: GameControllerReceiver) -> GameControllerInputMappingProtocol?
+    {
+        return self.stateManager.inputMapping(for: receiver)
+    }
+    
+    func mappedInput(for input: Input, receiver: GameControllerReceiver) -> Input?
+    {
+        return self.stateManager.mappedInput(for: input, receiver: receiver)
+    }
+}
+
 public func ==(lhs: GameController?, rhs: GameController?) -> Bool
 {
     switch (lhs, rhs)

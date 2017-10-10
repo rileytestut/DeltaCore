@@ -124,10 +124,19 @@ extension GameControllerStateManager
         
         self.deactivate(AnyInput(input))
     }
-    
-    private func mappedInput(for input: Input, receiver: GameControllerReceiver) -> Input?
+}
+
+extension GameControllerStateManager
+{
+    func inputMapping(for receiver: GameControllerReceiver) -> GameControllerInputMappingProtocol?
     {
-        guard let inputMapping = self._receivers.object(forKey: receiver) as? GameControllerInputMappingProtocol else { return input }
+        let inputMapping = self._receivers.object(forKey: receiver) as? GameControllerInputMappingProtocol
+        return inputMapping
+    }
+    
+    func mappedInput(for input: Input, receiver: GameControllerReceiver) -> Input?
+    {
+        guard let inputMapping = self.inputMapping(for: receiver) else { return input }
         
         let mappedInput = inputMapping.input(forControllerInput: input)
         return mappedInput

@@ -97,17 +97,23 @@ public extension GameController
     }
 }
 
-public func ==(lhs: GameController, rhs: GameController) -> Bool
+public func ==(lhs: GameController?, rhs: GameController?) -> Bool
 {
-    return lhs.isEqual(rhs)
+    switch (lhs, rhs)
+    {
+    case (nil, nil): return true
+    case (_?, nil): return false
+    case (nil, _?): return false
+    case (let lhs?, let rhs?): return lhs.isEqual(rhs)
+    }
 }
 
-public func !=(lhs: GameController, rhs: GameController) -> Bool
+public func !=(lhs: GameController?, rhs: GameController?) -> Bool
 {
     return !(lhs == rhs)
 }
 
-public func ~=(pattern: GameController, value: GameController) -> Bool
+public func ~=(pattern: GameController?, value: GameController?) -> Bool
 {
     return pattern == value
 }

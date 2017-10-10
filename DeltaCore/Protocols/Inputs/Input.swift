@@ -61,17 +61,17 @@ public extension Input
     }
 }
 
-public func ==(lhs: Input, rhs: Input) -> Bool
+public func ==(lhs: Input?, rhs: Input?) -> Bool
 {
-    return lhs.type == rhs.type && lhs.stringValue == rhs.stringValue
+    return lhs?.type == rhs?.type && lhs?.stringValue == rhs?.stringValue
 }
 
-public func !=(lhs: Input, rhs: Input) -> Bool
+public func !=(lhs: Input?, rhs: Input?) -> Bool
 {
     return !(lhs == rhs)
 }
 
-public func ~=(pattern: Input, value: Input) -> Bool
+public func ~=(pattern: Input?, value: Input?) -> Bool
 {
     return pattern == value
 }

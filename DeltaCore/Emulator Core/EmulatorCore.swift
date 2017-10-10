@@ -230,10 +230,10 @@ public extension EmulatorCore
         self.updateCheats()
         self.deltaCore.emulatorBridge.resetInputs()
         
-        // Reactivate sustained inputs.
+        // Reactivate activated inputs.
         for gameController in self.gameControllers.allObjects as! [GameController]
         {
-            for input in gameController.sustainedInputs
+            for input in gameController.activatedInputs
             {
                 gameController.activate(input)
             }

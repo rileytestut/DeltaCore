@@ -116,6 +116,7 @@ public class MFiGameController: NSObject, GameController
         
         self.controller.controllerPausedHandler = { [unowned self] controller in
             self.activate(Input.menu)
+            self.deactivate(Input.menu)
         }
         
         let inputChangedHandler: (_ input: MFiGameController.Input, _ pressed: Bool) -> Void = { [unowned self] (input, pressed) in

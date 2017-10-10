@@ -62,7 +62,6 @@ public final class EmulatorCore: NSObject
     fileprivate var cheatCodes = [String: CheatType]()
     
     fileprivate var gameControllers = NSHashTable<AnyObject>.weakObjects()
-    fileprivate var activatedInputs = [ObjectIdentifier: Set<AnyInput>]()
     
     fileprivate var previousState = State.stopped
     fileprivate var previousRate: Double? = nil
@@ -307,7 +306,13 @@ extension EmulatorCore: GameControllerReceiver
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        if let activatedInputs = self.activatedInputs[ObjectIdentifier(gameController)], activatedInputs.contains(AnyInput(input))
+        // If any of game controller's sustained inputs map to input, treat input as sustained.
+        let isSustainedInput = gameController.sustainedInputs.contains(where: {
+            guard let mappedInput = gameController.mappedInput(for: $0, receiver: self) else { return false }
+            return self.mappedInput(for: mappedInput) == input
+        })
+        
+        if isSustainedInput
         {
             self.reactivateInputsQueue.async {
                 
@@ -331,20 +336,11 @@ extension EmulatorCore: GameControllerReceiver
         {
             self.deltaCore.emulatorBridge.activateInput(input.intValue!)
         }
-        
-        self.activatedInputs[ObjectIdentifier(gameController), default: []].insert(AnyInput(input))
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
-        
-        if var activatedInputs = self.activatedInputs[ObjectIdentifier(gameController)], activatedInputs.contains(AnyInput(input))
-        {
-            activatedInputs.remove(AnyInput(input))
-            
-            self.activatedInputs[ObjectIdentifier(gameController)] = activatedInputs
-        }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
     }

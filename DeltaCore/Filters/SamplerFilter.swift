@@ -45,7 +45,7 @@ internal class SamplerFilter: CIFilter
         
         let sampler = CISampler(image: inputImage, options: [kCISamplerFilterMode: self.inputMode.rawValue])
         
-        let outputImage = self.kernel.apply(withExtent: inputImage.extent, arguments: [sampler])
+        let outputImage = self.kernel.apply(extent: inputImage.extent, arguments: [sampler])
         return outputImage
     }
     

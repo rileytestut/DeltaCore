@@ -41,8 +41,8 @@ public final class EmulatorCore: NSObject
     public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
     
     // KVO-Compliant
-    public fileprivate(set) dynamic var state = State.stopped
-    public dynamic var rate = 1.0 {
+    @objc public fileprivate(set) dynamic var state = State.stopped
+    @objc public dynamic var rate = 1.0 {
         didSet {
             self.audioManager.rate = self.rate
         }
@@ -117,7 +117,7 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
         self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
             self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
-        }
+        } as (() -> Void)
         
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)

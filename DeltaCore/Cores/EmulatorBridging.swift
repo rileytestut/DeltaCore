@@ -21,7 +21,7 @@ public protocol EmulatorBridging: NSObjectProtocol
     var videoRenderer: VideoRendering? { get set }
     
     /// Saves
-    var saveUpdateHandler: ((Void) -> Void)? { get set }
+    var saveUpdateHandler: (() -> Void)? { get set }
     
     
     /// Emulation State

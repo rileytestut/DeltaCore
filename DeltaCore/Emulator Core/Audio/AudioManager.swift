@@ -198,14 +198,14 @@ private extension AudioManager
         let outputAudioFormat = AVAudioFormat(standardFormatWithSampleRate: AVAudioSession.sharedInstance().sampleRate, channels: self.audioFormat.channelCount)
         
         let inputAudioBufferFrameCount = Int(self.audioFormat.sampleRate * self.frameDuration)
-        let outputAudioBufferFrameCount = Int(outputAudioFormat.sampleRate * self.frameDuration)
+        let outputAudioBufferFrameCount = Int((outputAudioFormat?.sampleRate)! * self.frameDuration)
         
-        if self.audioConverter == nil || self.audioPlayerNode.outputFormat(forBus: 0).sampleRate != outputAudioFormat.sampleRate
+        if self.audioConverter == nil || self.audioPlayerNode.outputFormat(forBus: 0).sampleRate != outputAudioFormat?.sampleRate
         {
             // Output sample rate has changed, so we'll update our logic accordingly.
             
             // Allocate enough space to prevent us from overwriting data before we've used it.
-            let ringBufferAudioBufferCount = Int((self.audioFormat.sampleRate / outputAudioFormat.sampleRate).rounded(.up) + 3.0)
+            let ringBufferAudioBufferCount = Int((self.audioFormat.sampleRate / (outputAudioFormat?.sampleRate)!).rounded(.up) + 3.0)
             
             let preferredBufferSize = inputAudioBufferFrameCount * self.audioFormat.frameSize * ringBufferAudioBufferCount
             guard let ringBuffer = RingBuffer(preferredBufferSize: preferredBufferSize) else {
@@ -213,7 +213,7 @@ private extension AudioManager
             }
             self.audioBuffer = ringBuffer
             
-            let audioConverter = AVAudioConverter(from: self.audioFormat, to: outputAudioFormat)
+            let audioConverter = AVAudioConverter(from: self.audioFormat, to: outputAudioFormat!)
             self.audioConverter = audioConverter
             
             self.audioConverterRequiredFrameCount = nil
@@ -232,9 +232,9 @@ private extension AudioManager
             let inputAudioBufferFrameCapacity = max(inputAudioBufferFrameCount, outputAudioBufferFrameCount)
             
             let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat, frameCapacity: AVAudioFrameCount(inputAudioBufferFrameCapacity))
-            let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
+            let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat!, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
             
-            self.render(inputBuffer, into: outputBuffer)
+            self.render(inputBuffer!, into: outputBuffer!)
         }
         
         do

@@ -61,7 +61,7 @@ public extension String
         
         // We need to repeat the format enough times so it is greater than or equal to the length of self
         // This prevents us from having to account for wrapping around the cheat format
-        let repetitions = Int(ceil((Float(self.characters.count) / Float(sanitizedFormat.characters.count))))
+        let repetitions = Int(ceil((Float(self.count) / Float(sanitizedFormat.count))))
         
         var format = ""
         for i in 0 ..< repetitions

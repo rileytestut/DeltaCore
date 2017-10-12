@@ -22,6 +22,31 @@ public class ExternalGameControllerManager
     //MARK: - Properties -
     /** Properties **/
     public fileprivate(set) var connectedControllers: [GameController] = []
+    
+    public var automaticallyAssignsPlayerIndexes = true
+    
+    fileprivate var nextAvailablePlayerIndex: Int {
+        var nextPlayerIndex = -1
+        
+        let sortedGameControllers = self.connectedControllers.sorted { ($0.playerIndex ?? -1) < ($1.playerIndex ?? -1) }
+        for controller in sortedGameControllers
+        {
+            let playerIndex = controller.playerIndex ?? -1
+            
+            if abs(playerIndex - nextPlayerIndex) > 1
+            {
+                break
+            }
+            else
+            {
+                nextPlayerIndex = playerIndex
+            }
+        }
+        
+        nextPlayerIndex += 1
+        
+        return nextPlayerIndex
+    }
 }
 
 //MARK: - Discovery -
@@ -87,10 +112,10 @@ private extension ExternalGameControllerManager
     
     func add(_ controller: GameController)
     {
-        if let playerIndex = controller.playerIndex, self.connectedControllers.contains(where: { $0.playerIndex == playerIndex })
+        if self.automaticallyAssignsPlayerIndexes
         {
-            // Reset the player index if there is another connected controller with the same player index
-            controller.playerIndex = nil
+            let playerIndex = self.nextAvailablePlayerIndex
+            controller.playerIndex = playerIndex
         }
         
         self.connectedControllers.append(controller)

@@ -8,6 +8,7 @@
 
 import CoreImage
 
+@objcMembers
 public class FilterChain: CIFilter
 {
     public var inputFilters = [CIFilter]()

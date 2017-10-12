@@ -117,7 +117,7 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
         self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
             self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
-        } as (() -> Void)
+        }
         
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)

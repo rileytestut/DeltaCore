@@ -35,6 +35,7 @@ extension SamplerMode: RawRepresentable
     }
 }
 
+@objcMembers
 internal class SamplerFilter: CIFilter
 {
     internal var inputMode: SamplerMode = .nearestNeighbor
@@ -54,7 +55,7 @@ internal class SamplerFilter: CIFilter
     internal override init()
     {
         let code = "kernel vec4 do_nothing(__sample s) { return s.rgba; }"
-        self.kernel = CIColorKernel(string: code)!
+        self.kernel = CIColorKernel(source: code)!
         
         super.init()
     }

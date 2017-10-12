@@ -9,7 +9,7 @@
 import Foundation
 import TPCircularBuffer
 
-@objc(DLTARingBuffer)
+@objc(DLTARingBuffer) @objcMembers
 public class RingBuffer: NSObject
 {
     public var isEnabled: Bool = true

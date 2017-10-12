@@ -88,20 +88,20 @@ public class ControllerView: UIView, GameController
     public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
     //MARK: - Private Properties
-    fileprivate let imageView = UIImageView(frame: CGRect.zero)
-    fileprivate var transitionImageView: UIImageView? = nil
-    fileprivate let controllerDebugView = ControllerDebugView()
+    private let imageView = UIImageView(frame: CGRect.zero)
+    private var transitionImageView: UIImageView? = nil
+    private let controllerDebugView = ControllerDebugView()
     
-    fileprivate var overrideTraits: ControllerSkin.Traits?
-    fileprivate var overrideSize: ControllerSkin.Size?
+    private var overrideTraits: ControllerSkin.Traits?
+    private var overrideSize: ControllerSkin.Size?
     
-    fileprivate var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
     
-    fileprivate var _performedInitialLayout = false
+    private var _performedInitialLayout = false
     
-    fileprivate var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
-    fileprivate var previousTouchInputs = Set<AnyInput>()
-    fileprivate var touchInputs: Set<AnyInput> {
+    private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
+    private var previousTouchInputs = Set<AnyInput>()
+    private var touchInputs: Set<AnyInput> {
         return self.touchInputsMappingDictionary.values.reduce(Set<AnyInput>(), { $0.union($1) })
     }
     

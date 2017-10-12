@@ -33,15 +33,15 @@ public final class EmulatorCore: NSObject
     //MARK: - Properties -
     /** Properties **/
     public let game: GameProtocol
-    public fileprivate(set) var gameViews: [GameView] = []
+    public private(set) var gameViews: [GameView] = []
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public fileprivate(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat, frameDuration: self.deltaCore.frameDuration)
-    public fileprivate(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
+    public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat, frameDuration: self.deltaCore.frameDuration)
+    public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
     
     // KVO-Compliant
-    @objc public fileprivate(set) dynamic var state = State.stopped
+    @objc public private(set) dynamic var state = State.stopped
     @objc public dynamic var rate = 1.0 {
         didSet {
             self.audioManager.rate = self.rate
@@ -54,22 +54,22 @@ public final class EmulatorCore: NSObject
     //MARK: - Private Properties
     
     // We privately set this first to clean up before setting self.state, which notifies KVO observers
-    fileprivate var _state = State.stopped
+    private var _state = State.stopped
     
-    fileprivate let gameType: GameType
+    private let gameType: GameType
     
-    fileprivate let emulationSemaphore = DispatchSemaphore(value: 0)
-    fileprivate var cheatCodes = [String: CheatType]()
+    private let emulationSemaphore = DispatchSemaphore(value: 0)
+    private var cheatCodes = [String: CheatType]()
     
-    fileprivate var gameControllers = NSHashTable<AnyObject>.weakObjects()
+    private var gameControllers = NSHashTable<AnyObject>.weakObjects()
     
-    fileprivate var previousState = State.stopped
-    fileprivate var previousRate: Double? = nil
+    private var previousState = State.stopped
+    private var previousRate: Double? = nil
     
-    fileprivate var reactivateInputsSemaphores = Set<DispatchSemaphore>()
-    fileprivate let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
+    private var reactivateInputsSemaphores = Set<DispatchSemaphore>()
+    private let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
     
-    fileprivate var gameSaveURL: URL {
+    private var gameSaveURL: URL {
         let gameURL = self.game.fileURL.deletingPathExtension()
         let gameSaveURL = gameURL.appendingPathExtension(self.deltaCore.gameSaveFileExtension)
         return gameSaveURL
@@ -281,7 +281,7 @@ public extension EmulatorCore
         self.updateCheats()
     }
     
-    fileprivate func updateCheats()
+    private func updateCheats()
     {
         self.deltaCore.emulatorBridge.resetCheats()
         

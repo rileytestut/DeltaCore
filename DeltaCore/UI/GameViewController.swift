@@ -51,7 +51,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
     }
     
-    open fileprivate(set) var emulatorCore: EmulatorCore?
+    open private(set) var emulatorCore: EmulatorCore?
     {
         didSet
         {
@@ -68,12 +68,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     open weak var delegate: GameViewControllerDelegate?
     
-    open fileprivate(set) var gameView: GameView!
-    open fileprivate(set) var controllerView: ControllerView!
+    open private(set) var gameView: GameView!
+    open private(set) var controllerView: ControllerView!
     
     private var gameViewContainerView: UIView!
     
-    fileprivate let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
+    private let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
     
     /// UIViewController
     open override var prefersStatusBarHidden: Bool {

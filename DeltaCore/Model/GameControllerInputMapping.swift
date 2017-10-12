@@ -17,7 +17,7 @@ public struct GameControllerInputMapping: GameControllerInputMappingProtocol, Co
         return self.inputMappings.keys.map { AnyInput(stringValue: $0, intValue: nil, type: .controller(self.gameControllerInputType)) }
     }
     
-    fileprivate var inputMappings: [String: AnyInput]
+    private var inputMappings: [String: AnyInput]
     
     public init(gameControllerInputType: GameControllerInputType)
     {

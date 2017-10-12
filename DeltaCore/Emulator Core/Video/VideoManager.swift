@@ -24,15 +24,15 @@ private extension VideoFormat.PixelFormat
 
 public class VideoManager: NSObject, VideoRendering
 {
-    public fileprivate(set) var gameViews = [GameView]()
+    public private(set) var gameViews = [GameView]()
     
     public var isEnabled = true
     
     public let videoFormat: VideoFormat
     public let videoBuffer: UnsafeMutablePointer<UInt8>
     
-    fileprivate let outputVideoFormat: VideoFormat
-    fileprivate let outputVideoBuffer: UnsafeMutablePointer<UInt8>
+    private let outputVideoFormat: VideoFormat
+    private let outputVideoBuffer: UnsafeMutablePointer<UInt8>
     
     public init(videoFormat: VideoFormat)
     {

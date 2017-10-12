@@ -20,7 +20,7 @@ public class AudioManager: NSObject, AudioRendering
     /// Currently only supports 16-bit interleaved Linear PCM.
     public let audioFormat: AVAudioFormat
     
-    public fileprivate(set) var audioBuffer: RingBuffer
+    public private(set) var audioBuffer: RingBuffer
     
     public var isEnabled = true {
         didSet
@@ -54,16 +54,16 @@ public class AudioManager: NSObject, AudioRendering
         }
     }
     
-    fileprivate let frameDuration: Double
+    private let frameDuration: Double
     
-    fileprivate let audioEngine: AVAudioEngine
-    fileprivate let audioPlayerNode: AVAudioPlayerNode
-    fileprivate let timePitchEffect: AVAudioUnitTimePitch
+    private let audioEngine: AVAudioEngine
+    private let audioPlayerNode: AVAudioPlayerNode
+    private let timePitchEffect: AVAudioUnitTimePitch
     
-    fileprivate var audioConverter: AVAudioConverter?
-    fileprivate var audioConverterRequiredFrameCount: AVAudioFrameCount?
+    private var audioConverter: AVAudioConverter?
+    private var audioConverterRequiredFrameCount: AVAudioFrameCount?
     
-    fileprivate let audioBufferCount = 3
+    private let audioBufferCount = 3
     
     public init(audioFormat: AVAudioFormat, frameDuration: Double)
     {

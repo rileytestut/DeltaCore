@@ -75,9 +75,9 @@ internal class ControllerDebugView: UIView
     }
 }
 
-fileprivate class ItemView: UIView
+private class ItemView: UIView
 {
-    fileprivate let item: ControllerSkin.Item
+    let item: ControllerSkin.Item
     
     private let label: UILabel
     

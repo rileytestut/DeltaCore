@@ -101,8 +101,8 @@ public struct ControllerSkin: ControllerSkinProtocol
     
     public let fileURL: URL
     
-    fileprivate let representations: [Traits: Representation]
-    fileprivate let imageCache = NSCache<NSString, UIImage>()
+    private let representations: [Traits: Representation]
+    private let imageCache = NSCache<NSString, UIImage>()
     
     public init?(fileURL: URL)
     {

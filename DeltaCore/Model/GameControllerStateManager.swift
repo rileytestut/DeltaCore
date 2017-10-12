@@ -12,8 +12,8 @@ internal class GameControllerStateManager
 {
     let gameController: GameController
     
-    fileprivate(set) var activatedInputs = Set<AnyInput>()
-    fileprivate(set) var sustainedInputs = Set<AnyInput>()
+    private(set) var activatedInputs = Set<AnyInput>()
+    private(set) var sustainedInputs = Set<AnyInput>()
     
     var receivers: [GameControllerReceiver] {
         var objects: [GameControllerReceiver]!
@@ -25,10 +25,10 @@ internal class GameControllerStateManager
         return objects
     }
 
-    fileprivate let _receivers = NSMapTable<AnyObject, AnyObject>.weakToStrongObjects()
+    private let _receivers = NSMapTable<AnyObject, AnyObject>.weakToStrongObjects()
     
     // Used to synchronize access to _receivers to prevent race conditions (yay ObjC)
-    fileprivate let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
+    private let dispatchQueue = DispatchQueue(label: "com.rileytestut.Delta.GameControllerStateManager.dispatchQueue")
     
     
     init(gameController: GameController)

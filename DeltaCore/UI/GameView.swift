@@ -34,15 +34,15 @@ public class GameView: UIView
         return self.filterChain.outputImage
     }
     
-    fileprivate let filterChain = FilterChain(filters: [])
-    fileprivate let samplerFilter = SamplerFilter()
+    private let filterChain = FilterChain(filters: [])
+    private let samplerFilter = SamplerFilter()
     
-    fileprivate let glkView: GLKView
-    fileprivate let context: CIContext
+    private let glkView: GLKView
+    private let context: CIContext
     
     // Cache these properties so we don't access UIKit methods when rendering on background thread.
-    fileprivate var _screenScale: CGFloat?
-    fileprivate var _bounds = CGRect.zero
+    private var _screenScale: CGFloat?
+    private var _bounds = CGRect.zero
     
     public override init(frame: CGRect)
     {

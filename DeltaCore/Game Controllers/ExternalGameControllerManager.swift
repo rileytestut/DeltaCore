@@ -21,11 +21,11 @@ public class ExternalGameControllerManager
     
     //MARK: - Properties -
     /** Properties **/
-    public fileprivate(set) var connectedControllers: [GameController] = []
+    public private(set) var connectedControllers: [GameController] = []
     
     public var automaticallyAssignsPlayerIndexes = true
     
-    fileprivate var nextAvailablePlayerIndex: Int {
+    private var nextAvailablePlayerIndex: Int {
         var nextPlayerIndex = -1
         
         let sortedGameControllers = self.connectedControllers.sorted { ($0.playerIndex ?? -1) < ($1.playerIndex ?? -1) }

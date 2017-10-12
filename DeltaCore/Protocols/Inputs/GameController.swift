@@ -34,7 +34,7 @@ public protocol GameController: NSObjectProtocol
 
 public extension GameController
 {
-    fileprivate var stateManager: GameControllerStateManager {
+    private var stateManager: GameControllerStateManager {
         var stateManager = objc_getAssociatedObject(self, &gameControllerStateManagerKey) as? GameControllerStateManager
         
         if stateManager == nil

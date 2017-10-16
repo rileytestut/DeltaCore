@@ -23,7 +23,7 @@ public class ExternalGameControllerManager
     /** Properties **/
     public private(set) var connectedControllers: [GameController] = []
     
-    public var automaticallyAssignsPlayerIndexes = true
+    public var automaticallyAssignsPlayerIndexes: Bool
     
     private var nextAvailablePlayerIndex: Int {
         var nextPlayerIndex = -1
@@ -46,6 +46,15 @@ public class ExternalGameControllerManager
         nextPlayerIndex += 1
         
         return nextPlayerIndex
+    }
+    
+    private init()
+    {
+#if (arch(i386) || arch(x86_64)) && os(iOS)
+        self.automaticallyAssignsPlayerIndexes = false
+#else
+        self.automaticallyAssignsPlayerIndexes = true
+#endif
     }
 }
 

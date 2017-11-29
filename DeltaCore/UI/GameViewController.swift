@@ -110,6 +110,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
+    open override func prefersHomeIndicatorAutoHidden() -> Bool
+    {
+        let prefersHomeIndicatorAutoHidden = self.view.bounds.width > self.view.bounds.height
+        return prefersHomeIndicatorAutoHidden
+    }
+    
     open dynamic override func viewDidLoad()
     {
         super.viewDidLoad()
@@ -279,6 +285,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
             // Sometimes, iOS will cache the rendered image (such as when covered by a UIVisualEffectView), and as a result the game view might appear skewed
             // To compensate, we manually "refresh" the game screen
             self.gameView.inputImage = self.gameView.outputImage
+        }
+        
+        if #available(iOS 11.0, *)
+        {
+            self.setNeedsUpdateOfHomeIndicatorAutoHidden()
         }
     }
     

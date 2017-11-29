@@ -207,6 +207,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 // The CGRect returned by AVMakeRect is centered inside the parent frame.
                 // This is fine for landscape, but when in portrait, we want controllerView to be pinned to the bottom of the parent frame instead.
                 frame.origin.y = self.view.bounds.height - frame.height
+                
+                if #available(iOS 11.0, *)
+                {
+                    // Additionally, ensure the controllerView respects safe area.
+                    frame.origin.y -= self.view.safeAreaInsets.bottom
+                }
             }
             
             self.controllerView.frame = frame

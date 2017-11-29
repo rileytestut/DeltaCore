@@ -246,7 +246,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 
                 let scaleTransform = CGAffineTransform(scaleX: self.controllerView.bounds.width, y: self.controllerView.bounds.height)
                 
-                let frame = gameScreenFrame.applying(scaleTransform)
+                var frame = gameScreenFrame.applying(scaleTransform)
+                frame.origin.x += self.controllerView.frame.minX
+                frame.origin.y += self.controllerView.frame.minY
+                
                 self.gameViewContainerView.frame = frame
             }
             else

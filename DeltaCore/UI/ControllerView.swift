@@ -75,6 +75,9 @@ public class ControllerView: UIView, GameController
         }
     }
     
+    
+    public var translucentControllerSkinOpacity: CGFloat = 0.7
+    
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var name: String {
@@ -210,7 +213,7 @@ public extension ControllerView
         let transitionImageView = UIImageView(image: self.imageView.image)
         transitionImageView.frame = self.imageView.frame
         transitionImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        transitionImageView.alpha = 1.0
+        transitionImageView.alpha = self.imageView.alpha
         self.addSubview(transitionImageView)
         
         self.transitionImageView = transitionImageView
@@ -227,6 +230,8 @@ public extension ControllerView
             self.controllerDebugView.isHidden = !isDebugModeEnabled
         }
         
+        var isTranslucent = false
+        
         if let traits = self.controllerSkinTraits
         {
             let items = self.controllerSkin?.items(for: traits)
@@ -234,6 +239,8 @@ public extension ControllerView
             
             let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
             self.imageView.image = image
+            
+            isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
         }
         
         self.invalidateIntrinsicContentSize()
@@ -244,12 +251,12 @@ public extension ControllerView
             // As of iOS 8.3, calling this within transition coordinator animation closure without wrapping
             // in this animation closure causes the change to be instantaneous
             UIView.animate(withDuration: 0.0) {
-                self.imageView.alpha = 1.0
+                self.imageView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
             }
         }
         else
         {
-            self.imageView.alpha = 1.0
+            self.imageView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
         }
         
         self.transitionImageView?.alpha = 0.0

@@ -26,7 +26,8 @@ public class AudioManager: NSObject, AudioRendering
         didSet
         {
             self.audioBuffer.isEnabled = self.isEnabled
-            self.audioEngine.mainMixerNode.outputVolume = self.isEnabled ? 1.0 : 0.0
+            
+            self.updateOutputVolume()
             
             do
             {
@@ -73,6 +74,16 @@ public class AudioManager: NSObject, AudioRendering
         // Temporary. Will be replaced with more accurate RingBuffer in resetAudioEngine().
         self.audioBuffer = RingBuffer(preferredBufferSize: 4096)!
         
+        do
+        {
+            // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+        }
+        catch
+        {
+            print(error)
+        }
+        
         self.audioEngine = AVAudioEngine()
         
         self.audioPlayerNode = AVAudioPlayerNode()
@@ -85,7 +96,10 @@ public class AudioManager: NSObject, AudioRendering
         
         super.init()
         
+        self.updateOutputVolume()
+        
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.updateOutputVolume), name: .AVAudioSessionSilenceSecondaryAudioHint, object: nil)
     }
 }
 
@@ -248,5 +262,17 @@ private extension AudioManager
         }
         
         self.audioPlayerNode.play()
+    }
+    
+    @objc func updateOutputVolume()
+    {
+        if !self.isEnabled || AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
+        {
+            self.audioEngine.mainMixerNode.outputVolume = 0.0
+        }
+        else
+        {
+            self.audioEngine.mainMixerNode.outputVolume = 1.0
+        }
     }
 }

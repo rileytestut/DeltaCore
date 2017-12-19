@@ -10,19 +10,20 @@ import Foundation
 
 extension ControllerSkin
 {
-    public enum DeviceType: String
+    public enum Device: String
     {
         // Naming conventions? I treat the "P" as the capital letter, so since it's a value (not a type) I've opted to lowercase it
         case iphone
         case ipad
     }
-    
-    public enum DisplayMode: String
+
+    public enum DisplayType: String
     {
-        case fullScreen
+        case standard
+        case edgeToEdge
         case splitView
     }
-    
+
     public enum Orientation: String
     {
         case portrait
@@ -38,8 +39,8 @@ extension ControllerSkin
     
     public struct Traits: Hashable, CustomStringConvertible
     {
-        public var deviceType: DeviceType
-        public var displayMode: DisplayMode
+        public var device: Device
+        public var displayType: DisplayType
         public var orientation: Orientation
         
         /// Hashable
@@ -49,36 +50,58 @@ extension ControllerSkin
         
         /// CustomStringConvertible
         public var description: String {
-            return self.deviceType.rawValue + "-" + self.displayMode.rawValue + "-" + self.orientation.rawValue
+            return self.device.rawValue + "-" + self.displayType.rawValue + "-" + self.orientation.rawValue
         }
         
-        public init(deviceType: DeviceType, displayMode: DisplayMode, orientation: Orientation)
+        public init(device: Device, displayType: DisplayType, orientation: Orientation)
         {
-            self.deviceType = deviceType
-            self.displayMode = displayMode
+            self.device = device
+            self.displayType = displayType
             self.orientation = orientation
         }
         
-        public static func defaults(for view: UIView) -> ControllerSkin.Traits
+        public static func defaults(for window: UIWindow) -> ControllerSkin.Traits
         {
-            var traits = ControllerSkin.Traits(deviceType: .iphone, displayMode: .fullScreen, orientation: .portrait)
+            let device: Device
+            let displayType: DisplayType
+            let orientation: Orientation
             
             // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
             // 99% of the time, won't make a difference ¯\_(ツ)_/¯
-            traits.deviceType = (view.traitCollection.userInterfaceIdiom == .pad) ? .ipad : .iphone
-            
-            if traits.deviceType == .ipad, let window = view.window, !window.bounds.equalTo(window.screen.bounds)
+            if window.traitCollection.userInterfaceIdiom == .pad
             {
-                // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
-                traits.orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
+                device = .ipad
                 
-                traits.displayMode = .splitView
+                if !window.bounds.equalTo(window.screen.bounds)
+                {
+                    displayType = .splitView
+                    
+                    // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
+                    orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
+                }
+                else
+                {
+                    displayType = .standard
+                    orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                }
             }
             else
             {
-                traits.orientation = (view.bounds.width > view.bounds.height) ? .landscape : .portrait
+                device = .iphone
+                
+                if #available(iOS 11, *)
+                {
+                    displayType = (window.safeAreaInsets != .zero) ? .edgeToEdge : .standard
+                }
+                else
+                {
+                    displayType = .standard
+                }
+                
+                orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
             }
             
+            let traits = ControllerSkin.Traits(device: device, displayType: displayType, orientation: orientation)
             return traits
         }
     }
@@ -86,5 +109,5 @@ extension ControllerSkin
 
 public func ==(lhs: ControllerSkin.Traits, rhs: ControllerSkin.Traits) -> Bool
 {
-    return lhs.deviceType == rhs.deviceType && lhs.displayMode == rhs.displayMode && lhs.orientation == rhs.orientation
+    return lhs.device == rhs.device && lhs.displayType == rhs.displayType && lhs.orientation == rhs.orientation
 }

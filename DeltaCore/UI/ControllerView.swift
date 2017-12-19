@@ -48,33 +48,29 @@ public class ControllerView: UIView, GameController
         }
     }
     
-    public var controllerSkinTraits: ControllerSkin.Traits?
-    {
-        set { self.overrideTraits = newValue }
-        get
+    public var controllerSkinTraits: ControllerSkin.Traits? {
+        if let traits = self.overrideControllerSkinTraits
         {
-            if let traits = self.overrideTraits
-            {
-                return traits
-            }
-            
-            guard let superview = self.superview else { return nil }
-            
-            let traits = ControllerSkin.Traits.defaults(for: superview)
             return traits
         }
+        
+        guard let window = self.window else { return nil }
+        
+        let traits = ControllerSkin.Traits.defaults(for: window)
+        
+        guard let controllerSkin = self.controllerSkin else { return traits }
+        
+        guard let supportedTraits = controllerSkin.supportedTraits(for: traits) else { return traits }
+        return supportedTraits
+    }
+
+    public var controllerSkinSize: ControllerSkin.Size! {
+        let size = self.overrideControllerSkinSize ?? UIScreen.main.defaultControllerSkinSize
+        return size
     }
     
-    public var controllerSkinSize: ControllerSkin.Size!
-    {
-        set { self.overrideSize = newValue }
-        get
-        {
-            let size = self.overrideSize ?? UIScreen.main.defaultControllerSkinSize
-            return size
-        }
-    }
-    
+    public var overrideControllerSkinTraits: ControllerSkin.Traits?
+    public var overrideControllerSkinSize: ControllerSkin.Size?
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
     
@@ -94,9 +90,6 @@ public class ControllerView: UIView, GameController
     private let imageView = UIImageView(frame: CGRect.zero)
     private var transitionImageView: UIImageView? = nil
     private let controllerDebugView = ControllerDebugView()
-    
-    private var overrideTraits: ControllerSkin.Traits?
-    private var overrideSize: ControllerSkin.Size?
     
     private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
     

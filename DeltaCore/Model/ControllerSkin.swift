@@ -156,28 +156,28 @@ public struct ControllerSkin: ControllerSkinProtocol
     }
     
     // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
-    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, deviceType: DeviceType? = nil, displayMode: DisplayMode? = nil, orientation: Orientation? = nil) -> Set<Representation>
+    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, device: Device? = nil, displayType: DisplayType? = nil, orientation: Orientation? = nil) -> Set<Representation>
     {
         var representations = Set<Representation>()
         
         for (key, dictionary) in representationsDictionary
         {
-            if deviceType == nil
+            if device == nil
             {
-                guard let deviceType = DeviceType(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
+                guard let device = Device(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
                 
-                representations.formUnion(self.parsedRepresentations(from: dictionary, deviceType: deviceType))
+                representations.formUnion(self.parsedRepresentations(from: dictionary, device: device))
             }
-            else if displayMode == nil
+            else if displayType == nil
             {
-                if let displayMode = DisplayMode(rawValue: key), let dictionary = dictionary as? RepresentationDictionary
+                if let displayType = DisplayType(rawValue: key), let dictionary = dictionary as? RepresentationDictionary
                 {
-                    representations.formUnion(self.parsedRepresentations(from: dictionary, deviceType: deviceType, displayMode: displayMode))
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, device: device, displayType: displayType))
                 }
                 else
                 {
-                    // Key doesn't exist, so we continue with the same dictionary we're currently iterating, but pass in .fullScreen for displayMode
-                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, deviceType: deviceType, displayMode: .fullScreen))
+                    // Key doesn't exist, so we continue with the same dictionary we're currently iterating, but pass in .standard for displayMode
+                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, device: device, displayType: .standard))
                     
                     // Return early to prevent us from repeating the above step multiple times
                     return representations
@@ -186,12 +186,12 @@ public struct ControllerSkin: ControllerSkinProtocol
             else if orientation == nil
             {
                 guard
-                    let deviceType = deviceType,
-                    let displayMode = displayMode,
+                    let device = device,
+                    let displayType = displayType,
                     let orientation = Orientation(rawValue: key)
                     else { continue }
                 
-                let traits = Traits(deviceType: deviceType, displayMode: displayMode, orientation: orientation)
+                let traits = Traits(device: device, displayType: displayType, orientation: orientation)
                 if let representation = Representation(traits: traits, dictionary: dictionary)
                 {
                     representations.insert(representation)
@@ -493,17 +493,23 @@ private extension ControllerSkin
             
             var targetSize: CGSize
             
-            switch (traits.deviceType, assetSize)
+            switch (traits.device, traits.displayType, assetSize)
             {
-            case (.iphone, .small): targetSize = CGSize(width: 320, height: 568)
-            case (.iphone, .medium): targetSize = CGSize(width: 375, height: 667)
-            case (.iphone, .large): targetSize = CGSize(width: 414, height: 736)
+            case (.iphone, .standard, .small): targetSize = CGSize(width: 320, height: 568)
+            case (.iphone, .standard, .medium): targetSize = CGSize(width: 375, height: 667)
+            case (.iphone, .standard, .large): targetSize = CGSize(width: 414, height: 736)
                 
-            case (.ipad, .small): fallthrough
-            case (.ipad, .medium): targetSize = CGSize(width: 768, height: 1024)
-            case (.ipad, .large): targetSize = CGSize(width: 1024, height: 1366)
+            case (.iphone, .edgeToEdge, _): targetSize = CGSize(width: 375, height: 812)
+            case (.iphone, .splitView, _): return nil
                 
-            case (_, .resizable): return nil
+            case (.ipad, .standard,  .small): targetSize = CGSize(width: 768, height: 1024)
+            case (.ipad, .standard, .medium): targetSize = CGSize(width: 834, height: 1112)
+            case (.ipad, .standard, .large): targetSize = CGSize(width: 1024, height: 1366)
+                
+            case (.ipad, .edgeToEdge, _): return nil
+            case (.ipad, .splitView, _): return nil //TODO: Calculate split view size
+                
+            case (_, _, .resizable): return nil
             }
             
             switch traits.orientation
@@ -519,13 +525,20 @@ private extension ControllerSkin
         {
             guard let assetSize = self.unwrapped else { return nil }
             
-            switch (assetSize, traits.deviceType)
+            switch (traits.device, traits.displayType, assetSize)
             {
-            case (.small, _): return 2.0
-            case (.medium, _): return 2.0
-            case (.large, .ipad): return 2.0
-            case (.large, .iphone): return 3.0
-            case (.resizable, _): return nil
+            case (.iphone, .standard, .small): return 2.0
+            case (.iphone, .standard, .medium): return 2.0
+            case (.iphone, .standard, .large): return 3.0
+                
+            case (.iphone, .edgeToEdge, _): return 3.0
+            case (.iphone, .splitView, _): return nil
+                
+            case (.ipad, .standard, _): return 2.0
+            case (.ipad, .edgeToEdge, _): return nil
+            case (.ipad, .splitView, _): return 2.0
+                
+            case (_, _, .resizable): return nil
             }
         }
     }

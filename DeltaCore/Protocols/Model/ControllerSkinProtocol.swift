@@ -29,4 +29,23 @@ public protocol ControllerSkinProtocol
     func gameScreenFrame(for traits: ControllerSkin.Traits) -> CGRect?
     
     func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
+    
+    func supportedTraits(for traits: ControllerSkin.Traits) -> ControllerSkin.Traits?
+}
+
+public extension ControllerSkinProtocol
+{
+    func supportedTraits(for traits: ControllerSkin.Traits) -> ControllerSkin.Traits?
+    {
+        var traits = traits
+        
+        while !self.supports(traits)
+        {
+            guard traits.device == .iphone, traits.displayType == .edgeToEdge else { return nil }
+            
+            traits.displayType = .standard
+        }
+        
+        return traits
+    }
 }

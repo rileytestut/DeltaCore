@@ -216,8 +216,18 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 
                 if #available(iOS 11.0, *)
                 {
-                    // Additionally, ensure the controllerView respects safe area.
-                    frame.origin.y -= self.view.safeAreaInsets.bottom
+                    if let window = self.view.window, traits.device == .iphone, self.controllerView.overrideControllerSkinTraits == nil
+                    {
+                        let defaultTraits = ControllerSkin.Traits.defaults(for: window)
+                        if defaultTraits.displayType == .edgeToEdge && traits.displayType == .standard
+                        {
+                            // This is a device with an edge-to-edge screen, but controllerView's controllerSkinTraits are for standard display types.
+                            // This means that the controller skin we are using doesn't include edge-to-edge assets, and we're falling back to standard assets.
+                            // As a result, we need to ensure controllerView respects safe area, otherwise we may have unwanted cutoffs due to rounded corners.
+                            
+                            frame.origin.y -= self.view.safeAreaInsets.bottom
+                        }
+                    }
                 }
             }
             

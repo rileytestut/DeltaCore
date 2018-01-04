@@ -140,25 +140,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewWillAppear(animated)
         
-        if let emulatorCore = self.emulatorCore
-        {
-            self.emulatorCoreQueue.async {
-                
-                switch emulatorCore.state
-                {
-                case .stopped: emulatorCore.start()
-                case .paused: self.resumeEmulation()
-                case .running: break
-                }
-                
-                // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
-                // This is especially noticeable when peeking a game
-                emulatorCore.audioManager.isEnabled = false
-                emulatorCore.audioManager.isEnabled = true
-                
-                emulatorCore.start()
-            }
-        }
+        self.startEmulation()
     }
     
     open dynamic override func viewDidAppear(_ animated: Bool)
@@ -342,13 +324,32 @@ public extension GameViewController
     @discardableResult func pauseEmulation() -> Bool
     {
         guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(self) ?? true else { return false }
-        return emulatorCore.pause()
+        
+        var result = false
+        
+        self.emulatorCoreQueue.sync {
+            result = emulatorCore.pause()
+        }
+        
+        return result
     }
     
     @discardableResult func resumeEmulation() -> Bool
     {
         guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldResumeEmulation(self) ?? true else { return false }
-        return emulatorCore.resume()
+        
+        var result = false
+        
+        self.emulatorCoreQueue.sync {
+            switch emulatorCore.state
+            {
+            case .stopped: result = emulatorCore.start()
+            case .paused: result = emulatorCore.resume()
+            case .running: result = true
+            }
+        }
+        
+        return result
     }
 }
 
@@ -371,6 +372,18 @@ private extension GameViewController
         
         let controllerSkin = ControllerSkin.standardControllerSkin(for: game.type)
         controllerView.controllerSkin = controllerSkin
+    }
+    
+    func startEmulation()
+    {
+        guard let emulatorCore = self.emulatorCore else { return }
+        
+        // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
+        // This is especially noticeable when peeking a game
+        emulatorCore.audioManager.isEnabled = false
+        emulatorCore.audioManager.isEnabled = true
+        
+        self.resumeEmulation()
     }
 }
 

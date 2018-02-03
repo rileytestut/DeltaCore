@@ -50,7 +50,7 @@ public class ExternalGameControllerManager
     
     private init()
     {
-#if (arch(i386) || arch(x86_64)) && os(iOS)
+#if targetEnvironment(simulator)
         self.automaticallyAssignsPlayerIndexes = false
 #else
         self.automaticallyAssignsPlayerIndexes = true

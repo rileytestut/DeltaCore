@@ -25,7 +25,6 @@
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
-		BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFEE12D11B602CCA00156A2C /* ZipZap.framework */; };
 		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
 		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
@@ -45,6 +44,7 @@
 		BFBAB2E51EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */; };
 		BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */; };
 		BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */; };
+		BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */; };
 		BFD27EF71D261E9B00E081A3 /* DeltaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaCore.m */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
 		BFE438101AF606980095A5F1 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameController.swift */; };
@@ -58,54 +58,19 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		BF762EA71BC1AB6B002C8866 /* PBXContainerItemProxy */ = {
+		BFCBD91020CC6F6F0028E309 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
+			containerPortal = BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = BF8624EF1BB74B1F00C12EEE;
-			remoteInfo = "ZipZap (tvOS Static Library)";
+			remoteGlobalIDString = "ZIPFoundation::ZIPFoundation::Product";
+			remoteInfo = ZIPFoundation;
 		};
-		BF8624CE1BB74A4A00C12EEE /* PBXContainerItemProxy */ = {
+		BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
+			containerPortal = BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = BF8624CB1BB7495200C12EEE;
-			remoteInfo = "ZipZap (tvOS Framework)";
-		};
-		BFEE12D01B602CCA00156A2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D87BA1F81B3D6DEA00ED7EB3;
-			remoteInfo = "ZipZap (iOS Framework)";
-		};
-		BFEE12D21B602CCA00156A2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D899CFB0162C5EEB00112F49;
-			remoteInfo = "ZipZap (iOS Static Library)";
-		};
-		BFEE12D41B602CCA00156A2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D8D140D31B423B1100C411B0;
-			remoteInfo = "ZipZap (OS X Framework)";
-		};
-		BFEE12D61B602CCA00156A2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D899CF82162C5EC100112F49;
-			remoteInfo = "ZipZap (OS X Static Library)";
-		};
-		BFEE12D81B602CCA00156A2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D899CF96162C5EC100112F49;
-			remoteInfo = ZipZapTests;
+			remoteGlobalIDString = "ZIPFoundation::ZIPFoundationTests::Product";
+			remoteInfo = ZIPFoundationTests;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -149,6 +114,7 @@
 		BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CharacterSet+Hexadecimals.swift"; sourceTree = "<group>"; };
 		BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExtensibleEnums.swift; path = DeltaCore/Types/ExtensibleEnums.swift; sourceTree = SOURCE_ROOT; };
 		BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinProtocol.swift; sourceTree = "<group>"; };
+		BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZIPFoundation.xcodeproj; path = External/ZIPFoundation/ZIPFoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		BFD27EF61D261E9B00E081A3 /* DeltaCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCore.m; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
 		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -157,7 +123,6 @@
 		BFEC23CC1D247E4A00B3A6A9 /* AudioRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRendering.swift; sourceTree = "<group>"; };
 		BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
 		BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Thread+RealTime.swift"; sourceTree = "<group>"; };
-		BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZipZap.xcodeproj; path = External/ZipZap/ZipZap.xcodeproj; sourceTree = SOURCE_ROOT; };
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 /* End PBXFileReference section */
@@ -167,7 +132,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF7079881B6B458B0019077C /* ZipZap.framework in Frameworks */,
+				BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +174,7 @@
 			children = (
 				BF46895F1AACF36800A2586D /* DeltaCore */,
 				BF46895E1AACF36800A2586D /* Products */,
+				BFCBD91B20CC6F790028E309 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -343,6 +309,22 @@
 			path = Types;
 			sourceTree = "<group>";
 		};
+		BFCBD90C20CC6F6F0028E309 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */,
+				BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BFCBD91B20CC6F790028E309 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		BFD78F591C994587000441FC /* Video */ = {
 			isa = PBXGroup;
 			children = (
@@ -374,24 +356,10 @@
 		BFEE12C71B602CBF00156A2C /* External */ = {
 			isa = PBXGroup;
 			children = (
-				BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */,
+				BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */,
 				BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */,
 			);
 			name = External;
-			sourceTree = "<group>";
-		};
-		BFEE12C91B602CCA00156A2C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				BFEE12D11B602CCA00156A2C /* ZipZap.framework */,
-				BFEE12D31B602CCA00156A2C /* libZipZap.a */,
-				BFEE12D51B602CCA00156A2C /* ZipZap.framework */,
-				BFEE12D71B602CCA00156A2C /* libZipZap.a */,
-				BF8624CF1BB74A4A00C12EEE /* ZipZap.framework */,
-				BF762EA81BC1AB6B002C8866 /* libZipZap.a */,
-				BFEE12D91B602CCA00156A2C /* ZipZapTests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		BFF912D11AB08E7400AC07A1 /* Emulator Core */ = {
@@ -465,8 +433,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = BFEE12C91B602CCA00156A2C /* Products */;
-					ProjectRef = BFEE12C81B602CCA00156A2C /* ZipZap.xcodeproj */;
+					ProductGroup = BFCBD90C20CC6F6F0028E309 /* Products */;
+					ProjectRef = BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -477,53 +445,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		BF762EA81BC1AB6B002C8866 /* libZipZap.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libZipZap.a;
-			remoteRef = BF762EA71BC1AB6B002C8866 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		BF8624CF1BB74A4A00C12EEE /* ZipZap.framework */ = {
+		BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
-			path = ZipZap.framework;
-			remoteRef = BF8624CE1BB74A4A00C12EEE /* PBXContainerItemProxy */;
+			path = ZIPFoundation.framework;
+			remoteRef = BFCBD91020CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		BFEE12D11B602CCA00156A2C /* ZipZap.framework */ = {
+		BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */ = {
 			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = ZipZap.framework;
-			remoteRef = BFEE12D01B602CCA00156A2C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		BFEE12D31B602CCA00156A2C /* libZipZap.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libZipZap.a;
-			remoteRef = BFEE12D21B602CCA00156A2C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		BFEE12D51B602CCA00156A2C /* ZipZap.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = ZipZap.framework;
-			remoteRef = BFEE12D41B602CCA00156A2C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		BFEE12D71B602CCA00156A2C /* libZipZap.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libZipZap.a;
-			remoteRef = BFEE12D61B602CCA00156A2C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		BFEE12D91B602CCA00156A2C /* ZipZapTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = ZipZapTests.xctest;
-			remoteRef = BFEE12D81B602CCA00156A2C /* PBXContainerItemProxy */;
+			fileType = file;
+			path = ZIPFoundationTests.xctest;
+			remoteRef = BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */

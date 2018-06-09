@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import ZipZap
+import ZIPFoundation
 
 public let kUTTypeDeltaControllerSkin: CFString = "com.rileytestut.delta.skin" as CFString
 
@@ -92,6 +92,17 @@ extension ControllerSkin
     }
 }
 
+private extension Archive
+{
+    func extract(_ entry: Entry) throws -> Data
+    {
+        var data = Data()
+        _ = try self.extract(entry) { data.append($0) }
+        
+        return data
+    }
+}
+
 public struct ControllerSkin: ControllerSkinProtocol
 {
     public let name: String
@@ -104,55 +115,53 @@ public struct ControllerSkin: ControllerSkinProtocol
     private let representations: [Traits: Representation]
     private let imageCache = NSCache<NSString, UIImage>()
     
+    private let archive: Archive
+    
     public init?(fileURL: URL)
     {
         self.fileURL = fileURL
         
-        var info = [String: AnyObject]()
+        guard let archive = Archive(url: fileURL, accessMode: .read) else { return nil }
+        self.archive = archive
+        
+        guard let infoEntry = archive["info.json"] else { return nil }
         
         do
         {
-            let archive = try ZZArchive(url: self.fileURL)
+            let infoData = try archive.extract(infoEntry)
             
-            if let index = archive.entries.index(where: { $0.fileName == "info.json" })
+            guard let info = try JSONSerialization.jsonObject(with: infoData) as? [String: AnyObject] else { return nil }
+            
+            guard
+                let name = info["name"] as? String,
+                let identifier = info["identifier"] as? String,
+                let gameType = info["gameTypeIdentifier"] as? GameType,
+                let isDebugModeEnabled = info["debug"] as? Bool,
+                let representationsDictionary = info["representations"] as? RepresentationDictionary
+            else { return nil }
+            
+            self.name = name
+            self.identifier = identifier
+            self.gameType = gameType
+            self.isDebugModeEnabled = isDebugModeEnabled
+            
+            let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
+            
+            var representations = [Traits: Representation]()
+            for representation in representationsSet
             {
-                let entry = archive.entries[index]
-                let data = try entry.newData()
-                
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: AnyObject]
-                {
-                    info = json
-                }
+                representations[representation.traits] = representation
             }
+            self.representations = representations
+            
+            guard self.representations.count > 0 else { return nil }
         }
         catch let error as NSError
         {
             print("\(error) \(error.userInfo)")
+            
+            return nil
         }
-        
-        guard
-            let name = info["name"] as? String,
-            let identifier = info["identifier"] as? String,
-            let gameType = info["gameTypeIdentifier"] as? GameType,
-            let isDebugModeEnabled = info["debug"] as? Bool,
-            let representationsDictionary = info["representations"] as? RepresentationDictionary
-        else { return nil }
-        
-        self.name = name
-        self.identifier = identifier
-        self.gameType = gameType
-        self.isDebugModeEnabled = isDebugModeEnabled
-        
-        let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
-        
-        var representations = [Traits: Representation]()
-        for representation in representationsSet
-        {
-            representations[representation.traits] = representation
-        }
-        self.representations = representations
-        
-        guard self.representations.count > 0 else { return nil }
     }
     
     // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
@@ -348,11 +357,11 @@ private extension ControllerSkin
 {
     func image(for representation: Representation, assetSize: AssetSize) -> UIImage?
     {
-        guard let filename = representation.assets[assetSize], let entry = self.archiveEntry(forFilename: filename) else { return nil }
+        guard let filename = representation.assets[assetSize], let entry = self.archive[filename] else { return nil }
         
         do
         {
-            let data = try entry.newData()
+            let data = try self.archive.extract(entry)
             
             let image: UIImage?
             
@@ -369,23 +378,12 @@ private extension ControllerSkin
             
             return image
         }
-        catch let error as NSError
+        catch
         {
-            print("\(error) \(error.userInfo)")
+            print(error)
+            
+            return nil
         }
-        
-        return nil
-    }
-    
-    func archiveEntry(forFilename filename: String) -> ZZArchiveEntry?
-    {
-        guard
-            let archive = try? ZZArchive(url: self.fileURL),
-            let index = archive.entries.index(where: { $0.fileName == filename })
-        else { return nil }
-        
-        let entry = archive.entries[index]
-        return entry
     }
     
     func cacheKey(for traits: Traits, size: Size) -> String

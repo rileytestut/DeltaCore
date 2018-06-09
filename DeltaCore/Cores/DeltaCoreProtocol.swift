@@ -10,9 +10,6 @@ import AVFoundation
 
 public protocol DeltaCoreProtocol: CustomStringConvertible
 {
-    /* Bundle */
-    var bundleIdentifier: String { get }
-    
     /* Game */
     var gameType: GameType { get }
     
@@ -37,12 +34,21 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 
 public extension DeltaCoreProtocol
 {
+    var bundle: Bundle {
+        let bundle = Bundle(for: type(of: self.emulatorBridge))
+        return bundle
+    }
+}
+
+public extension DeltaCoreProtocol
+{
     var description: String {
-        return self.bundleIdentifier
+        let description = self.bundle.bundleIdentifier ?? self.bundle.description
+        return description
     }
 }
 
 public func ==(lhs: DeltaCoreProtocol, rhs: DeltaCoreProtocol) -> Bool
 {
-    return lhs.bundleIdentifier == rhs.bundleIdentifier
+    return lhs.bundle == rhs.bundle
 }

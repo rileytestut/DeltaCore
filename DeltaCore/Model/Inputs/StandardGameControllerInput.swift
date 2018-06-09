@@ -70,8 +70,7 @@ public extension StandardGameControllerInput
         
         guard
             let deltaCore = Delta.core(for: gameType),
-            let bundle = Bundle(identifier: deltaCore.bundleIdentifier),
-            let fileURL = bundle.url(forResource: "Standard", withExtension: "deltamapping")
+            let fileURL = deltaCore.bundle.url(forResource: "Standard", withExtension: "deltamapping")
         else { fatalError("Cannot find Standard.deltamapping for game type \(gameType)") }
         
         do

@@ -209,8 +209,7 @@ public extension ControllerSkin
     {
         guard
             let deltaCore = Delta.core(for: gameType),
-            let bundle = Bundle(identifier: deltaCore.bundleIdentifier),
-            let fileURL = bundle.url(forResource: "Standard", withExtension: "deltaskin")
+            let fileURL = deltaCore.bundle.url(forResource: "Standard", withExtension: "deltaskin")
         else { return nil }
         
         let controllerSkin = ControllerSkin(fileURL: fileURL)

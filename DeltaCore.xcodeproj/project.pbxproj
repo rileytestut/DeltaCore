@@ -43,8 +43,8 @@
 		BFB3DD9E1F4233D800A10CDE /* MFiGameController.deltamapping in Resources */ = {isa = PBXBuildFile; fileRef = BF2722091F40FB2100E19007 /* MFiGameController.deltamapping */; };
 		BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8F0D31D186D6000D9CD05 /* Game.swift */; };
 		BFBAB2E51EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */; };
+		BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */; };
 		BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */; };
-		BFCAC9381F28FAE3006B113C /* ExtensibleEnums+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCAC9371F28FAE3006B113C /* ExtensibleEnums+Codable.swift */; };
 		BFD27EF71D261E9B00E081A3 /* DeltaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaCore.m */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
 		BFE438101AF606980095A5F1 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameController.swift */; };
@@ -147,8 +147,8 @@
 		BFB355D81C263C8A00D2F25F /* CGGeometry+Dictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGGeometry+Dictionary.swift"; sourceTree = "<group>"; };
 		BFB8F0D31D186D6000D9CD05 /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CharacterSet+Hexadecimals.swift"; sourceTree = "<group>"; };
+		BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExtensibleEnums.swift; path = DeltaCore/Types/ExtensibleEnums.swift; sourceTree = SOURCE_ROOT; };
 		BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinProtocol.swift; sourceTree = "<group>"; };
-		BFCAC9371F28FAE3006B113C /* ExtensibleEnums+Codable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExtensibleEnums+Codable.swift"; sourceTree = "<group>"; };
 		BFD27EF61D261E9B00E081A3 /* DeltaCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCore.m; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
 		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -233,6 +233,7 @@
 				BFAA1FE61B8A722F00495943 /* Game Controllers */,
 				BF5996901E9FF47B00595F8D /* Filters */,
 				BFE4380E1AF606660095A5F1 /* Protocols */,
+				BFBAE94320CC6E1000E78FBC /* Types */,
 				BFB355D01C263C6700D2F25F /* Extensions */,
 				BFEE12C71B602CBF00156A2C /* External */,
 				BF4689601AACF36800A2586D /* Supporting Files */,
@@ -330,9 +331,16 @@
 				BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */,
 				BFA352461DEC19D70085A0BD /* UIDevice+Vibration.swift */,
 				BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */,
-				BFCAC9371F28FAE3006B113C /* ExtensibleEnums+Codable.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		BFBAE94320CC6E1000E78FBC /* Types */ = {
+			isa = PBXGroup;
+			children = (
+				BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */,
+			);
+			path = Types;
 			sourceTree = "<group>";
 		};
 		BFD78F591C994587000441FC /* Video */ = {
@@ -555,7 +563,6 @@
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
-				BFCAC9381F28FAE3006B113C /* ExtensibleEnums+Codable.swift in Sources */,
 				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
@@ -572,6 +579,7 @@
 				BFD78F621C994596000441FC /* VideoManager.swift in Sources */,
 				BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */,
 				BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */,
+				BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */,
 				BFEC23CD1D247E4A00B3A6A9 /* AudioRendering.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalGameControllerManager.swift in Sources */,
 				BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */,
@@ -713,6 +721,7 @@
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = FRAMEWORK;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 4.0;
@@ -734,6 +743,7 @@
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = FRAMEWORK;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 4.0;

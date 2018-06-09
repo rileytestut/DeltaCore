@@ -251,7 +251,7 @@ public extension EmulatorCore
         let codes = cheat.code.split(separator: "\n")
         for code in codes
         {
-            if !self.deltaCore.emulatorBridge.addCheatCode(String(code), type: cheat.type)
+            if !self.deltaCore.emulatorBridge.addCheatCode(String(code), type: cheat.type.rawValue)
             {
                 success = false
                 break
@@ -290,7 +290,7 @@ public extension EmulatorCore
             let codes = cheatCode.split(separator: "\n")
             for code in codes
             {
-                self.deltaCore.emulatorBridge.addCheatCode(String(code), type: type)
+                self.deltaCore.emulatorBridge.addCheatCode(String(code), type: type.rawValue)
             }
         }
         

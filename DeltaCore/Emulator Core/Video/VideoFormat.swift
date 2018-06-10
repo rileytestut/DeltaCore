@@ -6,7 +6,8 @@
 //  Copyright © 2017 Riley Testut. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
+import CoreImage
 
 extension VideoFormat
 {
@@ -22,6 +23,15 @@ extension VideoFormat
             case .rgb565: return 2
             case .bgra8: return 4
             case .rgba8: return 4
+            }
+        }
+        
+        internal var nativeCIFormat: CIFormat? {
+            switch self
+            {
+            case .rgb565: return nil
+            case .bgra8: return kCIFormatBGRA8
+            case .rgba8: return kCIFormatRGBA8
             }
         }
     }

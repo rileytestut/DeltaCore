@@ -7,7 +7,10 @@
 //
 
 import UIKit
+
+#if FRAMEWORK
 import ZIPFoundation
+#endif
 
 public let kUTTypeDeltaControllerSkin: CFString = "com.rileytestut.delta.skin" as CFString
 
@@ -135,10 +138,16 @@ public struct ControllerSkin: ControllerSkinProtocol
             guard
                 let name = info["name"] as? String,
                 let identifier = info["identifier"] as? String,
-                let gameType = info["gameTypeIdentifier"] as? GameType,
                 let isDebugModeEnabled = info["debug"] as? Bool,
                 let representationsDictionary = info["representations"] as? RepresentationDictionary
             else { return nil }
+            
+            #if FRAMEWORK
+            guard let gameType = info["gameTypeIdentifier"] as? GameType else { return nil }
+            #else
+            guard let gameTypeString = info["gameTypeIdentifier"] as? String else { return nil }
+            let gameType = GameType(gameTypeString)
+            #endif
             
             self.name = name
             self.identifier = identifier

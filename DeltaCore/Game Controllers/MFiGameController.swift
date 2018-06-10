@@ -47,7 +47,7 @@ extension MFiGameController
     }
 }
 
-extension MFiGameController.Input: DeltaCore.Input
+extension MFiGameController.Input: Input
 {
     public var type: InputType {
         return .controller(.mfi)

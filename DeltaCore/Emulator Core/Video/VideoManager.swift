@@ -10,18 +10,6 @@ import Foundation
 import Accelerate
 import CoreImage
 
-private extension VideoFormat.PixelFormat
-{
-    var nativeCIFormat: CIFormat? {
-        switch self
-        {
-        case .rgb565: return nil
-        case .bgra8: return kCIFormatBGRA8
-        case .rgba8: return kCIFormatRGBA8
-        }
-    }
-}
-
 public class VideoManager: NSObject, VideoRendering
 {
     public private(set) var gameViews = [GameView]()

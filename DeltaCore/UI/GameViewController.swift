@@ -147,14 +147,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidAppear(animated)
         
-        UIApplication.shared.isIdleTimerDisabled = true
+        (UIApplication.value(forKey: "sharedApplication") as? UIApplication)?.isIdleTimerDisabled = true
     }
     
     open dynamic override func viewDidDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
         
-        UIApplication.shared.isIdleTimerDisabled = false
+        (UIApplication.value(forKey: "sharedApplication") as? UIApplication)?.isIdleTimerDisabled = false
         
         if let emulatorCore = self.emulatorCore
         {

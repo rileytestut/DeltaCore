@@ -5,9 +5,21 @@
 //  Created by Riley Testut on 6/29/16.
 //  Copyright © 2016 Riley Testut. All rights reserved.
 //
+//  Heavily based on Michael Tyson's TPCircularBuffer (https://github.com/michaeltyson/TPCircularBuffer)
+//
 
 import Foundation
-import TPCircularBuffer
+import Darwin.Mach.machine.vm_types
+
+private func trunc_page(_ x: vm_size_t) -> vm_size_t
+{
+    return x & ~(vm_page_size - 1)
+}
+
+private func round_page(_ x: vm_size_t) -> vm_size_t
+{
+    return trunc_page(x + (vm_size_t(vm_page_size) - 1))
+}
 
 @objc(DLTARingBuffer) @objcMembers
 public class RingBuffer: NSObject
@@ -15,30 +27,75 @@ public class RingBuffer: NSObject
     public var isEnabled: Bool = true
     
     public var availableBytesForWriting: Int {
-        return Int(self.circularBuffer.length - self.circularBuffer.fillCount)
+        return Int(self.bufferLength - Int(self.usedBytesCount))
     }
     
     public var availableBytesForReading: Int {
-        return Int(self.circularBuffer.fillCount)
+        return Int(self.usedBytesCount)
     }
     
-    private var circularBuffer = TPCircularBuffer()
+    private var head: UnsafeMutableRawPointer {
+        let head = self.buffer.advanced(by: self.headOffset)
+        return head
+    }
     
-    /// Initialize with `preferredBufferSize` bytes.
-    public init?(preferredBufferSize: Int)
+    private var tail: UnsafeMutableRawPointer {
+        let head = self.buffer.advanced(by: self.tailOffset)
+        return head
+    }
+    
+    private let buffer: UnsafeMutableRawPointer
+    private var bufferLength = 0
+    private var tailOffset = 0
+    private var headOffset = 0
+    private var usedBytesCount: Int32 = 0
+    
+    init?(preferredBufferSize: Int)
     {
-        // For 32-bit systems, the TPCircularBuffer struct is 24 bytes.
-        // For 64-bit systems, the TPCircularBuffer struct is 32 bytes.
-        let structSize = (MemoryLayout<Int>.size == MemoryLayout<Int32>.size) ? 24 : 32
-        if !_TPCircularBufferInit(&self.circularBuffer, Int32(preferredBufferSize), structSize)
+        assert(preferredBufferSize > 0)
+        
+        // To handle race conditions, repeat initialization process up to 3 times before failing.
+        for _ in 1...3
         {
-            return nil
+            let length = round_page(vm_size_t(preferredBufferSize))
+            self.bufferLength = Int(length)
+            
+            var bufferAddress: vm_address_t = 0
+            guard vm_allocate(mach_task_self_, &bufferAddress, vm_size_t(length * 2), VM_FLAGS_ANYWHERE) == ERR_SUCCESS else { continue }
+            
+            guard vm_deallocate(mach_task_self_, bufferAddress + length, length) == ERR_SUCCESS else {
+                vm_deallocate(mach_task_self_, bufferAddress, length)
+                continue
+            }
+            
+            var virtualAddress: vm_address_t = bufferAddress + length
+            var current_protection: vm_prot_t = 0
+            var max_protection: vm_prot_t = 0
+            
+            guard vm_remap(mach_task_self_, &virtualAddress, length, 0, 0, mach_task_self_, bufferAddress, 0, &current_protection, &max_protection, VM_INHERIT_DEFAULT) == ERR_SUCCESS else {
+                vm_deallocate(mach_task_self_, bufferAddress, length)
+                continue
+            }
+            
+            guard virtualAddress == bufferAddress + length else {
+                vm_deallocate(mach_task_self_, virtualAddress, length)
+                vm_deallocate(mach_task_self_, bufferAddress, length)
+                
+                continue
+            }
+            
+            self.buffer = UnsafeMutableRawPointer(bitPattern: UInt(bufferAddress))!
+            
+            return
         }
+        
+        return nil
     }
     
     deinit
     {
-        TPCircularBufferCleanup(&self.circularBuffer)
+        let address = UInt(bitPattern: self.buffer)
+        vm_deallocate(mach_task_self_, vm_address_t(address), vm_size_t(self.bufferLength * 2))
     }
 }
 
@@ -46,35 +103,52 @@ public extension RingBuffer
 {
     /// Writes `size` bytes from `buffer` to ring buffer if possible. Otherwise, writes as many as possible.
     @objc(writeBuffer:size:)
-    func write(_ buffer: UnsafePointer<UInt8>, size: Int)
+    @discardableResult func write(_ buffer: UnsafeRawPointer, size: Int) -> Int
     {
-        guard self.isEnabled else { return }
+        guard self.isEnabled else { return 0 }
+        guard self.availableBytesForWriting > 0 else { return 0 }
         
         let size = min(size, self.availableBytesForWriting)
-        TPCircularBufferProduceBytes(&self.circularBuffer, buffer, Int32(size))
+        memcpy(self.head, buffer, size)
+        
+        self.decrementAvailableBytes(by: size)
+        
+        return size
     }
     
     /// Copies `size` bytes from ring buffer to `buffer` if possible. Otherwise, copies as many as possible.
     @objc(readIntoBuffer:preferredSize:)
-    func read(into buffer: UnsafeMutablePointer<UInt8>, preferredSize: Int) -> Int
+    @discardableResult func read(into buffer: UnsafeMutableRawPointer, preferredSize: Int) -> Int
     {
-        var availableBytes: Int32 = 0
-        guard let ringBuffer = TPCircularBufferTail(&self.circularBuffer, &availableBytes) else { return 0 }
+        guard self.isEnabled else { return 0 }
+        guard self.availableBytesForReading > 0 else { return 0 }
         
-        let size = min(preferredSize, Int(availableBytes))
+        let size = min(preferredSize, self.availableBytesForReading)
+        memcpy(buffer, self.tail, size)
         
-        if self.isEnabled
-        {
-            memcpy(buffer, ringBuffer, size)
-        }
+        self.incrementAvailableBytes(by: size)
         
-        TPCircularBufferConsume(&self.circularBuffer, Int32(size))
         return size
     }
     
-    /// Resets buffer to clean state.
     func reset()
     {
-        TPCircularBufferClear(&self.circularBuffer)
+        let size = self.availableBytesForReading
+        self.incrementAvailableBytes(by: size)
+    }
+}
+
+private extension RingBuffer
+{
+    func incrementAvailableBytes(by size: Int)
+    {
+        self.tailOffset = (self.tailOffset + size) % self.bufferLength
+        self.usedBytesCount -= Int32(size)
+    }
+    
+    func decrementAvailableBytes(by size: Int)
+    {
+        self.headOffset = (self.headOffset + size) % self.bufferLength
+        self.usedBytesCount += Int32(size)
     }
 }

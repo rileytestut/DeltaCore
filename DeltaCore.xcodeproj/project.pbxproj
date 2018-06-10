@@ -25,8 +25,6 @@
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
-		BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
-		BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */; };
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF785CAE1B603E6900189DB8 /* MFiGameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785CAD1B603E6900189DB8 /* MFiGameController.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
@@ -96,8 +94,6 @@
 		BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatProtocol.swift; sourceTree = "<group>"; };
 		BF65E86D1CEE68F300CD3247 /* Cheat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cheat.swift; sourceTree = "<group>"; };
 		BF6834011C459C250052249F /* AudioManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
-		BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TPCircularBuffer.c; path = External/TPCircularBuffer/TPCircularBuffer.c; sourceTree = SOURCE_ROOT; };
-		BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TPCircularBuffer.h; path = External/TPCircularBuffer/TPCircularBuffer.h; sourceTree = SOURCE_ROOT; };
 		BF785C9C1B603C1800189DB8 /* Delta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delta.swift; sourceTree = "<group>"; };
 		BF785CAD1B603E6900189DB8 /* MFiGameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MFiGameController.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
@@ -241,15 +237,6 @@
 			path = Filters;
 			sourceTree = "<group>";
 		};
-		BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */ = {
-			isa = PBXGroup;
-			children = (
-				BF784EBE1C45CBF3007BFDBD /* TPCircularBuffer.h */,
-				BF784EBD1C45CBF3007BFDBD /* TPCircularBuffer.c */,
-			);
-			name = TPCircularBuffer;
-			sourceTree = "<group>";
-		};
 		BF9437FE1C46F42400E527B2 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
@@ -357,7 +344,6 @@
 			isa = PBXGroup;
 			children = (
 				BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */,
-				BF784EB51C45CBE0007BFDBD /* TPCircularBuffer */,
 			);
 			name = External;
 			sourceTree = "<group>";
@@ -380,7 +366,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
-				BF784EC11C45CBF3007BFDBD /* TPCircularBuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,7 +481,6 @@
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
-				BF784EBF1C45CBF3007BFDBD /* TPCircularBuffer.c in Sources */,
 				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */,
@@ -579,7 +563,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = DeltaCore;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = "\"${SRCROOT}/External/Modules\"";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -631,7 +614,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = DeltaCore;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = "\"${SRCROOT}/External/Modules\"";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

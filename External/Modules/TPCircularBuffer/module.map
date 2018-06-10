@@ -1,4 +1,0 @@
-module TPCircularBuffer [system] {
-    header "../../TPCircularBuffer/TPCircularBuffer.h"
-    export *
-}

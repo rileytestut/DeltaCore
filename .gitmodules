@@ -1,6 +1,3 @@
-[submodule "External/TPCircularBuffer"]
-	path = External/TPCircularBuffer
-	url = git@github.com:michaeltyson/TPCircularBuffer.git
 [submodule "External/ZIPFoundation"]
 	path = External/ZIPFoundation
 	url = https://github.com/weichsel/ZIPFoundation.git

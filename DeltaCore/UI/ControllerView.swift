@@ -290,12 +290,17 @@ private extension ControllerView
         }
         
         let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)
+        let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
+        
+        // We must update previousTouchInputs *before* calling activate() and deactivate().
+        // Otherwise, race conditions that cause duplicate touches from activate() or deactivate() calls can result in various bugs.
+        self.previousTouchInputs = self.touchInputs
+        
         for input in activatedInputs
         {
             self.activate(input)
         }
-
-        let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
+        
         for input in deactivatedInputs
         {
             self.deactivate(input)
@@ -309,7 +314,5 @@ private extension ControllerView
             case .basic, .unsupported: UIDevice.current.vibrate()
             }
         }
-        
-        self.previousTouchInputs = self.touchInputs
     }
 }

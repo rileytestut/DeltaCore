@@ -9,13 +9,29 @@
 import Foundation
 import GameController
 
+private let ExternalKeyboardStatusDidChange: @convention(c) (CFNotificationCenter?, UnsafeMutableRawPointer?, CFNotificationName?, UnsafeRawPointer?, CFDictionary?) -> Void = {
+    (notificationCenter, observer, name, object, userInfo) in
+    
+    if ExternalGameControllerManager.shared.isKeyboardConnected
+    {
+        NotificationCenter.default.post(name: .externalKeyboardDidConnect, object: nil)
+    }
+    else
+    {
+        NotificationCenter.default.post(name: .externalKeyboardDidDisconnect, object: nil)
+    }
+}
+
 public extension Notification.Name
 {
     public static let externalGameControllerDidConnect = Notification.Name("ExternalGameControllerDidConnectNotification")
     public static let externalGameControllerDidDisconnect = Notification.Name("ExternalGameControllerDidDisconnectNotification")
+    
+    public static let externalKeyboardDidConnect = Notification.Name("ExternalKeyboardDidConnect")
+    public static let externalKeyboardDidDisconnect = Notification.Name("ExternalKeyboardDidDisconnect")
 }
 
-public class ExternalGameControllerManager
+public class ExternalGameControllerManager: UIResponder
 {
     public static let shared = ExternalGameControllerManager()
     
@@ -48,13 +64,15 @@ public class ExternalGameControllerManager
         return nextPlayerIndex
     }
     
-    private init()
+    private override init()
     {
 #if (arch(i386) || arch(x86_64)) && os(iOS)
         self.automaticallyAssignsPlayerIndexes = false
 #else
         self.automaticallyAssignsPlayerIndexes = true
 #endif
+        
+        super.init()
     }
 }
 
@@ -69,15 +87,32 @@ public extension ExternalGameControllerManager
             let externalController = MFiGameController(controller: controller)
             self.add(externalController)
         }
-                
+        
+        if self.isKeyboardConnected
+        {
+            let keyboardController = KeyboardGameController()
+            self.add(keyboardController)
+        }
+        
         NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.mfiGameControllerDidConnect(_:)), name: .GCControllerDidConnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.mfiGameControllerDidDisconnect(_:)), name: .GCControllerDidDisconnect, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.keyboardDidConnect(_:)), name: .externalKeyboardDidConnect, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
+        
+        if let notificationCenter = CFNotificationCenterGetDarwinNotifyCenter()
+        {
+            CFNotificationCenterAddObserver(notificationCenter, nil, ExternalKeyboardStatusDidChange, "GSEventHardwareKeyboardAttached" as CFString, nil, .deliverImmediately)
+        }
     }
     
     func stopMonitoring()
     {
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidConnect, object: nil)
         NotificationCenter.default.removeObserver(self, name: .GCControllerDidDisconnect, object: nil)
+        
+        NotificationCenter.default.removeObserver(self, name: .externalKeyboardDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .externalKeyboardDidDisconnect, object: nil)
         
         self.connectedControllers.removeAll()
     }
@@ -93,32 +128,45 @@ public extension ExternalGameControllerManager
     }
 }
 
-//MARK: - Managing Controllers -
-private extension ExternalGameControllerManager
+//MARK: - External Keyboard -
+public extension ExternalGameControllerManager
 {
-    @objc func mfiGameControllerDidConnect(_ notification: Notification)
-    {        
-        guard let controller = notification.object as? GCController else { return }
+    // Implementation based on Ian McDowell's tweet: https://twitter.com/ian_mcdowell/status/844572113759547392
+    var isKeyboardConnected: Bool {
+        guard let uiKeyboardClass: AnyObject = NSClassFromString("UIKeyboard") else { return false }
         
-        let externalController = MFiGameController(controller: controller)
-        self.add(externalController)
+        let selector = NSSelectorFromString("shouldMinimizeForHardwareKeyboard")
+        guard uiKeyboardClass.responds(to: selector) else { return false }
+        
+        if let _ = uiKeyboardClass.perform(selector)
+        {
+            // Returns non-nil value when true, so return true ourselves.
+            return true
+        }
+        
+        return false
     }
     
-    @objc func mfiGameControllerDidDisconnect(_ notification: Notification)
+    override func keyPressesBegan(_ presses: Set<KeyPress>, with event: UIEvent)
     {
-        guard let controller = notification.object as? GCController else { return }
-        
-        for externalController in self.connectedControllers
+        for case let keyboardController as KeyboardGameController in self.connectedControllers
         {
-            guard let mfiController = externalController as? MFiGameController else { continue }
-            
-            if mfiController.controller == controller
-            {
-                self.remove(externalController)
-            }
+            keyboardController.keyPressesBegan(presses, with: event)
         }
     }
     
+    override func keyPressesEnded(_ presses: Set<KeyPress>, with event: UIEvent)
+    {
+        for case let keyboardController as KeyboardGameController in self.connectedControllers
+        {
+            keyboardController.keyPressesEnded(presses, with: event)
+        }
+    }
+}
+
+//MARK: - Managing Controllers -
+private extension ExternalGameControllerManager
+{
     func add(_ controller: GameController)
     {
         if self.automaticallyAssignsPlayerIndexes
@@ -139,5 +187,51 @@ private extension ExternalGameControllerManager
         self.connectedControllers.remove(at: index)
         
         NotificationCenter.default.post(name: .externalGameControllerDidDisconnect, object: controller)
+    }
+}
+
+//MARK: - MFi Game Controllers -
+private extension ExternalGameControllerManager
+{
+    @objc func mfiGameControllerDidConnect(_ notification: Notification)
+    {
+        guard let controller = notification.object as? GCController else { return }
+        
+        let externalController = MFiGameController(controller: controller)
+        self.add(externalController)
+    }
+    
+    @objc func mfiGameControllerDidDisconnect(_ notification: Notification)
+    {
+        guard let controller = notification.object as? GCController else { return }
+        
+        for externalController in self.connectedControllers
+        {
+            guard let mfiController = externalController as? MFiGameController else { continue }
+            
+            if mfiController.controller == controller
+            {
+                self.remove(externalController)
+            }
+        }
+    }
+}
+
+//MARK: - Keyboard Game Controllers -
+private extension ExternalGameControllerManager
+{
+    @objc func keyboardDidConnect(_ notification: Notification)
+    {
+        guard !self.connectedControllers.contains(where: { $0 is KeyboardGameController }) else { return }
+        
+        let keyboardController = KeyboardGameController()
+        self.add(keyboardController)
+    }
+    
+    @objc func keyboardDidDisconnect(_ notification: Notification)
+    {
+        guard let keyboardController = self.connectedControllers.first(where: { $0 is KeyboardGameController }) else { return }
+        
+        self.remove(keyboardController)
     }
 }

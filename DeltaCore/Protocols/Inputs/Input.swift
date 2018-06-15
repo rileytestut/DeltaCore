@@ -51,6 +51,27 @@ public protocol Input: CodingKey
     var type: InputType { get }
 }
 
+public extension RawRepresentable where Self: Input, RawValue == String
+{
+    var stringValue: String {
+        return self.rawValue
+    }
+    
+    var intValue: Int? {
+        return nil
+    }
+    
+    public init?(stringValue: String)
+    {
+        self.init(rawValue: stringValue)
+    }
+    
+    public init?(intValue: Int)
+    {
+        return nil
+    }
+}
+
 public extension Input
 {
     init?(input: Input)

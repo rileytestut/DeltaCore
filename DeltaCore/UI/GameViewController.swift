@@ -147,14 +147,16 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidAppear(animated)
         
-        (UIApplication.value(forKey: "sharedApplication") as? UIApplication)?.isIdleTimerDisabled = true
+        UIApplication.delta_shared?.isIdleTimerDisabled = true
+        
+        self.becomeFirstResponder()
     }
     
     open dynamic override func viewDidDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
         
-        (UIApplication.value(forKey: "sharedApplication") as? UIApplication)?.isIdleTimerDisabled = false
+        UIApplication.delta_shared?.isIdleTimerDisabled = false
         
         if let emulatorCore = self.emulatorCore
         {
@@ -350,6 +352,19 @@ public extension GameViewController
         }
         
         return result
+    }
+}
+
+// MARK: - UIResponder
+extension GameViewController
+{
+    open override var canBecomeFirstResponder: Bool {
+        return true
+    }
+    
+    open override var next: UIResponder? {
+        let keyboardResponder = KeyboardResponder(nextResponder: super.next)
+        return keyboardResponder
     }
 }
 

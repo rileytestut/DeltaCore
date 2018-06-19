@@ -17,6 +17,7 @@ public class FilterChain: CIFilter
     
     public override var outputImage: CIImage? {
         return self.inputFilters.reduce(self.inputImage, { (image, filter) -> CIImage? in
+            guard let image = image else { return nil }
             filter.setValue(image, forKey: kCIInputImageKey)
             return filter.outputImage
         })

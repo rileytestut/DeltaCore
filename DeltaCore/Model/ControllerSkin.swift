@@ -207,7 +207,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                     let device = device,
                     let displayType = displayType,
                     let orientation = Orientation(rawValue: key)
-                    else { continue }
+                else { continue }
                 
                 let traits = Traits(device: device, displayType: displayType, orientation: orientation)
                 if let representation = Representation(traits: traits, dictionary: dictionary)
@@ -508,12 +508,9 @@ private extension ControllerSkin
             case (.iphone, .edgeToEdge, _): targetSize = CGSize(width: 375, height: 812)
             case (.iphone, .splitView, _): return nil
                 
-            case (.ipad, .standard,  .small): targetSize = CGSize(width: 768, height: 1024)
-            case (.ipad, .standard, .medium): targetSize = CGSize(width: 834, height: 1112)
-            case (.ipad, .standard, .large): targetSize = CGSize(width: 1024, height: 1366)
-                
-            case (.ipad, .edgeToEdge, _): return nil
-            case (.ipad, .splitView, _): return nil //TODO: Calculate split view size
+            case (.ipad, _,  .small): targetSize = CGSize(width: 768, height: 1024)
+            case (.ipad, _, .medium): targetSize = CGSize(width: 834, height: 1112)
+            case (.ipad, _, .large): targetSize = CGSize(width: 1024, height: 1366)
                 
             case (_, _, .resizable): return nil
             }

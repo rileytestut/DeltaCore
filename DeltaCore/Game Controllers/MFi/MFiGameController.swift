@@ -15,7 +15,7 @@ public extension GameControllerInputType
 
 extension MFiGameController
 {
-    public enum Input: String
+    public enum Input: String, Codable
     {
         case menu
         

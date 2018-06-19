@@ -13,7 +13,7 @@ public extension GameControllerInputType
     static let standard = GameControllerInputType("standard")
 }
 
-public enum StandardGameControllerInput: String
+public enum StandardGameControllerInput: String, Codable
 {
     case menu
     

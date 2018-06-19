@@ -15,7 +15,7 @@ public extension GameControllerInputType
 
 extension KeyboardGameController
 {
-    public struct Input: Hashable, RawRepresentable
+    public struct Input: Hashable, RawRepresentable, Codable
     {
         public let rawValue: String
         

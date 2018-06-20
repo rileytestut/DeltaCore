@@ -49,3 +49,18 @@ public extension ControllerSkinProtocol
         return traits
     }
 }
+
+public func ==(lhs: ControllerSkinProtocol?, rhs: ControllerSkinProtocol?) -> Bool
+{
+    return lhs?.identifier == rhs?.identifier
+}
+
+public func !=(lhs: ControllerSkinProtocol?, rhs: ControllerSkinProtocol?) -> Bool
+{
+    return !(lhs == rhs)
+}
+
+public func ~=(pattern: ControllerSkinProtocol?, value: ControllerSkinProtocol?) -> Bool
+{
+    return pattern == value
+}

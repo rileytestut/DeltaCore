@@ -80,11 +80,17 @@ public class ControllerView: UIView, GameController
         return self.controllerSkin?.name ?? NSLocalizedString("Game Controller", comment: "")
     }
     
-    public var playerIndex: Int?
+    public var playerIndex: Int? {
+        didSet {
+            self.reloadInputViews()
+        }
+    }
     
     public let inputType: GameControllerInputType = .controllerSkin
     
     public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
+    
+    internal var isControllerInputView = false
     
     //MARK: - Private Properties
     private let imageView = UIImageView(frame: CGRect.zero)
@@ -100,6 +106,8 @@ public class ControllerView: UIView, GameController
     private var touchInputs: Set<AnyInput> {
         return self.touchInputsMappingDictionary.values.reduce(Set<AnyInput>(), { $0.union($1) })
     }
+    
+    private var controllerInputView: ControllerInputView?
     
     public override var intrinsicContentSize: CGSize {
         return self.imageView.intrinsicContentSize
@@ -138,12 +146,8 @@ public class ControllerView: UIView, GameController
         self.feedbackGenerator.prepare()
     }
     
-    //MARK: - Overrides -
-    /** Overrides **/
-    
     //MARK: - UIView
     /// UIView
-    
     public override func layoutSubviews()
     {
         super.layoutSubviews()
@@ -153,8 +157,43 @@ public class ControllerView: UIView, GameController
         self.updateControllerSkin()
     }
     
-    //MARK: - UIResponder
-    /// UIResponder
+    //MARK: - <UITraitEnvironment>
+    /// <UITraitEnvironment>
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
+    {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        self.setNeedsLayout()
+    }
+}
+
+//MARK: - UIResponder -
+/// UIResponder
+extension ControllerView
+{
+    public override var canBecomeFirstResponder: Bool {
+        return true
+    }
+    
+    public override var next: UIResponder? {
+        return KeyboardResponder(nextResponder: super.next)
+    }
+    
+    public override var inputView: UIView? {
+        guard self.playerIndex != nil else { return nil }
+        
+        return self.controllerInputView
+    }
+    
+    @discardableResult public override func becomeFirstResponder() -> Bool
+    {
+        guard super.becomeFirstResponder() else { return false }
+        
+        self.reloadInputViews()
+        
+        return self.isFirstResponder
+    }
+    
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         for touch in touches
@@ -183,15 +222,6 @@ public class ControllerView: UIView, GameController
     public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         return self.touchesEnded(touches, with: event)
-    }
-    
-    //MARK: - <UITraitEnvironment>
-    /// <UITraitEnvironment>
-    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
-    {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        self.setNeedsLayout()
     }
 }
 
@@ -230,13 +260,24 @@ public extension ControllerView
             let items = self.controllerSkin?.items(for: traits)
             self.controllerDebugView.items = items
             
-            let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
-            self.imageView.image = image
+            if traits.displayType == .splitView && !self.isControllerInputView
+            {
+                self.imageView.image = nil
+                
+                self.isUserInteractionEnabled = false
+                self.controllerDebugView.alpha = 0.0
+            }
+            else
+            {
+                let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
+                self.imageView.image = image
+                
+                self.isUserInteractionEnabled = true
+                self.controllerDebugView.alpha = 1.0
+            }
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
         }
-        
-        self.invalidateIntrinsicContentSize()
         
         if self.transitionImageView != nil
         {
@@ -253,6 +294,22 @@ public extension ControllerView
         }
         
         self.transitionImageView?.alpha = 0.0
+        
+        if self.controllerSkinTraits?.displayType == .splitView
+        {
+            self.presentInputControllerView()
+        }
+        else
+        {
+            self.dismissInputControllerView()
+        }
+        
+        self.controllerInputView?.controllerView.overrideControllerSkinTraits = self.controllerSkinTraits
+        
+        self.invalidateIntrinsicContentSize()
+        self.setNeedsUpdateConstraints()
+        
+        self.reloadInputViews()
     }
     
     func finishAnimatingUpdateControllerSkin()
@@ -267,10 +324,45 @@ public extension ControllerView
     }
 }
 
-//MARK: - Private Methods -
 private extension ControllerView
 {
-    //MARK: - Activating/Deactivating Inputs
+    func presentInputControllerView()
+    {
+        guard !self.isControllerInputView else { return }
+
+        guard let controllerSkin = self.controllerSkin, let traits = self.controllerSkinTraits else { return }
+
+        if self.controllerInputView == nil
+        {
+            let inputControllerView = ControllerInputView(frame: CGRect(x: 0, y: 0, width: 1024, height: 300))
+            inputControllerView.controllerView.addReceiver(self, inputMapping: nil)
+            self.controllerInputView = inputControllerView
+        }
+
+        if controllerSkin.supports(traits)
+        {
+            self.controllerInputView?.controllerView.controllerSkin = controllerSkin
+        }
+        else
+        {
+            self.controllerInputView?.controllerView.controllerSkin = ControllerSkin.standardControllerSkin(for: controllerSkin.gameType)
+        }
+    }
+    
+    func dismissInputControllerView()
+    {
+        guard !self.isControllerInputView else { return }
+        
+        guard self.controllerInputView != nil else { return }
+        
+        self.controllerInputView = nil
+    }
+}
+
+//MARK: - Activating/Deactivating Inputs -
+/// Activating/Deactivating Inputs
+private extension ControllerView
+{
     func updateInputs(for touches: Set<UITouch>)
     {
         guard let controllerSkin = self.controllerSkin else { return }
@@ -314,5 +406,24 @@ private extension ControllerView
             case .basic, .unsupported: UIDevice.current.vibrate()
             }
         }
+    }
+}
+
+//MARK: - GameControllerReceiver -
+/// GameControllerReceiver
+extension ControllerView: GameControllerReceiver
+{
+    public func gameController(_ gameController: GameController, didActivate input: Input)
+    {
+        guard gameController == self.controllerInputView?.controllerView else { return }
+        
+        self.activate(input)
+    }
+    
+    public func gameController(_ gameController: GameController, didDeactivate input: Input)
+    {
+        guard gameController == self.controllerInputView?.controllerView else { return }
+        
+        self.deactivate(input)
     }
 }

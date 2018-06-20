@@ -37,7 +37,7 @@ public final class EmulatorCore: NSObject
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat, frameDuration: self.deltaCore.frameDuration)
+    public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat)
     public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
     
     // KVO-Compliant
@@ -64,7 +64,7 @@ public final class EmulatorCore: NSObject
     private var gameControllers = NSHashTable<AnyObject>.weakObjects()
     
     private var previousState = State.stopped
-    private var previousRate: Double? = nil
+    private var previousFrameDuration: TimeInterval? = nil
     
     private var reactivateInputsSemaphores = Set<DispatchSemaphore>()
     private let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
@@ -111,8 +111,6 @@ public extension EmulatorCore
         self._state = .running
         defer { self.state = self._state }
         
-        self.audioManager.start()
-        
         self.deltaCore.emulatorBridge.audioRenderer = self.audioManager
         self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
         self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
@@ -121,6 +119,9 @@ public extension EmulatorCore
         
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
+        
+        self.audioManager.frameDuration = self.deltaCore.emulatorBridge.frameDuration
+        self.audioManager.start()
         
         self.runGameLoop()
         
@@ -368,13 +369,13 @@ private extension EmulatorCore
             
             while true
             {
-                let frameDuration = self.deltaCore.frameDuration / self.rate
+                let frameDuration = self.deltaCore.emulatorBridge.frameDuration / self.rate
                 
-                if self.rate != self.previousRate
+                if frameDuration != self.previousFrameDuration
                 {
                     Thread.setRealTimePriority(withPeriod: frameDuration)
                     
-                    self.previousRate = self.rate
+                    self.previousFrameDuration = frameDuration
                     
                     // Reset counter
                     counter = 0

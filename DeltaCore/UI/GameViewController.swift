@@ -323,6 +323,18 @@ open class GameViewController: UIViewController, GameControllerReceiver
 /// Emulation
 public extension GameViewController
 {
+    @discardableResult func startEmulation() -> Bool
+    {
+        guard let emulatorCore = self.emulatorCore else { return false }
+        
+        // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
+        // This is especially noticeable when peeking a game
+        emulatorCore.audioManager.isEnabled = false
+        emulatorCore.audioManager.isEnabled = true
+        
+        return self.resumeEmulation()
+    }
+    
     @discardableResult func pauseEmulation() -> Bool
     {
         guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(self) ?? true else { return false }
@@ -387,18 +399,6 @@ private extension GameViewController
         
         let controllerSkin = ControllerSkin.standardControllerSkin(for: game.type)
         controllerView.controllerSkin = controllerSkin
-    }
-    
-    func startEmulation()
-    {
-        guard let emulatorCore = self.emulatorCore else { return }
-        
-        // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
-        // This is especially noticeable when peeking a game
-        emulatorCore.audioManager.isEnabled = false
-        emulatorCore.audioManager.isEnabled = true
-        
-        self.resumeEmulation()
     }
 }
 

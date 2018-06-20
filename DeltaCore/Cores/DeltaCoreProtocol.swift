@@ -19,8 +19,6 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     var gameSaveFileExtension: String { get }
     
     /* Rendering */
-    var frameDuration: TimeInterval { get }
-    
     var audioFormat: AVAudioFormat { get }
     
     var videoFormat: VideoFormat { get }

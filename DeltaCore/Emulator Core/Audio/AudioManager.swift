@@ -55,7 +55,7 @@ public class AudioManager: NSObject, AudioRendering
         }
     }
     
-    private let frameDuration: Double
+    public internal(set) var frameDuration: Double = (1.0 / 60.0)
     
     private let audioEngine: AVAudioEngine
     private let audioPlayerNode: AVAudioPlayerNode
@@ -66,10 +66,11 @@ public class AudioManager: NSObject, AudioRendering
     
     private let audioBufferCount = 3
     
-    public init(audioFormat: AVAudioFormat, frameDuration: Double)
+    private var _previousFrameDuration: Double?
+    
+    public init(audioFormat: AVAudioFormat)
     {
         self.audioFormat = audioFormat
-        self.frameDuration = frameDuration
         
         // Temporary. Will be replaced with more accurate RingBuffer in resetAudioEngine().
         self.audioBuffer = RingBuffer(preferredBufferSize: 4096)!
@@ -214,7 +215,7 @@ private extension AudioManager
         let inputAudioBufferFrameCount = Int(self.audioFormat.sampleRate * self.frameDuration)
         let outputAudioBufferFrameCount = Int(outputAudioFormat.sampleRate * self.frameDuration)
         
-        if self.audioConverter == nil || self.audioPlayerNode.outputFormat(forBus: 0).sampleRate != outputAudioFormat.sampleRate
+        if self.audioConverter == nil || self.audioPlayerNode.outputFormat(forBus: 0).sampleRate != outputAudioFormat.sampleRate || self.frameDuration != self._previousFrameDuration
         {
             // Output sample rate has changed, so we'll update our logic accordingly.
             
@@ -237,6 +238,8 @@ private extension AudioManager
             
             self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputAudioFormat)
             self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputAudioFormat)
+            
+            self._previousFrameDuration = self.frameDuration
         }
         
         self.audioBuffer.reset()

@@ -14,6 +14,9 @@ public protocol EmulatorBridging: NSObjectProtocol
     /// State
     var gameURL: URL? { get }
     
+    /// System
+    var frameDuration: TimeInterval { get }
+    
     /// Audio
     var audioRenderer: AudioRendering? { get set }
     

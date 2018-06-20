@@ -31,7 +31,8 @@ public class GameView: UIView
     }
     
     public var outputImage: CIImage? {
-        return self.filterChain.outputImage
+        guard let inputImage = self.inputImage else { return nil }
+        return self.filterChain.outputImage?.cropped(to: inputImage.extent)
     }
     
     private let filterChain = FilterChain(filters: [])
@@ -120,12 +121,12 @@ extension GameView: GLKViewDelegate
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         
-        if let outputImage = self.outputImage, let extent = self.inputImage?.extent
+        if let outputImage = self.outputImage
         {
             let bounds = CGRect(x: 0, y: 0, width: self._bounds.width * scale, height: self._bounds.height * scale)
             
-            let rect = AVMakeRect(aspectRatio: extent.size, insideRect: bounds)
-            self.context.draw(outputImage, in: rect, from: extent)
+            let rect = AVMakeRect(aspectRatio: outputImage.extent.size, insideRect: bounds)
+            self.context.draw(outputImage, in: rect, from: outputImage.extent)
         }
     }
 }

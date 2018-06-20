@@ -72,7 +72,13 @@ public class GameView: UIView
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self
+        
+        #if FRAMEWORK
         self.glkView.enableSetNeedsDisplay = false
+        #else
+        self.glkView.enableSetNeedsDisplay = true
+        #endif
+        
         self.addSubview(self.glkView)
     }
     
@@ -108,7 +114,13 @@ private extension GameView
     {
         guard self._screenScale != nil, !self._bounds.isEmpty else { return }
         
+        #if FRAMEWORK
         self.glkView.display()
+        #else
+        DispatchQueue.main.async {
+            self.glkView.setNeedsDisplay()
+        }
+        #endif
     }
 }
 

@@ -109,6 +109,10 @@ public class ControllerView: UIView, GameController
     
     private var controllerInputView: ControllerInputView?
     
+    // Becoming first responder doesn't steal keyboard focus from other apps in split view unless the first responder is a text control.
+    // As a workaround, we first make a hidden text field become first responder to steal focus, then become first responder ourselves.
+    private let forceFirstResponderTextField = UITextField(frame: .zero)
+    
     public override var intrinsicContentSize: CGSize {
         return self.imageView.intrinsicContentSize
     }
@@ -144,6 +148,13 @@ public class ControllerView: UIView, GameController
         self.isMultipleTouchEnabled = true
         
         self.feedbackGenerator.prepare()
+        
+        self.forceFirstResponderTextField.isHidden = true
+        self.forceFirstResponderTextField.autocorrectionType = .no
+        self.forceFirstResponderTextField.inputView = UIView(frame: .zero)
+        self.forceFirstResponderTextField.inputAssistantItem.leadingBarButtonGroups = []
+        self.forceFirstResponderTextField.inputAssistantItem.trailingBarButtonGroups = []
+        self.addSubview(self.forceFirstResponderTextField)
     }
     
     //MARK: - UIView
@@ -187,7 +198,9 @@ extension ControllerView
     
     @discardableResult public override func becomeFirstResponder() -> Bool
     {
-        guard super.becomeFirstResponder() else { return false }
+        guard self.forceFirstResponderTextField.becomeFirstResponder() else { return false }
+        
+        super.becomeFirstResponder()
         
         self.reloadInputViews()
         

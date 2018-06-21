@@ -182,7 +182,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resetFirstResponder))
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self.controllerView, action: #selector(ControllerView.becomeFirstResponder))
         self.view.addGestureRecognizer(tapGestureRecognizer)
         
         self.prepareConstraints()
@@ -589,17 +589,6 @@ private extension GameViewController
     }
 }
 
-// MARK: - Actions -
-private extension GameViewController
-{
-    @objc func resetFirstResponder()
-    {
-        self.resumeEmulation()
-        
-        self.controllerView.becomeFirstResponder()
-    }
-}
-
 // MARK: - Notifications - 
 private extension GameViewController
 {
@@ -615,22 +604,16 @@ private extension GameViewController
     
     @objc func keyboardWillShow(with notification: Notification)
     {
-        guard let userInfo = notification.userInfo, let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
+        guard let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
         
-        let isLocal = userInfo[UIKeyboardIsLocalUserInfoKey] as! Bool
-        if !isLocal
-        {
-            self.pauseEmulation()
-        }
-        
-        let keyboardFrame = userInfo[UIKeyboardFrameEndUserInfoKey] as! CGRect
+        let keyboardFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as! CGRect
         guard keyboardFrame.height > 0 else { return }
         
         self.gameViewContainerViewBottomConstraint.constant = -keyboardFrame.height
         
-        let duration = userInfo[UIKeyboardAnimationDurationUserInfoKey] as! TimeInterval
+        let duration = notification.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as! TimeInterval
         
-        let rawAnimationCurve = userInfo[UIKeyboardAnimationCurveUserInfoKey] as! Int
+        let rawAnimationCurve = notification.userInfo?[UIKeyboardAnimationCurveUserInfoKey] as! Int
         let animationCurve = UIViewAnimationCurve(rawValue: rawAnimationCurve)!
         
         let animator = UIViewPropertyAnimator(duration: duration, curve: animationCurve) {

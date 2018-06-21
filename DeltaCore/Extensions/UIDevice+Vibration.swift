@@ -83,7 +83,7 @@ private extension UIDevice
         var modelGeneration: String!
         
         withUnsafePointer(to: &sysinfo.machine) { pointer in
-            pointer.withMemoryRebound(to: UInt8.self, capacity: Int(Mirror(reflecting: sysinfo.machine).children.count), { (pointer) in
+            pointer.withMemoryRebound(to: UInt8.self, capacity: Int(Mirror(reflecting: pointer.pointee).children.count), { (pointer) in
                 modelGeneration = String(cString: pointer)
             })
         }

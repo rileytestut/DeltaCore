@@ -66,7 +66,7 @@ public class ExternalGameControllerManager: UIResponder
     
     private override init()
     {
-#if (arch(i386) || arch(x86_64)) && os(iOS)
+#if targetEnvironment(simulator)
         self.automaticallyAssignsPlayerIndexes = false
 #else
         self.automaticallyAssignsPlayerIndexes = true

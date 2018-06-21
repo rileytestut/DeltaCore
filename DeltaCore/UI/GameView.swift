@@ -106,7 +106,7 @@ private extension GameView
     func updateFilterChain()
     {
         self.filterChain.inputImage = self.inputImage?.clampedToExtent()
-        self.filterChain.inputFilters = [self.samplerFilter, self.filter].flatMap { $0 }
+        self.filterChain.inputFilters = [self.samplerFilter, self.filter].compactMap { $0 }
         self.update()
     }
     

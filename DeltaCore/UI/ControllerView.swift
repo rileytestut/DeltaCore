@@ -144,6 +144,10 @@ public class ControllerView: UIView, GameController
         self.isMultipleTouchEnabled = true
         
         self.feedbackGenerator.prepare()
+        
+        // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
+        self.inputAssistantItem.leadingBarButtonGroups = []
+        self.inputAssistantItem.trailingBarButtonGroups = []
     }
     
     //MARK: - UIView
@@ -425,5 +429,24 @@ extension ControllerView: GameControllerReceiver
         guard gameController == self.controllerInputView?.controllerView else { return }
         
         self.deactivate(input)
+    }
+}
+
+//MARK: - UIKeyInput
+/// UIKeyInput
+// Becoming first responder doesn't steal keyboard focus from other apps in split view unless the first responder conforms to UIKeyInput.
+// So, we conform ControllerView to UIKeyInput and provide stub method implementations.
+extension ControllerView: UIKeyInput
+{
+    public var hasText: Bool {
+        return false
+    }
+    
+    public func insertText(_ text: String)
+    {
+    }
+    
+    public func deleteBackward()
+    {
     }
 }

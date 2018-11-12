@@ -19,7 +19,7 @@ internal class GameControllerStateManager
         var objects: [GameControllerReceiver]!
         
         self.dispatchQueue.sync {
-            objects = self._receivers.keyEnumerator().allObjects as! [GameControllerReceiver]
+            objects = self._receivers.keyEnumerator().allObjects as? [GameControllerReceiver]
         }
         
         return objects

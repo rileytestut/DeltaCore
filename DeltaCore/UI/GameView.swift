@@ -47,9 +47,9 @@ public class GameView: UIView
     
     public override init(frame: CGRect)
     {
-        let eaglContext = EAGLContext(api: .openGLES2)
-        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext!)
-        self.context = CIContext(eaglContext: eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
+        let eaglContext = EAGLContext(api: .openGLES2)!
+        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
+        self.context = CIContext(eaglContext: eaglContext, options: [.workingColorSpace: NSNull()])
         
         super.init(frame: frame)
         
@@ -58,9 +58,9 @@ public class GameView: UIView
     
     public required init?(coder aDecoder: NSCoder)
     {
-        let eaglContext = EAGLContext(api: .openGLES2)
-        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext!)
-        self.context = CIContext(eaglContext: eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
+        let eaglContext = EAGLContext(api: .openGLES2)!
+        self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
+        self.context = CIContext(eaglContext: eaglContext, options: [.workingColorSpace: NSNull()])
         
         super.init(coder: aDecoder)
         

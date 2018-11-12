@@ -30,8 +30,8 @@ extension VideoFormat
             switch self
             {
             case .rgb565: return nil
-            case .bgra8: return kCIFormatBGRA8
-            case .rgba8: return kCIFormatRGBA8
+            case .bgra8: return .BGRA8
+            case .rgba8: return .RGBA8
             }
         }
     }

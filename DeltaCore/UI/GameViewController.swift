@@ -137,12 +137,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     private func initialize()
     {
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: .UIApplicationWillResignActive, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: .UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: .UIKeyboardWillChangeFrame, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: .UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
     deinit
@@ -155,7 +155,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
-    open override func prefersHomeIndicatorAutoHidden() -> Bool
+    open override var prefersHomeIndicatorAutoHidden: Bool
     {
         let prefersHomeIndicatorAutoHidden = self.view.bounds.width > self.view.bounds.height
         return prefersHomeIndicatorAutoHidden
@@ -606,15 +606,15 @@ private extension GameViewController
     {
         guard let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
         
-        let keyboardFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as! CGRect
+        let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
         guard keyboardFrame.height > 0 else { return }
         
         self.gameViewContainerViewBottomConstraint.constant = -keyboardFrame.height
         
-        let duration = notification.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as! TimeInterval
+        let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
-        let rawAnimationCurve = notification.userInfo?[UIKeyboardAnimationCurveUserInfoKey] as! Int
-        let animationCurve = UIViewAnimationCurve(rawValue: rawAnimationCurve)!
+        let rawAnimationCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! Int
+        let animationCurve = UIView.AnimationCurve(rawValue: rawAnimationCurve)!
         
         let animator = UIViewPropertyAnimator(duration: duration, curve: animationCurve) {
             self.view.layoutIfNeeded()
@@ -629,13 +629,13 @@ private extension GameViewController
     
     @objc func keyboardWillHide(with notification: Notification)
     {
-        let keyboardFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as! CGRect
+        let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
         guard keyboardFrame.height > 0 else { return }
         
-        let duration = notification.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as! TimeInterval
+        let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
-        let rawAnimationCurve = notification.userInfo?[UIKeyboardAnimationCurveUserInfoKey] as! Int
-        let animationCurve = UIViewAnimationCurve(rawValue: rawAnimationCurve)!
+        let rawAnimationCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! Int
+        let animationCurve = UIView.AnimationCurve(rawValue: rawAnimationCurve)!
         
         self.gameViewContainerViewBottomConstraint.constant = 0
         

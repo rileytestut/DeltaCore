@@ -124,11 +124,11 @@ private extension KeyboardResponder
         {
             switch pressedKey
             {
-            case UIKeyInputUpArrow: pressedKey = KeyboardGameController.Input.up.rawValue
-            case UIKeyInputDownArrow: pressedKey = KeyboardGameController.Input.down.rawValue
-            case UIKeyInputLeftArrow: pressedKey = KeyboardGameController.Input.left.rawValue
-            case UIKeyInputRightArrow: pressedKey = KeyboardGameController.Input.right.rawValue
-            case UIKeyInputEscape: pressedKey = KeyboardGameController.Input.escape.rawValue
+            case UIKeyCommand.inputUpArrow: pressedKey = KeyboardGameController.Input.up.rawValue
+            case UIKeyCommand.inputDownArrow: pressedKey = KeyboardGameController.Input.down.rawValue
+            case UIKeyCommand.inputLeftArrow: pressedKey = KeyboardGameController.Input.left.rawValue
+            case UIKeyCommand.inputRightArrow: pressedKey = KeyboardGameController.Input.right.rawValue
+            case UIKeyCommand.inputEscape: pressedKey = KeyboardGameController.Input.escape.rawValue
             default: break
             }
         }

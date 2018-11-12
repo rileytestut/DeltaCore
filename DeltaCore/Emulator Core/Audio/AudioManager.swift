@@ -78,7 +78,7 @@ public class AudioManager: NSObject, AudioRendering
         do
         {
             // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
         }
         catch
         {
@@ -100,7 +100,7 @@ public class AudioManager: NSObject, AudioRendering
         self.updateOutputVolume()
         
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.updateOutputVolume), name: .AVAudioSessionSilenceSecondaryAudioHint, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.updateOutputVolume), name: AVAudioSession.silenceSecondaryAudioHintNotification, object: nil)
     }
 }
 
@@ -110,7 +110,7 @@ public extension AudioManager
     {
         do
         {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
             try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
             try AVAudioSession.sharedInstance().setActive(true)
         }

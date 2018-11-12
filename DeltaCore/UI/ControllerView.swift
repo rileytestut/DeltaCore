@@ -176,6 +176,7 @@ public class ControllerView: UIView, GameController
 extension ControllerView
 {
     public override var canBecomeFirstResponder: Bool {
+        guard self.controllerSkinTraits?.displayType == .splitView else { return false }
         return true
     }
     
@@ -185,7 +186,6 @@ extension ControllerView
     
     public override var inputView: UIView? {
         guard self.playerIndex != nil else { return nil }
-        
         return self.controllerInputView
     }
     

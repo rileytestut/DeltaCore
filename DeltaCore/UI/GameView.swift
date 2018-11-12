@@ -11,6 +11,22 @@ import CoreImage
 import GLKit
 import AVFoundation
 
+// Create wrapper class to prevent exposing GLKView (and its annoying deprecation warnings) to clients.
+private class GameViewGLKViewDelegate: NSObject, GLKViewDelegate
+{
+    let gameView: GameView
+    
+    init(gameView: GameView)
+    {
+        self.gameView = gameView
+    }
+    
+    func glkView(_ view: GLKView, drawIn rect: CGRect)
+    {
+        self.gameView.glkView(view, drawIn: rect)
+    }
+}
+
 public class GameView: UIView
 {
     @NSCopying public var inputImage: CIImage? {
@@ -40,6 +56,8 @@ public class GameView: UIView
     
     private let glkView: GLKView
     private let context: CIContext
+    
+    private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
     
     // Cache these properties so we don't access UIKit methods when rendering on background thread.
     private var _screenScale: CGFloat?
@@ -71,7 +89,7 @@ public class GameView: UIView
     {        
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        self.glkView.delegate = self
+        self.glkView.delegate = self.glkViewDelegate
         self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
     }
@@ -112,10 +130,10 @@ private extension GameView
     }
 }
 
-extension GameView: GLKViewDelegate
+private extension GameView
 {
-    public func glkView(_ view: GLKView, drawIn rect: CGRect)
-    {        
+    func glkView(_ view: GLKView, drawIn rect: CGRect)
+    {
         guard let scale = self._screenScale, !self._bounds.isEmpty else { return }
         
         glClearColor(0.0, 0.0, 0.0, 1.0)

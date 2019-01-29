@@ -36,6 +36,7 @@ public final class EmulatorCore: NSObject
     public private(set) var gameViews: [GameView] = []
     
     public var updateHandler: ((EmulatorCore) -> Void)?
+    public var saveHandler: ((EmulatorCore) -> Void)?
     
     public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat)
     public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
@@ -57,6 +58,7 @@ public final class EmulatorCore: NSObject
     private var _state = State.stopped
     
     private let gameType: GameType
+    private let gameSaveURL: URL
     
     private let emulationSemaphore = DispatchSemaphore(value: 0)
     private var cheatCodes = [String: CheatType]()
@@ -68,12 +70,6 @@ public final class EmulatorCore: NSObject
     
     private var reactivateInputsSemaphores = Set<DispatchSemaphore>()
     private let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
-    
-    private var gameSaveURL: URL {
-        let gameURL = self.game.fileURL.deletingPathExtension()
-        let gameSaveURL = gameURL.appendingPathExtension(self.deltaCore.gameSaveFileExtension)
-        return gameSaveURL
-    }
     
     //MARK: - Initializers -
     /** Initializers **/
@@ -93,8 +89,9 @@ public final class EmulatorCore: NSObject
         
         self.game = game
         
-        // Stored separately in case self.game is an NSManagedObject subclass, and we need to access .type on a different thread than its NSManagedObjectContext
+        // Store separately in case self.game is an NSManagedObject subclass, and we need to access .type or .gameSaveURL on a different thread than its NSManagedObjectContext
         self.gameType = self.game.type
+        self.gameSaveURL = self.game.gameSaveURL
         
         super.init()
     }
@@ -114,7 +111,7 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.audioRenderer = self.audioManager
         self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
         self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
-            self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
+            self.save()
         }
         
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
@@ -144,7 +141,7 @@ public extension EmulatorCore
             self.emulationSemaphore.wait()
         }
         
-        self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
+        self.save()
         
         self.audioManager.stop()
         self.deltaCore.emulatorBridge.stop()
@@ -161,7 +158,7 @@ public extension EmulatorCore
         
         self.emulationSemaphore.wait()
         
-        self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
+        self.save()
         
         self.audioManager.isEnabled = false
         self.deltaCore.emulatorBridge.pause()
@@ -206,6 +203,17 @@ public extension EmulatorCore
         }
         
         self.videoManager.remove(gameView)
+    }
+}
+
+//MARK: - Game Saves -
+/// Game Saves
+public extension EmulatorCore
+{
+    func save()
+    {
+        self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
+        self.saveHandler?(self)
     }
 }
 

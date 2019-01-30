@@ -148,6 +148,8 @@ public class ControllerView: UIView, GameController
         // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
         self.inputAssistantItem.leadingBarButtonGroups = []
         self.inputAssistantItem.trailingBarButtonGroups = []
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(ControllerView.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
     }
     
     //MARK: - UIView
@@ -176,8 +178,8 @@ public class ControllerView: UIView, GameController
 extension ControllerView
 {
     public override var canBecomeFirstResponder: Bool {
-        guard self.controllerSkinTraits?.displayType == .splitView else { return false }
-        return true
+        let canBecomeFirstResponder = (self.controllerSkinTraits?.displayType == .splitView || ExternalGameControllerManager.shared.isKeyboardConnected)
+        return canBecomeFirstResponder
     }
     
     public override var next: UIResponder? {
@@ -409,6 +411,21 @@ private extension ControllerView
             case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
             case .basic, .unsupported: UIDevice.current.vibrate()
             }
+        }
+    }
+}
+
+private extension ControllerView
+{
+    @objc func keyboardDidDisconnect(_ notification: Notification)
+    {
+        guard self.isFirstResponder else { return }
+        
+        self.resignFirstResponder()
+        
+        if self.canBecomeFirstResponder
+        {
+            self.becomeFirstResponder()
         }
     }
 }

@@ -88,7 +88,7 @@ extension ControllerSkin
             else
             {
                 device = .iphone
-                displayType = (window.safeAreaInsets != .zero) ? .edgeToEdge : .standard
+                displayType = (window.safeAreaInsets.bottom != 0) ? .edgeToEdge : .standard
                 orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
             }
             

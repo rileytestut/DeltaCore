@@ -231,6 +231,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         let isControllerViewFirstResponder = self.controllerView.isFirstResponder
         self.controllerView.resignFirstResponder()
         
+        self.view.setNeedsUpdateConstraints()
+        
         coordinator.animate(alongsideTransition: nil) { (context) in
             self.controllerView.finishAnimatingUpdateControllerSkin()
             

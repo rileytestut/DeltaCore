@@ -62,6 +62,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BFA07F06221F3A070012699D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = "ZIPFoundation::ZIPFoundation";
+			remoteInfo = ZIPFoundation;
+		};
 		BFCBD91020CC6F6F0028E309 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */;
@@ -418,6 +425,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				BFA07F07221F3A070012699D /* PBXTargetDependency */,
 			);
 			name = DeltaCore;
 			productName = DeltaCore;
@@ -549,6 +557,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BFA07F07221F3A070012699D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ZIPFoundation;
+			targetProxy = BFA07F06221F3A070012699D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		BF4689711AACF36800A2586D /* Debug */ = {

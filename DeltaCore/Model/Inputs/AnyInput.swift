@@ -50,7 +50,7 @@ public extension AnyInput
         case type
     }
     
-    public init(from decoder: Decoder) throws
+    init(from decoder: Decoder) throws
     {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         

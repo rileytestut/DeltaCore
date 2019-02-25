@@ -355,7 +355,7 @@ public extension ControllerSkin
         return representation.gameScreenFrame
     }
     
-    public func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
+    func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
     {
         guard let representation = self.representations[traits] else { return nil }
         return representation.aspectRatio

@@ -188,14 +188,14 @@ public extension EmulatorCore
 /// Game Views
 public extension EmulatorCore
 {
-    public func add(_ gameView: GameView)
+    func add(_ gameView: GameView)
     {
         self.gameViews.append(gameView)
         
         self.videoManager.add(gameView)
     }
     
-    public func remove(_ gameView: GameView)
+    func remove(_ gameView: GameView)
     {
         if let index = self.gameViews.firstIndex(of: gameView)
         {

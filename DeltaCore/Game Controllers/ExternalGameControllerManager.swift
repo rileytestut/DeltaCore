@@ -24,11 +24,11 @@ private let ExternalKeyboardStatusDidChange: @convention(c) (CFNotificationCente
 
 public extension Notification.Name
 {
-    public static let externalGameControllerDidConnect = Notification.Name("ExternalGameControllerDidConnectNotification")
-    public static let externalGameControllerDidDisconnect = Notification.Name("ExternalGameControllerDidDisconnectNotification")
+    static let externalGameControllerDidConnect = Notification.Name("ExternalGameControllerDidConnectNotification")
+    static let externalGameControllerDidDisconnect = Notification.Name("ExternalGameControllerDidDisconnectNotification")
     
-    public static let externalKeyboardDidConnect = Notification.Name("ExternalKeyboardDidConnect")
-    public static let externalKeyboardDidDisconnect = Notification.Name("ExternalKeyboardDidDisconnect")
+    static let externalKeyboardDidConnect = Notification.Name("ExternalKeyboardDidConnect")
+    static let externalKeyboardDidDisconnect = Notification.Name("ExternalKeyboardDidDisconnect")
 }
 
 public class ExternalGameControllerManager: UIResponder

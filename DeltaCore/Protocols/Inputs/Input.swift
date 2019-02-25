@@ -61,12 +61,12 @@ public extension RawRepresentable where Self: Input, RawValue == String
         return nil
     }
     
-    public init?(stringValue: String)
+    init?(stringValue: String)
     {
         self.init(rawValue: stringValue)
     }
     
-    public init?(intValue: Int)
+    init?(intValue: Int)
     {
         return nil
     }

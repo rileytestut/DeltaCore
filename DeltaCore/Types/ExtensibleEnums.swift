@@ -12,12 +12,12 @@ public protocol ExtensibleEnum: Hashable, Codable, RawRepresentable where RawVal
 
 public extension ExtensibleEnum
 {
-    public init(_ rawValue: String)
+    init(_ rawValue: String)
     {
         self.init(rawValue: rawValue)!
     }
     
-    public init(from decoder: Decoder) throws
+    init(from decoder: Decoder) throws
     {
         let container = try decoder.singleValueContainer()
         
@@ -25,7 +25,7 @@ public extension ExtensibleEnum
         self.init(rawValue: rawValue)!
     }
     
-    public func encode(to encoder: Encoder) throws
+    func encode(to encoder: Encoder) throws
     {
         var container = encoder.singleValueContainer()
         try container.encode(self.rawValue)

@@ -247,7 +247,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
-        for constraint in self.gameViewContainerViewLayoutConstraints + [self.gameViewContainerViewBottomConstraint]
+        for constraint in self.gameViewContainerViewLayoutConstraints + [self.gameViewContainerViewBottomConstraint!]
         {
             func setConstraintConstant(_ constant: CGFloat)
             {

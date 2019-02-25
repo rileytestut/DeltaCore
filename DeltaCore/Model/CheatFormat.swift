@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct CheatFormat
+public struct CheatFormat: Hashable
 {
     public let name: String
 
@@ -26,18 +26,6 @@ public struct CheatFormat
         self.format = format
         self.type = type
         self.allowedCodeCharacters = allowedCodeCharacters
-    }
-}
-
-extension CheatFormat: Hashable
-{
-    public var hashValue: Int {
-        return self.type.hashValue
-    }
-    
-    public static func ==(lhs: CheatFormat, rhs: CheatFormat) -> Bool
-    {
-        return lhs.type == rhs.type
     }
 }
 

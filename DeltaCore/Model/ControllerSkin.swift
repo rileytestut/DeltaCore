@@ -557,11 +557,6 @@ private extension ControllerSkin
         
         let items: [Item]
         
-        /// Hashable
-        var hashValue: Int {
-            return self.traits.hashValue
-        }
-        
         /// CustomStringConvertible
         var description: String {
             return self.traits.description
@@ -617,10 +612,17 @@ private extension ControllerSkin
                 self.gameScreenFrame = nil
             }
         }
+        
+        /// Equatable
+        static func ==(lhs: ControllerSkin.Representation, rhs: ControllerSkin.Representation) -> Bool
+        {
+            return lhs.traits == rhs.traits
+        }
+        
+        /// Hashable
+        func hash(into hasher: inout Hasher)
+        {
+            hasher.combine(self.traits)
+        }
     }
-}
-
-private func ==(lhs: ControllerSkin.Representation, rhs: ControllerSkin.Representation) -> Bool
-{
-    return lhs.traits == rhs.traits
 }

@@ -40,8 +40,9 @@ extension InputType: RawRepresentable
 
 extension InputType: Hashable
 {
-    public var hashValue: Int {
-        return self.rawValue.hashValue
+    public func hash(into hasher: inout Hasher)
+    {
+        hasher.combine(self.rawValue)
     }
 }
 

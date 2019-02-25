@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct AnyInput: Input, Codable
+public struct AnyInput: Input, Codable, Hashable
 {
     public let stringValue: String
     public let intValue: Int?
@@ -78,17 +78,5 @@ public extension AnyInput
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.stringValue, forKey: .stringValue)
         try container.encode(self.type, forKey: .type)
-    }
-}
-
-extension AnyInput: Hashable
-{
-    public var hashValue: Int {
-        return self.stringValue.hashValue
-    }
-    
-    public static func ==(lhs: AnyInput, rhs: AnyInput) -> Bool
-    {
-        return lhs.type == rhs.type && lhs.stringValue == rhs.stringValue
     }
 }

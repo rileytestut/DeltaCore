@@ -43,11 +43,6 @@ extension ControllerSkin
         public var displayType: DisplayType
         public var orientation: Orientation
         
-        /// Hashable
-        public var hashValue: Int {
-            return self.description.hashValue
-        }
-        
         /// CustomStringConvertible
         public var description: String {
             return self.device.rawValue + "-" + self.displayType.rawValue + "-" + self.orientation.rawValue
@@ -96,9 +91,4 @@ extension ControllerSkin
             return traits
         }
     }
-}
-
-public func ==(lhs: ControllerSkin.Traits, rhs: ControllerSkin.Traits) -> Bool
-{
-    return lhs.device == rhs.device && lhs.displayType == rhs.displayType && lhs.orientation == rhs.orientation
 }

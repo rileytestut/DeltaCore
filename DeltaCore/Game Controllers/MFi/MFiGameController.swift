@@ -73,6 +73,7 @@ public class MFiGameController: NSObject, GameController
             case .index2: return 1
             case .index3: return 2
             case .index4: return 3
+            @unknown default: return nil
             }
         }
         set {

@@ -54,7 +54,7 @@ public extension VideoManager
     
     func remove(_ gameView: GameView)
     {
-        if let index = self.gameViews.index(of: gameView)
+        if let index = self.gameViews.firstIndex(of: gameView)
         {
             self.gameViews.remove(at: index)
         }

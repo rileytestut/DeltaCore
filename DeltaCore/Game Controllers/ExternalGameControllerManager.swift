@@ -182,7 +182,7 @@ private extension ExternalGameControllerManager
     
     func remove(_ controller: GameController)
     {
-        guard let index = self.connectedControllers.index(where: { $0.isEqual(controller) }) else { return }
+        guard let index = self.connectedControllers.firstIndex(where: { $0.isEqual(controller) }) else { return }
         
         self.connectedControllers.remove(at: index)
         

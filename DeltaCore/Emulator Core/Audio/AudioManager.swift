@@ -18,9 +18,11 @@ internal extension AVAudioFormat
 public class AudioManager: NSObject, AudioRendering
 {
     /// Currently only supports 16-bit interleaved Linear PCM.
-    public let audioFormat: AVAudioFormat
-    
-    public private(set) var audioBuffer: RingBuffer
+    public internal(set) var audioFormat: AVAudioFormat {
+        didSet {
+            self.resetAudioEngine()
+        }
+    }
     
     public var isEnabled = true {
         didSet
@@ -49,13 +51,20 @@ public class AudioManager: NSObject, AudioRendering
         }
     }
     
-    public var rate = 1.0 {
+    public private(set) var audioBuffer: RingBuffer
+    
+    public internal(set) var rate = 1.0 {
         didSet {
             self.timePitchEffect.rate = Float(self.rate)
         }
     }
     
-    public internal(set) var frameDuration: Double = (1.0 / 60.0)
+    var frameDuration: Double = (1.0 / 60.0) {
+        didSet {
+            guard self.audioEngine.isRunning else { return }
+            self.resetAudioEngine()
+        }
+    }
     
     private let audioEngine: AVAudioEngine
     private let audioPlayerNode: AVAudioPlayerNode
@@ -66,8 +75,9 @@ public class AudioManager: NSObject, AudioRendering
     
     private let audioBufferCount = 3
     
-    private var _previousFrameDuration: Double?
-    
+    // Used to synchronize access to self.audioPlayerNode without causing deadlocks.
+    private let renderingQueue = DispatchQueue(label: "com.rileytestut.Delta.AudioManager.renderingQueue")
+        
     public init(audioFormat: AVAudioFormat)
     {
         self.audioFormat = audioFormat
@@ -92,8 +102,6 @@ public class AudioManager: NSObject, AudioRendering
         
         self.timePitchEffect = AVAudioUnitTimePitch()
         self.audioEngine.attach(self.timePitchEffect)
-        
-        self.audioEngine.connect(self.audioPlayerNode, to: self.audioEngine.mainMixerNode, format: nil)
         
         super.init()
         
@@ -137,8 +145,8 @@ private extension AudioManager
     {
         guard let buffer = inputBuffer.int16ChannelData, let audioConverter = self.audioConverter else { return }
         
-        // Ensure any output buffers from previous audio route configurations are no longer processed.
-        guard outputBuffer.format == audioConverter.outputFormat else { return }
+        // Ensure any buffers from previous audio route configurations are no longer processed.
+        guard inputBuffer.format == audioConverter.inputFormat && outputBuffer.format == audioConverter.outputFormat else { return }
         
         if self.audioConverterRequiredFrameCount == nil
         {
@@ -198,26 +206,27 @@ private extension AudioManager
             inputBuffer.frameLength = 0
         }
         
-        self.audioPlayerNode.scheduleBuffer(outputBuffer) { [weak self, unowned audioPlayerNode] in
-            if audioPlayerNode.isPlaying
-            {
-                self?.render(inputBuffer, into: outputBuffer)
+        self.audioPlayerNode.scheduleBuffer(outputBuffer) { [weak self, weak node = audioPlayerNode] in
+            guard let self = self else { return }
+            
+            self.renderingQueue.async {
+                if node?.isPlaying == true
+                {
+                    self.render(inputBuffer, into: outputBuffer)
+                }
             }
         }
     }
     
     @objc func resetAudioEngine()
     {
-        self.audioPlayerNode.reset()
-        
-        guard let outputAudioFormat = AVAudioFormat(standardFormatWithSampleRate: AVAudioSession.sharedInstance().sampleRate, channels: self.audioFormat.channelCount) else { return }
-        
-        let inputAudioBufferFrameCount = Int(self.audioFormat.sampleRate * self.frameDuration)
-        let outputAudioBufferFrameCount = Int(outputAudioFormat.sampleRate * self.frameDuration)
-        
-        if self.audioConverter == nil || self.audioPlayerNode.outputFormat(forBus: 0).sampleRate != outputAudioFormat.sampleRate || self.frameDuration != self._previousFrameDuration
-        {
-            // Output sample rate has changed, so we'll update our logic accordingly.
+        self.renderingQueue.sync {
+            self.audioPlayerNode.reset()
+            
+            guard let outputAudioFormat = AVAudioFormat(standardFormatWithSampleRate: AVAudioSession.sharedInstance().sampleRate, channels: self.audioFormat.channelCount) else { return }
+            
+            let inputAudioBufferFrameCount = Int(self.audioFormat.sampleRate * self.frameDuration)
+            let outputAudioBufferFrameCount = Int(outputAudioFormat.sampleRate * self.frameDuration)
             
             // Allocate enough space to prevent us from overwriting data before we've used it.
             let ringBufferAudioBufferCount = Int((self.audioFormat.sampleRate / outputAudioFormat.sampleRate).rounded(.up) + 3.0)
@@ -239,19 +248,17 @@ private extension AudioManager
             self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputAudioFormat)
             self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputAudioFormat)
             
-            self._previousFrameDuration = self.frameDuration
-        }
-        
-        self.audioBuffer.reset()
-        
-        for _ in 0 ..< self.audioBufferCount
-        {
-            let inputAudioBufferFrameCapacity = max(inputAudioBufferFrameCount, outputAudioBufferFrameCount)
+            self.audioBuffer.reset()
             
-            if let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat, frameCapacity: AVAudioFrameCount(inputAudioBufferFrameCapacity)),
-                let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
+            for _ in 0 ..< self.audioBufferCount
             {
-                self.render(inputBuffer, into: outputBuffer)
+                let inputAudioBufferFrameCapacity = max(inputAudioBufferFrameCount, outputAudioBufferFrameCount)
+                
+                if let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat, frameCapacity: AVAudioFrameCount(inputAudioBufferFrameCapacity)),
+                    let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
+                {
+                    self.render(inputBuffer, into: outputBuffer)
+                }
             }
         }
         

@@ -117,7 +117,6 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
         
-        self.audioManager.frameDuration = self.deltaCore.emulatorBridge.frameDuration
         self.audioManager.start()
         
         self.runGameLoop()
@@ -378,7 +377,6 @@ private extension EmulatorCore
             while true
             {
                 let frameDuration = self.deltaCore.emulatorBridge.frameDuration / self.rate
-                
                 if frameDuration != self.previousFrameDuration
                 {
                     Thread.setRealTimePriority(withPeriod: frameDuration)
@@ -387,6 +385,20 @@ private extension EmulatorCore
                     
                     // Reset counter
                     counter = 0
+                }
+                
+                // Update audio configurations if necessary.
+                
+                let internalFrameDuration = self.deltaCore.emulatorBridge.frameDuration
+                if internalFrameDuration != self.audioManager.frameDuration
+                {
+                    self.audioManager.frameDuration = internalFrameDuration
+                }
+                
+                let audioFormat = self.deltaCore.audioFormat
+                if audioFormat != self.audioManager.audioFormat
+                {
+                    self.audioManager.audioFormat = audioFormat
                 }
                 
                 if counter >= screenRefreshRate
@@ -452,7 +464,7 @@ private extension EmulatorCore
         
         if renderGraphics
         {
-            self.videoManager.didUpdateVideoBuffer()
+            self.videoManager.render()
         }
         
         for semaphore in self.reactivateInputsSemaphores

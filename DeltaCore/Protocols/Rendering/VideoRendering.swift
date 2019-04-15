@@ -11,5 +11,8 @@ import Foundation
 @objc(DLTAVideoRendering)
 public protocol VideoRendering: NSObjectProtocol
 {
-    var videoBuffer: UnsafeMutablePointer<UInt8> { get }
+    var videoBuffer: UnsafeMutablePointer<UInt8>? { get }
+    
+    func prepare()
+    func processFrame()
 }

@@ -123,6 +123,13 @@ public extension EmulatorCore
         }
         
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
+        
+        let videoFormat = self.deltaCore.videoFormat
+        if videoFormat != self.videoManager.videoFormat
+        {
+            self.videoManager.videoFormat = videoFormat
+        }
+        
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
         
         self.audioManager.start()
@@ -420,7 +427,7 @@ private extension EmulatorCore
                     counter = 0
                 }
                 
-                // Update audio configurations if necessary.
+                // Update audio/video configurations if necessary.
                 
                 let internalFrameDuration = self.deltaCore.emulatorBridge.frameDuration
                 if internalFrameDuration != self.audioManager.frameDuration
@@ -432,6 +439,12 @@ private extension EmulatorCore
                 if audioFormat != self.audioManager.audioFormat
                 {
                     self.audioManager.audioFormat = audioFormat
+                }
+                
+                let videoFormat = self.deltaCore.videoFormat
+                if videoFormat != self.videoManager.videoFormat
+                {
+                    self.videoManager.videoFormat = videoFormat
                 }
                 
                 if counter >= screenRefreshRate

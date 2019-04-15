@@ -11,7 +11,13 @@ import CoreImage
 
 extension VideoFormat
 {
-    public enum PixelFormat
+    public enum Format: Equatable
+    {
+        case bitmap(PixelFormat)
+        case openGLES
+    }
+    
+    public enum PixelFormat: Equatable
     {
         case rgb565
         case bgra8
@@ -25,30 +31,17 @@ extension VideoFormat
             case .rgba8: return 4
             }
         }
-        
-        internal var nativeCIFormat: CIFormat? {
-            switch self
-            {
-            case .rgb565: return nil
-            case .bgra8: return .BGRA8
-            case .rgba8: return .RGBA8
-            }
-        }
     }
 }
 
-public struct VideoFormat
+public struct VideoFormat: Equatable
 {
-    public let pixelFormat: PixelFormat
-    public let dimensions: CGSize
+    public var format: Format
+    public var dimensions: CGSize
     
-    public var bufferSize: Int {
-        return Int(self.dimensions.width * self.dimensions.height) * self.pixelFormat.bytesPerPixel
-    }
-    
-    public init(pixelFormat: PixelFormat, dimensions: CGSize)
+    public init(format: Format, dimensions: CGSize)
     {
-        self.pixelFormat = pixelFormat
+        self.format = format
         self.dimensions = dimensions
     }
 }

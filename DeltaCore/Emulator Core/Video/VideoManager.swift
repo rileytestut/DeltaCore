@@ -9,39 +9,58 @@
 import Foundation
 import Accelerate
 import CoreImage
+import GLKit
+
+protocol VideoProcessor
+{
+    var videoBuffer: UnsafeMutablePointer<UInt8>? { get }
+    
+    func prepare()
+    func processFrame() -> CIImage?
+}
 
 public class VideoManager: NSObject, VideoRendering
 {
+    public internal(set) var videoFormat: VideoFormat {
+        didSet {
+            self.updateProcessor()
+        }
+    }
+    
     public private(set) var gameViews = [GameView]()
     
     public var isEnabled = true
     
-    public let videoFormat: VideoFormat
-    public let videoBuffer: UnsafeMutablePointer<UInt8>
+    private let context: EAGLContext
     
-    private let outputVideoFormat: VideoFormat
-    private let outputVideoBuffer: UnsafeMutablePointer<UInt8>
+    private var processor: VideoProcessor
+    private var processedImage: CIImage?
     
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
+        self.context = EAGLContext(api: .openGLES2)!
         
-        switch self.videoFormat.pixelFormat
+        switch videoFormat.format
         {
-        case .rgb565: self.outputVideoFormat = VideoFormat(pixelFormat: .bgra8, dimensions: self.videoFormat.dimensions)
-        case .bgra8, .rgba8: self.outputVideoFormat = self.videoFormat
+        case .bitmap: self.processor = BitmapProcessor(videoFormat: videoFormat)
+        case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
         }
-        
-        self.videoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.videoFormat.bufferSize)
-        self.outputVideoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.outputVideoFormat.bufferSize)
         
         super.init()
     }
     
-    deinit
+    private func updateProcessor()
     {
-        self.videoBuffer.deallocate()
-        self.outputVideoBuffer.deallocate()
+        switch self.videoFormat.format
+        {
+        case .bitmap:
+            self.processor = BitmapProcessor(videoFormat: self.videoFormat)
+            
+        case .openGLES:
+            guard let processor = self.processor as? OpenGLESProcessor else { return }
+            processor.videoFormat = self.videoFormat
+        }
     }
 }
 
@@ -49,6 +68,7 @@ public extension VideoManager
 {
     func add(_ gameView: GameView)
     {
+        gameView.eaglContext = self.context
         self.gameViews.append(gameView)
     }
     
@@ -61,41 +81,33 @@ public extension VideoManager
     }
 }
 
-private let colorSpace = CGColorSpaceCreateDeviceRGB()
-
-internal extension VideoManager
+public extension VideoManager
 {
-    func didUpdateVideoBuffer()
+    var videoBuffer: UnsafeMutablePointer<UInt8>? {
+        return self.processor.videoBuffer
+    }
+    
+    func prepare()
+    {
+        self.processor.prepare()
+    }
+    
+    func processFrame()
     {
         guard self.isEnabled else { return }
         
-        guard let ciFormat = self.outputVideoFormat.pixelFormat.nativeCIFormat else {
-            print("VideoManager output format is not supported.")
-            return
-        }
+        self.processedImage = self.processor.processFrame()
+    }
+    
+    func render()
+    {
+        guard self.isEnabled else { return }
         
-        autoreleasepool {
-            
-            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.videoFormat.dimensions.height), width: vImagePixelCount(self.videoFormat.dimensions.width), rowBytes: self.videoFormat.pixelFormat.bytesPerPixel * Int(self.videoFormat.dimensions.width))
-            var outputVImageBuffer = vImage_Buffer(data: self.outputVideoBuffer, height: vImagePixelCount(self.outputVideoFormat.dimensions.height), width: vImagePixelCount(self.outputVideoFormat.dimensions.width), rowBytes: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width))
-            
-            switch self.videoFormat.pixelFormat
-            {
-            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &outputVImageBuffer, 0)
-            case .bgra8, .rgba8:
-                // Ensure alpha value is 255, not 0.
-                // 0x1 refers to the Blue channel in ARGB, which corresponds to the Alpha channel in BGRA and RGBA.
-                vImageOverwriteChannelsWithScalar_ARGB8888(255, &inputVImageBuffer, &outputVImageBuffer, 0x1, vImage_Flags(kvImageNoFlags))
-            }
-            
-            let bitmapData = Data(bytes: self.outputVideoBuffer, count: self.outputVideoFormat.bufferSize)
-            
-            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width), size: self.outputVideoFormat.dimensions, format: ciFormat, colorSpace: nil)
-            
-            for gameView in self.gameViews
-            {
-                gameView.inputImage = image
-            }
+        guard let image = self.processedImage else { return }
+        
+        for gameView in self.gameViews
+        {
+            gameView.inputImage = image
         }
     }
 }

@@ -8,6 +8,11 @@
 
 import AVFoundation
 
+private extension Notification.Name
+{
+    static let didUpdateFrame = Notification.Name("com.rileytestut.DeltaCore.didUpdateFrame")
+}
+
 public extension EmulatorCore
 {
     @objc enum State: Int
@@ -60,7 +65,6 @@ public final class EmulatorCore: NSObject
     private let gameType: GameType
     private let gameSaveURL: URL
     
-    private let emulationSemaphore = DispatchSemaphore(value: 0)
     private var cheatCodes = [String: CheatType]()
     
     private var gameControllers = NSHashTable<AnyObject>.weakObjects()
@@ -70,6 +74,8 @@ public final class EmulatorCore: NSObject
     
     private var reactivateInputsSemaphores = Set<DispatchSemaphore>()
     private let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
+    
+    private let emulationLock = NSLock()
     
     //MARK: - Initializers -
     /** Initializers **/
@@ -105,6 +111,8 @@ public extension EmulatorCore
     {
         guard self._state == .stopped else { return false }
         
+        self.emulationLock.lock()
+        
         self._state = .running
         defer { self.state = self._state }
         
@@ -120,8 +128,9 @@ public extension EmulatorCore
         self.audioManager.start()
         
         self.runGameLoop()
+        self.waitForFrameUpdate()
         
-        self.emulationSemaphore.wait()
+        self.emulationLock.unlock()
         
         return true
     }
@@ -130,6 +139,8 @@ public extension EmulatorCore
     {
         guard self._state != .stopped else { return false }
         
+        self.emulationLock.lock()
+        
         let isRunning = self.state == .running
         
         self._state = .stopped
@@ -137,13 +148,15 @@ public extension EmulatorCore
         
         if isRunning
         {
-            self.emulationSemaphore.wait()
+            self.waitForFrameUpdate()
         }
         
         self.save()
         
         self.audioManager.stop()
         self.deltaCore.emulatorBridge.stop()
+        
+        self.emulationLock.unlock()
         
         return true
     }
@@ -152,15 +165,19 @@ public extension EmulatorCore
     {
         guard self._state == .running else { return false }
         
+        self.emulationLock.lock()
+        
         self._state = .paused
         defer { self.state = self._state }
         
-        self.emulationSemaphore.wait()
+        self.waitForFrameUpdate()
         
         self.save()
         
         self.audioManager.isEnabled = false
         self.deltaCore.emulatorBridge.pause()
+        
+        self.emulationLock.unlock()
         
         return true
     }
@@ -169,6 +186,8 @@ public extension EmulatorCore
     {
         guard self._state == .paused else { return false }
         
+        self.emulationLock.lock()
+        
         self._state = .running
         defer { self.state = self._state }
         
@@ -176,10 +195,24 @@ public extension EmulatorCore
         self.deltaCore.emulatorBridge.resume()
         
         self.runGameLoop()
+        self.waitForFrameUpdate()
         
-        self.emulationSemaphore.wait()
+        self.emulationLock.unlock()
         
         return true
+    }
+    
+    private func waitForFrameUpdate()
+    {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        let token = NotificationCenter.default.addObserver(forName: .didUpdateFrame, object: self, queue: nil) { (notification) in
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        NotificationCenter.default.removeObserver(token, name: .didUpdateFrame, object: self)
     }
 }
 
@@ -440,11 +473,13 @@ private extension EmulatorCore
                 // Prevent race conditions
                 let state = self._state
                 
-                if self.previousState != state
+                defer
                 {
-                    self.emulationSemaphore.signal()
-                    
-                    self.previousState = state
+                    if self.previousState != state
+                    {
+                        NotificationCenter.default.post(name: .didUpdateFrame, object: self)
+                        self.previousState = state
+                    }
                 }
                 
                 if state != .running
@@ -454,7 +489,6 @@ private extension EmulatorCore
                 
                 Thread.realTimeWait(until: emulationTime)
             }
-            
         }
     }
     

@@ -194,7 +194,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewWillAppear(animated)
         
-        self.startEmulation()
+        self.emulatorCoreQueue.async {
+            _ = self._startEmulation()
+        }
     }
     
     open dynamic override func viewDidAppear(_ animated: Bool)
@@ -212,11 +214,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         UIApplication.delta_shared?.isIdleTimerDisabled = false
         
-        if let emulatorCore = self.emulatorCore
-        {
-            self.emulatorCoreQueue.async {
-                emulatorCore.pause()
-            }
+        self.emulatorCoreQueue.async {
+            _ = self._pauseEmulation()
         }
     }
     
@@ -504,6 +503,30 @@ public extension GameViewController
 {
     @discardableResult func startEmulation() -> Bool
     {
+        return self.emulatorCoreQueue.sync {
+            return self._startEmulation()
+        }
+    }
+    
+    @discardableResult func pauseEmulation() -> Bool
+    {
+        return self.emulatorCoreQueue.sync {
+            return self._pauseEmulation()
+        }
+    }
+    
+    @discardableResult func resumeEmulation() -> Bool
+    {
+        return self.emulatorCoreQueue.sync {
+            self._resumeEmulation()
+        }
+    }
+}
+
+private extension GameViewController
+{
+    func _startEmulation() -> Bool
+    {
         guard let emulatorCore = self.emulatorCore else { return false }
         
         // Toggle audioManager.enabled to reset the audio buffer and ensure the audio isn't delayed from the beginning
@@ -511,40 +534,35 @@ public extension GameViewController
         emulatorCore.audioManager.isEnabled = false
         emulatorCore.audioManager.isEnabled = true
         
-        return self.resumeEmulation()
+        return self._resumeEmulation()
     }
     
-    @discardableResult func pauseEmulation() -> Bool
+    private func _pauseEmulation() -> Bool
     {
         guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldPauseEmulation(self) ?? true else { return false }
         
-        var result = false
-        
-        self.emulatorCoreQueue.sync {
-            result = emulatorCore.pause()
-        }
-        
+        let result = emulatorCore.pause()
         return result
     }
     
-    @discardableResult func resumeEmulation() -> Bool
+    private func _resumeEmulation() -> Bool
     {
         guard let emulatorCore = self.emulatorCore, self.delegate?.gameViewControllerShouldResumeEmulation(self) ?? true else { return false }
         
-        if self.view.window != nil
-        {
-            self.controllerView.becomeFirstResponder()
+        DispatchQueue.main.async {
+            if self.view.window != nil
+            {
+                self.controllerView.becomeFirstResponder()
+            }
         }
         
-        var result = false
+        let result: Bool
         
-        self.emulatorCoreQueue.sync {
-            switch emulatorCore.state
-            {
-            case .stopped: result = emulatorCore.start()
-            case .paused: result = emulatorCore.resume()
-            case .running: result = true
-            }
+        switch emulatorCore.state
+        {
+        case .stopped: result = emulatorCore.start()
+        case .paused: result = emulatorCore.resume()
+        case .running: result = true
         }
         
         return result
@@ -583,12 +601,16 @@ private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)
     {
-        self.pauseEmulation()
+        self.emulatorCoreQueue.async {
+            _ = self._pauseEmulation()
+        }
     }
     
     @objc func didBecomeActive(with notification: Notification)
     {
-        self.resumeEmulation()
+        self.emulatorCoreQueue.async {
+            _ = self._resumeEmulation()
+        }
     }
     
     @objc func keyboardWillShow(with notification: Notification)

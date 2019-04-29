@@ -21,80 +21,6 @@ public extension GameControllerInputType
     static let controllerSkin = GameControllerInputType("controllerSkin")
 }
 
-extension ControllerSkin
-{
-    public struct Item
-    {
-        public enum Inputs
-        {
-            case standard([Input])
-            case directional(up: Input, down: Input, left: Input, right: Input)
-            
-            public var allInputs: [Input] {
-                switch self
-                {
-                case .standard(let inputs): return inputs
-                case let .directional(up, down, left, right): return [up, down, left, right]
-                }
-            }
-        }
-        
-        public let inputs: Inputs
-        
-        public let frame: CGRect
-        public let extendedFrame: CGRect
-        
-        fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
-        {
-            guard
-                let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
-            else { return nil }
-            
-            if let inputs = dictionary["inputs"] as? [String]
-            {
-                self.inputs = .standard(inputs.map { AnyInput(stringValue: $0, intValue: nil, type: .controller(.controllerSkin)) })
-            }
-            else if let inputs = dictionary["inputs"] as? [String: String]
-            {
-                if let up = inputs["up"], let down = inputs["down"], let left = inputs["left"], let right = inputs["right"]
-                {
-                    self.inputs = .directional(up: AnyInput(stringValue: up, intValue: nil, type: .controller(.controllerSkin)),
-                                               down: AnyInput(stringValue: down, intValue: nil, type: .controller(.controllerSkin)),
-                                               left: AnyInput(stringValue: left, intValue: nil, type: .controller(.controllerSkin)),
-                                               right: AnyInput(stringValue: right, intValue: nil, type: .controller(.controllerSkin)))
-                }
-                else
-                {
-                    return nil
-                }
-            }
-            else
-            {
-                return nil
-            }
-            
-            let overrideExtendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
-            
-            var extendedEdges = extendedEdges
-            extendedEdges.top = overrideExtendedEdges.top ?? extendedEdges.top
-            extendedEdges.bottom = overrideExtendedEdges.bottom ?? extendedEdges.bottom
-            extendedEdges.left = overrideExtendedEdges.left ?? extendedEdges.left
-            extendedEdges.right = overrideExtendedEdges.right ?? extendedEdges.right
-            
-            var extendedFrame = frame
-            extendedFrame.origin.x -= extendedEdges.left ?? 0
-            extendedFrame.origin.y -= extendedEdges.top ?? 0
-            extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
-            extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
-            
-            // Convert frames to relative values.
-            let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
-            self.frame = frame.applying(scaleTransform)
-            self.extendedFrame = extendedFrame.applying(scaleTransform)
-        }
-    }
-}
-
 private extension Archive
 {
     func extract(_ entry: Entry) throws -> Data
@@ -243,6 +169,52 @@ public extension ControllerSkin
         return representation != nil
     }
     
+    func thumbstick(for item: ControllerSkin.Item, traits: Traits, preferredSize: Size) -> (UIImage, CGSize)?
+    {
+        guard let representation = self.representations[traits] else { return nil }
+        guard let imageName = item.thumbstickImageName, let size = item.thumbstickSize else { return nil }
+        guard let entry = self.archive[imageName] else { return nil }
+        
+        let cacheKey = imageName + self.cacheKey(for: traits, size: preferredSize)
+        
+        if let image = self.imageCache.object(forKey: cacheKey as NSString)
+        {
+            return (image, size)
+        }
+        
+        let thumbstickImage: UIImage?
+        
+        do
+        {
+            let data = try self.archive.extract(entry)
+            
+            switch (imageName as NSString).pathExtension.lowercased()
+            {
+            case "pdf":
+                let assetSize = AssetSize(size: preferredSize)
+                guard let targetSize = assetSize.targetSize(for: representation.traits) else { return nil }
+                
+                let thumbstickSize = CGSize(width: size.width * targetSize.width, height: size.height * targetSize.height)
+                thumbstickImage = UIImage.image(withPDFData: data, targetSize: thumbstickSize)
+                
+            default:
+                thumbstickImage = UIImage(data: data, scale: 1.0)
+            }
+        }
+        catch
+        {
+            print(error)
+            
+            return nil
+        }
+        
+        guard let image = thumbstickImage else { return nil }
+        
+        self.imageCache.setObject(image, forKey: cacheKey as NSString)
+        
+        return (image, size)
+    }
+    
     func image(for traits: Traits, preferredSize: Size) -> UIImage?
     {
         guard let representation = self.representations[traits] else { return nil }
@@ -307,10 +279,21 @@ public extension ControllerSkin
             {
             case .standard(let itemInputs): inputs.append(contentsOf: itemInputs)
             case let .directional(up, down, left, right):
-                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / 3.0) + (item.frame.minY - item.extendedFrame.minY))
-                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / 3.0, width: item.extendedFrame.width, height: (item.frame.height / 3.0) + (item.extendedFrame.maxY - item.frame.maxY))
-                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / 3.0) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
-                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / 3.0, y: item.extendedFrame.minY, width: (item.frame.width / 3.0) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
+
+                let divisor: CGFloat
+                if case .thumbstick = item.kind
+                {
+                    divisor = 2.0
+                }
+                else
+                {
+                    divisor = 3.0
+                }
+                
+                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
+                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
+                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
+                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
                 
                 if topRect.contains(point)
                 {
@@ -398,6 +381,154 @@ private extension ControllerSkin
     func cacheKey(for traits: Traits, size: Size) -> String
     {
         return String(describing: traits) + "-" + String(describing: size)
+    }
+}
+
+extension ControllerSkin
+{
+    public struct Item
+    {
+        public enum Kind: Equatable
+        {
+            case button
+            case dPad
+            case thumbstick
+        }
+        
+        public enum Inputs
+        {
+            case standard([Input])
+            case directional(up: Input, down: Input, left: Input, right: Input)
+            
+            public var allInputs: [Input] {
+                switch self
+                {
+                case .standard(let inputs): return inputs
+                case let .directional(up, down, left, right): return [up, down, left, right]
+                }
+            }
+        }
+        
+        public var kind: Kind
+        public var inputs: Inputs
+        
+        public var frame: CGRect
+        public var extendedFrame: CGRect
+        
+        fileprivate var thumbstickImageName: String?
+        fileprivate var thumbstickSize: CGSize?
+        
+        fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
+        {
+            guard
+                let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
+                else { return nil }
+            
+            if let inputs = dictionary["inputs"] as? [String]
+            {
+                self.kind = .button
+                self.inputs = .standard(inputs.map { AnyInput(stringValue: $0, intValue: nil, type: .controller(.controllerSkin)) })
+            }
+            else if let inputs = dictionary["inputs"] as? [String: String]
+            {
+                if let up = inputs["up"], let down = inputs["down"], let left = inputs["left"], let right = inputs["right"]
+                {
+                    let isContinuous: Bool
+                    
+                    if
+                        let thumbstickDictionary = dictionary["thumbstick"] as? [String: Any],
+                        let imageName = thumbstickDictionary["name"] as? String,
+                        let width = thumbstickDictionary["width"] as? CGFloat,
+                        let height = thumbstickDictionary["height"] as? CGFloat
+                    {
+                        self.thumbstickImageName = imageName
+                        self.thumbstickSize = CGSize(width: CGFloat(width) / mappingSize.width, height: CGFloat(height) / mappingSize.height)
+                        
+                        self.kind = .thumbstick
+                        isContinuous = true
+                    }
+                    else
+                    {
+                        self.kind = .dPad
+                        isContinuous = false
+                    }
+                    
+                    self.inputs = .directional(up: AnyInput(stringValue: up, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous),
+                                               down: AnyInput(stringValue: down, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous),
+                                               left: AnyInput(stringValue: left, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous),
+                                               right: AnyInput(stringValue: right, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous))
+                }
+                else
+                {
+                    return nil
+                }
+            }
+            else
+            {
+                return nil
+            }
+            
+            let overrideExtendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
+            
+            var extendedEdges = extendedEdges
+            extendedEdges.top = overrideExtendedEdges.top ?? extendedEdges.top
+            extendedEdges.bottom = overrideExtendedEdges.bottom ?? extendedEdges.bottom
+            extendedEdges.left = overrideExtendedEdges.left ?? extendedEdges.left
+            extendedEdges.right = overrideExtendedEdges.right ?? extendedEdges.right
+            
+            var extendedFrame = frame
+            extendedFrame.origin.x -= extendedEdges.left ?? 0
+            extendedFrame.origin.y -= extendedEdges.top ?? 0
+            extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
+            extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
+            
+            // Convert frames to relative values.
+            let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+            self.frame = frame.applying(scaleTransform)
+            self.extendedFrame = extendedFrame.applying(scaleTransform)
+        }
+    }
+}
+
+extension ControllerSkin.Item: Hashable
+{
+    public static func ==(lhs: ControllerSkin.Item, rhs: ControllerSkin.Item) -> Bool
+    {
+        guard
+            lhs.kind == rhs.kind,
+            lhs.thumbstickImageName == rhs.thumbstickImageName, lhs.thumbstickSize == rhs.thumbstickSize,
+            lhs.inputs.allInputs.map({ $0.stringValue }) == rhs.inputs.allInputs.map({ $0.stringValue }),
+            lhs.frame == rhs.frame && lhs.extendedFrame == rhs.extendedFrame
+        else { return false }
+        
+        return true
+    }
+    
+    public func hash(into hasher: inout Hasher)
+    {
+        switch self.kind
+        {
+        case .button: hasher.combine(0)
+        case .dPad: hasher.combine(1)
+        case .thumbstick: hasher.combine(2)
+        }
+        
+        hasher.combine(self.thumbstickImageName)
+        hasher.combine(self.thumbstickSize?.width)
+        hasher.combine(self.thumbstickSize?.height)
+        
+        for input in self.inputs.allInputs
+        {
+            hasher.combine(input.stringValue)
+        }
+        
+        for frame in [self.frame, self.extendedFrame]
+        {
+            hasher.combine(frame.origin.x)
+            hasher.combine(frame.origin.y)
+            hasher.combine(frame.width)
+            hasher.combine(frame.height)
+        }
     }
 }
 

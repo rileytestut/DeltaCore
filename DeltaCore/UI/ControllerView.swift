@@ -74,6 +74,8 @@ public class ControllerView: UIView, GameController
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
     
+    private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
+    
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var name: String {
@@ -283,6 +285,62 @@ public extension ControllerView
             }
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
+            
+            var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
+            var previousThumbstickViews = self.thumbstickViews
+            
+            for item in items ?? []
+            {
+                guard case .thumbstick = item.kind else { continue }
+                
+                var frame = item.frame
+                frame.origin.x *= self.bounds.width
+                frame.origin.y *= self.bounds.height
+                frame.size.width *= self.bounds.width
+                frame.size.height *= self.bounds.height
+                
+                var extendedFrame = item.extendedFrame
+                extendedFrame.origin.x *= self.bounds.width
+                extendedFrame.origin.y *= self.bounds.height
+                extendedFrame.size.width *= self.bounds.width
+                extendedFrame.size.height *= self.bounds.height
+                
+                let thumbstickView: ThumbstickInputView
+                
+                if let previousThumbstickView = previousThumbstickViews[item]
+                {
+                    thumbstickView = previousThumbstickView
+                    previousThumbstickViews[item] = nil
+                }
+                else
+                {
+                    thumbstickView = ThumbstickInputView(frame: frame)
+                    self.addSubview(thumbstickView)
+                }
+                
+                thumbstickView.frame = frame
+                thumbstickView.extendedFrame = extendedFrame
+                thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
+                    self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
+                }
+                
+                if let (image, size) = self.controllerSkin?.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                {
+                    let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
+                    thumbstickView.thumbstickImage = image
+                    thumbstickView.thumbstickSize = size
+                }
+                
+                thumbstickViews[item] = thumbstickView
+            }
+            
+            previousThumbstickViews.values.forEach { $0.removeFromSuperview() }
+            self.thumbstickViews = thumbstickViews
+        }
+        else
+        {
+            self.thumbstickViews.values.forEach { $0.removeFromSuperview() }
+            self.thumbstickViews = [:]
         }
         
         if self.transitionImageView != nil
@@ -377,13 +435,27 @@ private extension ControllerView
         for touch in touches where self.touchInputsMappingDictionary[touch] != nil
         {
             var point = touch.location(in: self)
+            
+            // Ignore touch if it is within a ThumbstickInputView's extended frame.
+            guard !self.thumbstickViews.values.contains(where: { $0.extendedFrame?.contains(point) == true }) else { continue }
+            
             point.x /= self.bounds.width
             point.y /= self.bounds.height
             
             if let traits = self.controllerSkinTraits
             {
-                let inputs = (controllerSkin.inputs(for: traits, at: point) ?? []).map { AnyInput($0) }
-                self.touchInputsMappingDictionary[touch] = Set(inputs)
+                let inputs = Set((controllerSkin.inputs(for: traits, at: point) ?? []).map { AnyInput($0) })
+                
+                let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
+                if inputs.contains(menuInput)
+                {
+                    // If the menu button is located at this position, ignore all other inputs that might be overlapping.
+                    self.touchInputsMappingDictionary[touch] = [menuInput]
+                }
+                else
+                {
+                    self.touchInputsMappingDictionary[touch] = Set(inputs)
+                }
             }
         }
         
@@ -411,6 +483,41 @@ private extension ControllerView
             case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
             case .basic, .unsupported: UIDevice.current.vibrate()
             }
+        }
+    }
+    
+    func updateThumbstickValues(item: ControllerSkin.Item, xAxis: Double, yAxis: Double)
+    {
+        guard case .directional(let up, let down, let left, let right) = item.inputs else { return }
+        
+        switch xAxis
+        {
+        case ..<0:
+            self.activate(left, value: -xAxis)
+            self.deactivate(right)
+            
+        case 0:
+            self.deactivate(left)
+            self.deactivate(right)
+            
+        default:
+            self.deactivate(left)
+            self.activate(right, value: xAxis)
+        }
+        
+        switch yAxis
+        {
+        case ..<0:
+            self.activate(down, value: -yAxis)
+            self.deactivate(up)
+            
+        case 0:
+            self.deactivate(down)
+            self.deactivate(up)
+            
+        default:
+            self.deactivate(down)
+            self.activate(up, value: yAxis)
         }
     }
 }

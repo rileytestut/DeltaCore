@@ -72,7 +72,7 @@ public final class EmulatorCore: NSObject
     private var previousState = State.stopped
     private var previousFrameDuration: TimeInterval? = nil
     
-    private var reactivateInputsSemaphores = Set<DispatchSemaphore>()
+    private var reactivateInputsDispatchGroup: DispatchGroup?
     private let reactivateInputsQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.EmulatorCore.reactivateInputsQueue", attributes: [.concurrent])
     
     private let emulationLock = NSLock()
@@ -280,9 +280,9 @@ public extension EmulatorCore
         // Reactivate activated inputs.
         for gameController in self.gameControllers.allObjects as! [GameController]
         {
-            for input in gameController.activatedInputs
+            for (input, value) in gameController.activatedInputs
             {
-                gameController.activate(input)
+                gameController.activate(input, value: value)
             }
         }
     }
@@ -348,41 +348,39 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiver
 {
-    public func gameController(_ gameController: GameController, didActivate input: Input)
+    public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
         self.gameControllers.add(gameController)
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
         // If any of game controller's sustained inputs map to input, treat input as sustained.
-        let isSustainedInput = gameController.sustainedInputs.contains(where: {
+        let isSustainedInput = gameController.sustainedInputs.keys.contains(where: {
             guard let mappedInput = gameController.mappedInput(for: $0, receiver: self) else { return false }
             return self.mappedInput(for: mappedInput) == input
         })
         
-        if isSustainedInput
+        if isSustainedInput && !input.isContinuous
         {
             self.reactivateInputsQueue.async {
                 
                 self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
                 
-                let semaphore = DispatchSemaphore(value: 0)
-                self.reactivateInputsSemaphores.insert(semaphore)
+                self.reactivateInputsDispatchGroup = DispatchGroup()
                 
                 // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
-                // Unfortunately we cannot init DispatchSemaphore with value less than 0.
-                // To compensate, we simply wait twice; once the first wait returns, we wait again.
-                semaphore.wait()
-                semaphore.wait()
+                self.reactivateInputsDispatchGroup?.enter()
+                self.reactivateInputsDispatchGroup?.enter()
+                self.reactivateInputsDispatchGroup?.wait()
+
+                self.reactivateInputsDispatchGroup = nil
                 
-                self.reactivateInputsSemaphores.remove(semaphore)
-                
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!)
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!)
+            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
         }
     }
     
@@ -514,9 +512,9 @@ private extension EmulatorCore
             self.videoManager.render()
         }
         
-        for semaphore in self.reactivateInputsSemaphores
+        if let dispatchGroup = self.reactivateInputsDispatchGroup
         {
-            semaphore.signal()
+            dispatchGroup.leave()
         }
         
         self.updateHandler?(self)

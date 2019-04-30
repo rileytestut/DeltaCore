@@ -12,8 +12,8 @@ internal class GameControllerStateManager
 {
     let gameController: GameController
     
-    private(set) var activatedInputs = Set<AnyInput>()
-    private(set) var sustainedInputs = Set<AnyInput>()
+    private(set) var activatedInputs = [AnyInput: Double]()
+    private(set) var sustainedInputs = [AnyInput: Double]()
     
     var receivers: [GameControllerReceiver] {
         var objects: [GameControllerReceiver]!
@@ -56,19 +56,18 @@ extension GameControllerStateManager
 
 extension GameControllerStateManager
 {
-    func activate(_ input: Input)
+    func activate(_ input: Input, value: Double)
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
         // An input may be "activated" multiple times, such as by pressing different buttons that map to same input, or moving an analog stick.
-        
-        self.activatedInputs.insert(AnyInput(input))
+        self.activatedInputs[AnyInput(input)] = value
         
         for receiver in self.receivers
         {
             if let mappedInput = self.mappedInput(for: input, receiver: receiver)
             {
-                receiver.gameController(self.gameController, didActivate: mappedInput)
+                receiver.gameController(self.gameController, didActivate: mappedInput, value: value)
             }
         }
     }
@@ -77,42 +76,48 @@ extension GameControllerStateManager
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
-        // Cannot deactivate a sustained input.
-        guard !self.sustainedInputs.contains(AnyInput(input)) else { return }
-        
         // Unlike activate(_:), we don't allow an input to be deactivated multiple times.
-        guard self.activatedInputs.contains(AnyInput(input)) else { return }
+        guard self.activatedInputs.keys.contains(AnyInput(input)) else { return }
         
-        self.activatedInputs.remove(AnyInput(input))
-        
-        for receiver in self.receivers
+        if let sustainedValue = self.sustainedInputs[AnyInput(input)]
         {
-            if let mappedInput = self.mappedInput(for: input, receiver: receiver)
+            // Currently sustained, so reset value to sustained value.
+            self.activate(input, value: sustainedValue)
+        }
+        else
+        {
+            // Not sustained, so simply deactivate it.
+            self.activatedInputs[AnyInput(input)] = nil
+            
+            for receiver in self.receivers
             {
-                let hasActivatedMappedControllerInputs = self.activatedInputs.contains() {
-                    guard let input = self.mappedInput(for: $0, receiver: receiver) else { return false }
-                    return input == mappedInput
-                }
-                
-                if !hasActivatedMappedControllerInputs
+                if let mappedInput = self.mappedInput(for: input, receiver: receiver)
                 {
-                    // All controller inputs that map to this input have been deactivated, so we can deactivate the mapped input.
-                    receiver.gameController(self.gameController, didDeactivate: mappedInput)
+                    let hasActivatedMappedControllerInputs = self.activatedInputs.keys.contains {
+                        guard let input = self.mappedInput(for: $0, receiver: receiver) else { return false }
+                        return input == mappedInput
+                    }
+                    
+                    if !hasActivatedMappedControllerInputs
+                    {
+                        // All controller inputs that map to this input have been deactivated, so we can deactivate the mapped input.
+                        receiver.gameController(self.gameController, didDeactivate: mappedInput)
+                    }
                 }
             }
         }
     }
     
-    func sustain(_ input: Input)
+    func sustain(_ input: Input, value: Double)
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
-        if !self.activatedInputs.contains(AnyInput(input))
+        if self.activatedInputs[AnyInput(input)] != value
         {
-            self.activate(input)
+            self.activate(input, value: value)
         }
-        
-        self.sustainedInputs.insert(AnyInput(input))
+
+        self.sustainedInputs[AnyInput(input)] = value
     }
     
     // Technically not a word, but no good alternative, so ¯\_(ツ)_/¯
@@ -120,7 +125,7 @@ extension GameControllerStateManager
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
-        self.sustainedInputs.remove(AnyInput(input))
+        self.sustainedInputs[AnyInput(input)] = nil
         
         self.deactivate(AnyInput(input))
     }

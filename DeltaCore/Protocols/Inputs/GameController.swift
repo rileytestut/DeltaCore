@@ -14,7 +14,7 @@ private var gameControllerStateManagerKey = 0
 public protocol GameControllerReceiver: class
 {
     /// Equivalent to pressing a button, or moving an analog stick
-    func gameController(_ gameController: GameController, didActivate input: Input)
+    func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     
     /// Equivalent to releasing a button or an analog stick
     func gameController(_ gameController: GameController, didDeactivate input: Input)
@@ -50,12 +50,12 @@ public extension GameController
         return self.stateManager.receivers
     }
     
-    var activatedInputs: [Input] {
-        return Array(self.stateManager.activatedInputs)
+    var activatedInputs: [AnyInput: Double] {
+        return self.stateManager.activatedInputs
     }
     
-    var sustainedInputs: [Input] {
-        return Array(self.stateManager.sustainedInputs)
+    var sustainedInputs: [AnyInput: Double] {
+        return self.stateManager.sustainedInputs
     }
 }
 
@@ -76,9 +76,9 @@ public extension GameController
         self.stateManager.removeReceiver(receiver)
     }
     
-    func activate(_ input: Input)
+    func activate(_ input: Input, value: Double = 1.0)
     {
-        self.stateManager.activate(input)
+        self.stateManager.activate(input, value: value)
     }
     
     func deactivate(_ input: Input)
@@ -86,9 +86,9 @@ public extension GameController
         self.stateManager.deactivate(input)
     }
     
-    func sustain(_ input: Input)
+    func sustain(_ input: Input, value: Double = 1.0)
     {
-        self.stateManager.sustain(input)
+        self.stateManager.sustain(input, value: value)
     }
     
     func unsustain(_ input: Input)

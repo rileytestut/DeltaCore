@@ -54,6 +54,15 @@ extension StandardGameControllerInput: Input
     public var type: InputType {
         return .controller(.standard)
     }
+    
+    public var isContinuous: Bool {
+        switch self
+        {
+        case .leftThumbstickUp, .leftThumbstickDown, .leftThumbstickLeft, .leftThumbstickRight: return true
+        case .rightThumbstickUp, .rightThumbstickDown, .rightThumbstickLeft, .rightThumbstickRight: return true
+        default: return false
+        }
+    }
 }
 
 public extension StandardGameControllerInput

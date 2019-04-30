@@ -52,6 +52,15 @@ extension MFiGameController.Input: Input
     public var type: InputType {
         return .controller(.mfi)
     }
+    
+    public var isContinuous: Bool {
+        switch self
+        {
+        case .leftThumbstickUp, .leftThumbstickDown, .leftThumbstickLeft, .leftThumbstickRight: return true
+        case .rightThumbstickUp, .rightThumbstickDown, .rightThumbstickLeft, .rightThumbstickRight: return true
+        default: return false
+        }
+    }
 }
 
 public class MFiGameController: NSObject, GameController
@@ -121,7 +130,6 @@ public class MFiGameController: NSObject, GameController
         }
         
         let inputChangedHandler: (_ input: MFiGameController.Input, _ pressed: Bool) -> Void = { [unowned self] (input, pressed) in
-            
             if pressed
             {
                 self.activate(input)
@@ -129,6 +137,24 @@ public class MFiGameController: NSObject, GameController
             else
             {
                 self.deactivate(input)
+            }
+        }
+        
+        let thumbstickChangedHandler: (_ input1: MFiGameController.Input, _ input2: MFiGameController.Input, _ value: Float) -> Void = { [unowned self] (input1, input2, value) in
+            
+            switch value
+            {
+            case ..<0:
+                self.activate(input1, value: Double(-value))
+                self.deactivate(input2)
+                
+            case 0:
+                self.deactivate(input1)
+                self.deactivate(input2)
+                
+            default:
+                self.deactivate(input1)
+                self.activate(input2, value: Double(value))
             }
         }
         
@@ -152,15 +178,18 @@ public class MFiGameController: NSObject, GameController
             extendedGamepad.leftTrigger.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.leftTrigger, pressed) }
             extendedGamepad.rightTrigger.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.rightTrigger, pressed) }
             
-            extendedGamepad.leftThumbstick.up.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftThumbstickUp, pressed) }
-            extendedGamepad.leftThumbstick.down.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftThumbstickDown, pressed) }
-            extendedGamepad.leftThumbstick.left.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftThumbstickLeft, pressed) }
-            extendedGamepad.leftThumbstick.right.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftThumbstickRight, pressed) }
-            
-            extendedGamepad.rightThumbstick.up.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightThumbstickUp, pressed) }
-            extendedGamepad.rightThumbstick.down.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightThumbstickDown, pressed) }
-            extendedGamepad.rightThumbstick.left.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightThumbstickLeft, pressed) }
-            extendedGamepad.rightThumbstick.right.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightThumbstickRight, pressed) }
+            extendedGamepad.leftThumbstick.xAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.leftThumbstickLeft, .leftThumbstickRight, value)
+            }
+            extendedGamepad.leftThumbstick.yAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.leftThumbstickDown, .leftThumbstickUp, value)
+            }
+            extendedGamepad.rightThumbstick.xAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.rightThumbstickLeft, .rightThumbstickRight, value)
+            }
+            extendedGamepad.rightThumbstick.yAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.rightThumbstickDown, .rightThumbstickUp, value)
+            }
         }
     }
 }

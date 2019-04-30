@@ -13,19 +13,48 @@ public struct AnyInput: Input, Codable, Hashable
     public let stringValue: String
     public let intValue: Int?
     
-    public let type: InputType
+    public var type: InputType
+    public var isContinuous: Bool
     
     public init(_ input: Input)
     {
-        self.init(stringValue: input.stringValue, intValue: input.intValue, type: input.type)
+        self.init(stringValue: input.stringValue, intValue: input.intValue, type: input.type, isContinuous: input.isContinuous)
     }
     
-    public init(stringValue: String, intValue: Int?, type: InputType)
+    public init(stringValue: String, intValue: Int?, type: InputType, isContinuous: Bool? = nil)
     {
         self.stringValue = stringValue
         self.intValue = intValue
         
         self.type = type
+        self.isContinuous = false
+        
+        if let isContinuous = isContinuous
+        {
+            self.isContinuous = isContinuous
+        }
+        else
+        {
+            switch type
+            {
+            case .game(let gameType):
+                guard let deltaCore = Delta.core(for: gameType), let input = deltaCore.gameInputType.init(stringValue: self.stringValue) else { break }
+                self.isContinuous = input.isContinuous
+                
+            case .controller(.standard):
+                guard let standardInput = StandardGameControllerInput(input: self) else { break }
+                self.isContinuous = standardInput.isContinuous
+                
+            case .controller(.mfi):
+                guard let mfiInput = MFiGameController.Input(input: self) else { break }
+                self.isContinuous = mfiInput.isContinuous
+                
+            case .controller:
+                // FIXME: We have no way to look up arbitrary controller inputs at runtime, so just leave isContinuous as false for now.
+                // In practice this is not too bad, since it's very uncommon to map from an input to a non-standard controller input.
+                break
+            }
+        }
     }
 }
 

@@ -50,6 +50,8 @@ extension InputType: Hashable
 public protocol Input: CodingKey
 {
     var type: InputType { get }
+    
+    var isContinuous: Bool { get }
 }
 
 public extension RawRepresentable where Self: Input, RawValue == String
@@ -75,6 +77,10 @@ public extension RawRepresentable where Self: Input, RawValue == String
 
 public extension Input
 {
+    var isContinuous: Bool {
+        return false
+    }
+    
     init?(input: Input)
     {
         self.init(stringValue: input.stringValue)

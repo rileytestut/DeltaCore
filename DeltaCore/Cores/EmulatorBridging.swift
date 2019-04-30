@@ -37,7 +37,7 @@ public protocol EmulatorBridging: NSObjectProtocol
     func runFrame()
     
     /// Inputs
-    func activateInput(_ input: Int)
+    func activateInput(_ input: Int, value: Double)
     func deactivateInput(_ input: Int)
     func resetInputs()
     

@@ -434,7 +434,7 @@ private extension ControllerView
 /// GameControllerReceiver
 extension ControllerView: GameControllerReceiver
 {
-    public func gameController(_ gameController: GameController, didActivate input: Input)
+    public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
         guard gameController == self.controllerInputView?.controllerView else { return }
         

@@ -105,9 +105,12 @@ public extension VideoManager
         
         guard let image = self.processedImage else { return }
         
-        for gameView in self.gameViews
-        {
-            gameView.inputImage = image
-        }
+        // Autoreleasepool necessary to prevent leaking CIImages.
+        autoreleasepool {
+            for gameView in self.gameViews
+            {
+                gameView.inputImage = image
+            }
+        }        
     }
 }

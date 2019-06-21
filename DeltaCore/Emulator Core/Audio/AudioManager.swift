@@ -108,7 +108,6 @@ public class AudioManager: NSObject, AudioRendering
         self.updateOutputVolume()
         
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.updateOutputVolume), name: AVAudioSession.silenceSecondaryAudioHintNotification, object: nil)
     }
 }
 
@@ -276,7 +275,7 @@ private extension AudioManager
     
     @objc func updateOutputVolume()
     {
-        if !self.isEnabled || AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
+        if !self.isEnabled
         {
             self.audioEngine.mainMixerNode.outputVolume = 0.0
         }

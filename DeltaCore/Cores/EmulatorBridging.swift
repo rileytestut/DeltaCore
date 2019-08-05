@@ -34,7 +34,7 @@ public protocol EmulatorBridging: NSObjectProtocol
     func resume()
     
     /// Game Loop
-    func runFrame()
+    @objc(runFrameAndProcessVideo:) func runFrame(processVideo: Bool)
     
     /// Inputs
     func activateInput(_ input: Int, value: Double)

@@ -505,7 +505,7 @@ private extension EmulatorCore
     
     func runFrame(renderGraphics: Bool)
     {
-        self.deltaCore.emulatorBridge.runFrame()
+        self.deltaCore.emulatorBridge.runFrame(processVideo: renderGraphics)
         
         if renderGraphics
         {

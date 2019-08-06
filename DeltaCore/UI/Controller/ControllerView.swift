@@ -99,6 +99,7 @@ public class ControllerView: UIView, GameController
     
     private let buttonsView = ButtonsInputView(frame: CGRect.zero)
     private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
+    private var touchViews = [ControllerSkin.Item: TouchInputView]()
     
     private var _performedInitialLayout = false
     
@@ -188,6 +189,20 @@ public class ControllerView: UIView, GameController
         {
             guard item.extendedFrame.contains(adjustedPoint) else { continue }
             return thumbstickView
+        }
+        
+        for (item, touchView) in self.touchViews
+        {
+            guard item.frame.contains(adjustedPoint) else { continue }
+            
+            if let traits = self.controllerSkinTraits, let inputs = self.controllerSkin?.inputs(for: traits, at: adjustedPoint)
+            {
+                // No other inputs at this position, so return touchView.
+                if inputs.isEmpty
+                {
+                    return touchView
+                }
+            }
         }
         
         return self.buttonsView
@@ -290,6 +305,9 @@ public extension ControllerView
             var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
             var previousThumbstickViews = self.thumbstickViews
             
+            var touchViews = [ControllerSkin.Item: TouchInputView]()
+            var previousTouchViews = self.touchViews
+            
             for item in items ?? []
             {
                 var frame = item.frame
@@ -334,16 +352,43 @@ public extension ControllerView
                     }
                     
                     thumbstickViews[item] = thumbstickView
+                    
+                case .touchScreen:
+                    let touchView: TouchInputView
+                    
+                    if let previousTouchView = previousTouchViews[item]
+                    {
+                        touchView = previousTouchView
+                        previousTouchViews[item] = nil
+                    }
+                    else
+                    {
+                        touchView = TouchInputView(frame: frame)
+                        self.contentView.addSubview(touchView)
+                    }
+                    
+                    touchView.frame = frame
+                    touchView.valueChangedHandler = { [weak self] (point) in
+                        self?.updateTouchValues(item: item, point: point)
+                    }
+                    
+                    touchViews[item] = touchView
                 }
             }
             
             previousThumbstickViews.values.forEach { $0.removeFromSuperview() }
             self.thumbstickViews = thumbstickViews
+            
+            previousTouchViews.values.forEach { $0.removeFromSuperview() }
+            self.touchViews = touchViews
         }
         else
         {
             self.thumbstickViews.values.forEach { $0.removeFromSuperview() }
             self.thumbstickViews = [:]
+            
+            self.touchViews.values.forEach { $0.removeFromSuperview() }
+            self.touchViews = [:]
         }
         
         if self.transitionSnapshotView != nil
@@ -478,6 +523,22 @@ private extension ControllerView
         default:
             self.deactivate(down)
             self.activate(up, value: yAxis)
+        }
+    }
+    
+    func updateTouchValues(item: ControllerSkin.Item, point: CGPoint?)
+    {
+        guard case .touch(let x, let y) = item.inputs else { return }
+        
+        if let point = point
+        {
+            self.activate(x, value: Double(point.x))
+            self.activate(y, value: Double(point.y))
+        }
+        else
+        {
+            self.deactivate(x)
+            self.deactivate(y)
         }
     }
 }

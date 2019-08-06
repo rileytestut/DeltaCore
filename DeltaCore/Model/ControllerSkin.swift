@@ -277,8 +277,9 @@ public extension ControllerSkin
             
             switch item.inputs
             {
-            // Don't return inputs for thumbsticks since they're handled separately.
+            // Don't return inputs for thumbsticks or touch screens since they're handled separately.
             case .directional where item.kind == .thumbstick: break
+            case .touch: break
                 
             case .standard(let itemInputs):
                 inputs.append(contentsOf: itemInputs)
@@ -398,18 +399,21 @@ extension ControllerSkin
             case button
             case dPad
             case thumbstick
+            case touchScreen
         }
         
         public enum Inputs
         {
             case standard([Input])
             case directional(up: Input, down: Input, left: Input, right: Input)
+            case touch(x: Input, y: Input)
             
             public var allInputs: [Input] {
                 switch self
                 {
                 case .standard(let inputs): return inputs
                 case let .directional(up, down, left, right): return [up, down, left, right]
+                case let .touch(x, y): return [x, y]
                 }
             }
         }
@@ -462,6 +466,12 @@ extension ControllerSkin
                                                down: AnyInput(stringValue: down, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous),
                                                left: AnyInput(stringValue: left, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous),
                                                right: AnyInput(stringValue: right, intValue: nil, type: .controller(.controllerSkin), isContinuous: isContinuous))
+                }
+                else if let x = inputs["x"], let y = inputs["y"]
+                {
+                    self.kind = .touchScreen
+                    self.inputs = .touch(x: AnyInput(stringValue: x, intValue: nil, type: .controller(.controllerSkin), isContinuous: true),
+                                         y: AnyInput(stringValue: y, intValue: nil, type: .controller(.controllerSkin), isContinuous: true))
                 }
                 else
                 {
@@ -516,6 +526,7 @@ extension ControllerSkin.Item: Hashable
         case .button: hasher.combine(0)
         case .dPad: hasher.combine(1)
         case .thumbstick: hasher.combine(2)
+        case .touchScreen: hasher.combine(3)
         }
         
         hasher.combine(self.thumbstickImageName)

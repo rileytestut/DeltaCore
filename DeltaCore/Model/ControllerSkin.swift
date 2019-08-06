@@ -277,7 +277,12 @@ public extension ControllerSkin
             
             switch item.inputs
             {
-            case .standard(let itemInputs): inputs.append(contentsOf: itemInputs)
+            // Don't return inputs for thumbsticks since they're handled separately.
+            case .directional where item.kind == .thumbstick: break
+                
+            case .standard(let itemInputs):
+                inputs.append(contentsOf: itemInputs)
+            
             case let .directional(up, down, left, right):
 
                 let divisor: CGFloat

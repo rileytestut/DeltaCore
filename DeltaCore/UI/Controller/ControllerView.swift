@@ -74,8 +74,6 @@ public class ControllerView: UIView, GameController
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
     
-    private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
-    
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var name: String {
@@ -95,24 +93,19 @@ public class ControllerView: UIView, GameController
     internal var isControllerInputView = false
     
     //MARK: - Private Properties
-    private let imageView = UIImageView(frame: CGRect.zero)
-    private var transitionImageView: UIImageView? = nil
+    private let contentView = UIView(frame: .zero)
+    private var transitionSnapshotView: UIView? = nil
     private let controllerDebugView = ControllerDebugView()
     
-    private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private let buttonsView = ButtonsInputView(frame: CGRect.zero)
+    private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
     
     private var _performedInitialLayout = false
-    
-    private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
-    private var previousTouchInputs = Set<AnyInput>()
-    private var touchInputs: Set<AnyInput> {
-        return self.touchInputsMappingDictionary.values.reduce(Set<AnyInput>(), { $0.union($1) })
-    }
     
     private var controllerInputView: ControllerInputView?
     
     public override var intrinsicContentSize: CGSize {
-        return self.imageView.intrinsicContentSize
+        return self.buttonsView.intrinsicContentSize
     }
     
     //MARK: - Initializers -
@@ -135,23 +128,43 @@ public class ControllerView: UIView, GameController
     {
         self.backgroundColor = UIColor.clear
         
-        self.imageView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-        self.imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        self.addSubview(self.imageView)
+        self.contentView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(self.contentView)
         
-        self.controllerDebugView.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-        self.controllerDebugView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        self.addSubview(self.controllerDebugView)
+        self.buttonsView.translatesAutoresizingMaskIntoConstraints = false
+        self.buttonsView.activateInputsHandler = { [weak self] (inputs) in
+            self?.activateButtonInputs(inputs)
+        }
+        self.buttonsView.deactivateInputsHandler = { [weak self] (inputs) in
+            self?.deactivateButtonInputs(inputs)
+        }
+        self.contentView.addSubview(self.buttonsView)
+        
+        self.controllerDebugView.translatesAutoresizingMaskIntoConstraints = false
+        self.contentView.addSubview(self.controllerDebugView)
         
         self.isMultipleTouchEnabled = true
-        
-        self.feedbackGenerator.prepare()
         
         // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
         self.inputAssistantItem.leadingBarButtonGroups = []
         self.inputAssistantItem.trailingBarButtonGroups = []
         
         NotificationCenter.default.addObserver(self, selector: #selector(ControllerView.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
+        
+        NSLayoutConstraint.activate([self.contentView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+                                     self.contentView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+                                     self.contentView.topAnchor.constraint(equalTo: self.topAnchor),
+                                     self.contentView.bottomAnchor.constraint(equalTo: self.bottomAnchor)])
+        
+        NSLayoutConstraint.activate([self.buttonsView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
+                                     self.buttonsView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
+                                     self.buttonsView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
+                                     self.buttonsView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor)])
+        
+        NSLayoutConstraint.activate([self.controllerDebugView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
+                                     self.controllerDebugView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
+                                     self.controllerDebugView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
+                                     self.controllerDebugView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor)])
     }
     
     //MARK: - UIView
@@ -163,6 +176,21 @@ public class ControllerView: UIView, GameController
         self._performedInitialLayout = true
         
         self.updateControllerSkin()
+    }
+    
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?
+    {
+        guard self.bounds.contains(point) else { return super.hitTest(point, with: event) }
+        
+        let adjustedPoint = CGPoint(x: point.x / self.bounds.width, y: point.y / self.bounds.height)
+        
+        for (item, thumbstickView) in self.thumbstickViews
+        {
+            guard item.extendedFrame.contains(adjustedPoint) else { continue }
+            return thumbstickView
+        }
+        
+        return self.buttonsView
     }
     
     //MARK: - <UITraitEnvironment>
@@ -201,36 +229,6 @@ extension ControllerView
         
         return self.isFirstResponder
     }
-    
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
-    {
-        for touch in touches
-        {
-            self.touchInputsMappingDictionary[touch] = []
-        }
-        
-        self.updateInputs(for: touches)
-    }
-    
-    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
-    {
-        self.updateInputs(for: touches)
-    }
-    
-    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
-    {
-        for touch in touches
-        {
-            self.touchInputsMappingDictionary[touch] = nil
-        }
-        
-        self.updateInputs(for: touches)
-    }
-    
-    public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
-    {
-        return self.touchesEnded(touches, with: event)
-    }
 }
 
 //MARK: - Update Skins -
@@ -239,22 +237,25 @@ public extension ControllerView
 {
     func beginAnimatingUpdateControllerSkin()
     {
-        guard self.transitionImageView == nil else { return }
+        guard self.transitionSnapshotView == nil else { return }
         
-        let transitionImageView = UIImageView(image: self.imageView.image)
-        transitionImageView.frame = self.imageView.frame
-        transitionImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        transitionImageView.alpha = self.imageView.alpha
-        self.addSubview(transitionImageView)
+        guard let transitionSnapshotView = self.contentView.snapshotView(afterScreenUpdates: false) else { return }
+        transitionSnapshotView.frame = self.contentView.frame
+        transitionSnapshotView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        transitionSnapshotView.alpha = self.contentView.alpha
+        self.addSubview(transitionSnapshotView)
         
-        self.transitionImageView = transitionImageView
+        self.transitionSnapshotView = transitionSnapshotView
         
-        self.imageView.alpha = 0.0
+        self.contentView.alpha = 0.0
     }
     
     func updateControllerSkin()
     {
         guard self._performedInitialLayout else { return }
+        
+        self.buttonsView.controllerSkin = self.controllerSkin
+        self.buttonsView.controllerSkinTraits = self.controllerSkinTraits
         
         if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
         {
@@ -270,7 +271,7 @@ public extension ControllerView
             
             if traits.displayType == .splitView && !self.isControllerInputView
             {
-                self.imageView.image = nil
+                self.buttonsView.image = nil
                 
                 self.isUserInteractionEnabled = false
                 self.controllerDebugView.alpha = 0.0
@@ -278,7 +279,7 @@ public extension ControllerView
             else
             {
                 let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
-                self.imageView.image = image
+                self.buttonsView.image = image
                 
                 self.isUserInteractionEnabled = true
                 self.controllerDebugView.alpha = 1.0
@@ -291,8 +292,6 @@ public extension ControllerView
             
             for item in items ?? []
             {
-                guard case .thumbstick = item.kind else { continue }
-                
                 var frame = item.frame
                 frame.origin.x *= self.bounds.width
                 frame.origin.y *= self.bounds.height
@@ -305,33 +304,37 @@ public extension ControllerView
                 extendedFrame.size.width *= self.bounds.width
                 extendedFrame.size.height *= self.bounds.height
                 
-                let thumbstickView: ThumbstickInputView
-                
-                if let previousThumbstickView = previousThumbstickViews[item]
+                switch item.kind
                 {
-                    thumbstickView = previousThumbstickView
-                    previousThumbstickViews[item] = nil
+                case .button, .dPad: break
+                case .thumbstick:
+                    let thumbstickView: ThumbstickInputView
+                    
+                    if let previousThumbstickView = previousThumbstickViews[item]
+                    {
+                        thumbstickView = previousThumbstickView
+                        previousThumbstickViews[item] = nil
+                    }
+                    else
+                    {
+                        thumbstickView = ThumbstickInputView(frame: frame)
+                        self.contentView.addSubview(thumbstickView)
+                    }
+                    
+                    thumbstickView.frame = frame
+                    thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
+                        self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
+                    }
+                    
+                    if let (image, size) = self.controllerSkin?.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                    {
+                        let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
+                        thumbstickView.thumbstickImage = image
+                        thumbstickView.thumbstickSize = size
+                    }
+                    
+                    thumbstickViews[item] = thumbstickView
                 }
-                else
-                {
-                    thumbstickView = ThumbstickInputView(frame: frame)
-                    self.addSubview(thumbstickView)
-                }
-                
-                thumbstickView.frame = frame
-                thumbstickView.extendedFrame = extendedFrame
-                thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
-                    self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
-                }
-                
-                if let (image, size) = self.controllerSkin?.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
-                {
-                    let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
-                    thumbstickView.thumbstickImage = image
-                    thumbstickView.thumbstickSize = size
-                }
-                
-                thumbstickViews[item] = thumbstickView
             }
             
             previousThumbstickViews.values.forEach { $0.removeFromSuperview() }
@@ -343,21 +346,21 @@ public extension ControllerView
             self.thumbstickViews = [:]
         }
         
-        if self.transitionImageView != nil
+        if self.transitionSnapshotView != nil
         {
             // Wrap in an animation closure to ensure it actually animates correctly
             // As of iOS 8.3, calling this within transition coordinator animation closure without wrapping
             // in this animation closure causes the change to be instantaneous
             UIView.animate(withDuration: 0.0) {
-                self.imageView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
+                self.contentView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
             }
         }
         else
         {
-            self.imageView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
+            self.contentView.alpha = isTranslucent ? self.translucentControllerSkinOpacity : 1.0
         }
         
-        self.transitionImageView?.alpha = 0.0
+        self.transitionSnapshotView?.alpha = 0.0
         
         if self.controllerSkinTraits?.displayType == .splitView
         {
@@ -378,13 +381,13 @@ public extension ControllerView
     
     func finishAnimatingUpdateControllerSkin()
     {
-        if let transitionImageView = self.transitionImageView
+        if let transitionImageView = self.transitionSnapshotView
         {
             transitionImageView.removeFromSuperview()
-            self.transitionImageView = nil
+            self.transitionSnapshotView = nil
         }
         
-        self.imageView.alpha = 1.0
+        self.contentView.alpha = 1.0
     }
 }
 
@@ -427,62 +430,19 @@ private extension ControllerView
 /// Activating/Deactivating Inputs
 private extension ControllerView
 {
-    func updateInputs(for touches: Set<UITouch>)
+    func activateButtonInputs(_ inputs: Set<AnyInput>)
     {
-        guard let controllerSkin = self.controllerSkin else { return }
-        
-        // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
-        for touch in touches where self.touchInputsMappingDictionary[touch] != nil
-        {
-            var point = touch.location(in: self)
-            
-            // Ignore touch if it is within a ThumbstickInputView's extended frame.
-            guard !self.thumbstickViews.values.contains(where: { $0.extendedFrame?.contains(point) == true }) else { continue }
-            
-            point.x /= self.bounds.width
-            point.y /= self.bounds.height
-            
-            if let traits = self.controllerSkinTraits
-            {
-                let inputs = Set((controllerSkin.inputs(for: traits, at: point) ?? []).map { AnyInput($0) })
-                
-                let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
-                if inputs.contains(menuInput)
-                {
-                    // If the menu button is located at this position, ignore all other inputs that might be overlapping.
-                    self.touchInputsMappingDictionary[touch] = [menuInput]
-                }
-                else
-                {
-                    self.touchInputsMappingDictionary[touch] = Set(inputs)
-                }
-            }
-        }
-        
-        let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)
-        let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
-        
-        // We must update previousTouchInputs *before* calling activate() and deactivate().
-        // Otherwise, race conditions that cause duplicate touches from activate() or deactivate() calls can result in various bugs.
-        self.previousTouchInputs = self.touchInputs
-        
-        for input in activatedInputs
+        for input in inputs
         {
             self.activate(input)
         }
-        
-        for input in deactivatedInputs
+    }
+    
+    func deactivateButtonInputs(_ inputs: Set<AnyInput>)
+    {
+        for input in inputs
         {
             self.deactivate(input)
-        }
-        
-        if activatedInputs.count > 0
-        {
-            switch UIDevice.current.feedbackSupportLevel
-            {
-            case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
-            case .basic, .unsupported: UIDevice.current.vibrate()
-            }
         }
     }
     

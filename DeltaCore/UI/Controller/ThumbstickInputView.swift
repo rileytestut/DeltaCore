@@ -7,19 +7,6 @@
 //
 
 import UIKit
-import UIKit.UIGestureRecognizerSubclass
-
-private class ImmediatePanGestureRecognizer: UIPanGestureRecognizer
-{
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent)
-    {
-        guard self.state != .began else { return }
-        
-        super.touchesBegan(touches, with: event)
-        
-        self.state = .began
-    }
-}
 
 extension ThumbstickInputView
 {
@@ -48,7 +35,6 @@ extension ThumbstickInputView
 
 class ThumbstickInputView: UIView
 {
-    var extendedFrame: CGRect?
     var valueChangedHandler: ((Double, Double) -> Void)?
     
     var thumbstickImage: UIImage? {
@@ -102,19 +88,6 @@ class ThumbstickInputView: UIView
         super.layoutSubviews()
         
         self.update()
-    }
-    
-    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool
-    {
-        guard
-            let extendedFrame = self.extendedFrame,
-            let superview = self.superview
-        else { return super.point(inside: point, with: event) }
-        
-        let convertedFrame = self.convert(extendedFrame, from: superview)
-        
-        let isPointInside = convertedFrame.contains(point)
-        return isPointInside
     }
 }
 

@@ -11,6 +11,7 @@
 		BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */; };
 		BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */; };
 		BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1881C5EEC14007E2494 /* SaveState.swift */; };
+		BF27601122F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */; };
 		BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */; };
 		BF31A1F62268DE5700C64A1B /* ThumbstickInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */; };
 		BF3273D51B86428200494CFC /* ExternalGameControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */; };
@@ -20,6 +21,7 @@
 		BF46349120D882F900CD12FD /* ControllerInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF46348E20D882F900CD12FD /* ControllerInputView.swift */; };
 		BF4689631AACF36800A2586D /* DeltaCore.h in Headers */ = {isa = PBXBuildFile; fileRef = BF4689621AACF36800A2586D /* DeltaCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4689811AAD703500A2586D /* GameProtocol.swift */; };
+		BF4696BC22F7DB98008DD7F2 /* ButtonsInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4696BB22F7DB98008DD7F2 /* ButtonsInputView.swift */; };
 		BF5027081F210B05007EF163 /* StandardGameControllerInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */; };
 		BF57D1F81EA6DF840013CB1D /* VideoFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */; };
 		BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5996911EA01DC000595F8D /* FilterChain.swift */; };
@@ -93,6 +95,7 @@
 		BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SaveStateProtocol.swift; sourceTree = "<group>"; };
 		BF1FB1881C5EEC14007E2494 /* SaveState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SaveState.swift; sourceTree = "<group>"; };
 		BF2722091F40FB2100E19007 /* MFiGameController.deltamapping */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = MFiGameController.deltamapping; sourceTree = "<group>"; };
+		BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmediatePanGestureRecognizer.swift; sourceTree = "<group>"; };
 		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameControllerStateManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbstickInputView.swift; sourceTree = "<group>"; };
 		BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalGameControllerManager.swift; sourceTree = "<group>"; };
@@ -104,6 +107,7 @@
 		BF4689611AACF36800A2586D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4689621AACF36800A2586D /* DeltaCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaCore.h; sourceTree = "<group>"; };
 		BF4689811AAD703500A2586D /* GameProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameProtocol.swift; sourceTree = "<group>"; };
+		BF4696BB22F7DB98008DD7F2 /* ButtonsInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonsInputView.swift; sourceTree = "<group>"; };
 		BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardGameControllerInput.swift; sourceTree = "<group>"; };
 		BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoFormat.swift; sourceTree = "<group>"; };
 		BF5996911EA01DC000595F8D /* FilterChain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterChain.swift; sourceTree = "<group>"; };
@@ -158,6 +162,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BF27600D22F8CD73005D98FE /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				BFE438111AF60CDA0095A5F1 /* ControllerView.swift */,
+				BF4696BB22F7DB98008DD7F2 /* ButtonsInputView.swift */,
+				BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */,
+				BF46348E20D882F900CD12FD /* ControllerInputView.swift */,
+				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
+				BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */,
+			);
+			path = Controller;
+			sourceTree = "<group>";
+		};
+		BF27600F22F8CD8B005D98FE /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				BF9279521D2B53E2003084F3 /* GameViewController.swift */,
+				BF9873C01AB6C8BF0001D8C9 /* GameView.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
 		BF425A6D1D23922000F48ED9 /* Inputs */ = {
 			isa = PBXGroup;
 			children = (
@@ -272,12 +298,8 @@
 		BF9873BF1AB6C8AE0001D8C9 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				BF9279521D2B53E2003084F3 /* GameViewController.swift */,
-				BF9873C01AB6C8BF0001D8C9 /* GameView.swift */,
-				BFE438111AF60CDA0095A5F1 /* ControllerView.swift */,
-				BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */,
-				BF46348E20D882F900CD12FD /* ControllerInputView.swift */,
-				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
+				BF27600F22F8CD8B005D98FE /* Game */,
+				BF27600D22F8CD73005D98FE /* Controller */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -536,6 +558,7 @@
 				BFA5FCF620D3804400A3C5AB /* UIResponder+FirstResponder.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
+				BF27601122F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift in Sources */,
 				BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */,
 				BF0BC4FA225C138A000151C6 /* BitmapProcessor.swift in Sources */,
 				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
@@ -544,6 +567,7 @@
 				BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
+				BF4696BC22F7DB98008DD7F2 /* ButtonsInputView.swift in Sources */,
 				BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */,
 				BFBAB2E51EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift in Sources */,
 				BFE438101AF606980095A5F1 /* GameController.swift in Sources */,

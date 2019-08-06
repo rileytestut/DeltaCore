@@ -444,9 +444,25 @@ extension GameViewController
             
             let controllerViewBottomLayoutConstraint = self.preferredControllerViewBottomLayoutConstraint
             activate(controllerViewBottomLayoutConstraint)
-            activate(self.gameViewContainerViewControllerViewConstraint)
             
-            deactivate(self.gameViewContainerViewBottomConstraint)
+            if
+                let controllerSkin = self.controllerView.controllerSkin,
+                let traits = self.controllerView.controllerSkinTraits,
+                controllerSkin.gameScreenFrame(for: traits) != nil
+            {
+                // Custom game frame
+                
+                activate(self.gameViewContainerViewBottomConstraint)
+                deactivate(self.gameViewContainerViewControllerViewConstraint)
+            }
+            else
+            {
+                // Standard game frame
+                
+                activate(self.gameViewContainerViewControllerViewConstraint)
+                deactivate(self.gameViewContainerViewBottomConstraint)
+            }
+            
             deactivate(self.controllerViewCenterYConstraint)
             
         case _?:

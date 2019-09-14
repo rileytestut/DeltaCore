@@ -464,7 +464,8 @@ private extension EmulatorCore
                 let currentTime = Thread.absoluteSystemTime
                 
                 // The number of frames we need to skip to keep in sync
-                let framesToSkip = Int((currentTime - emulationTime) / frameDuration)
+                var framesToSkip = Int((currentTime - emulationTime) / frameDuration)
+                framesToSkip = min(framesToSkip, 5) // Prevent unbounding frame skipping resulting in frozen game.
                 
                 if framesToSkip > 0
                 {

@@ -617,14 +617,14 @@ private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)
     {
-        self.emulatorCoreQueue.async {
+        self.emulatorCoreQueue.sync {
             _ = self._pauseEmulation()
         }
     }
     
     @objc func didBecomeActive(with notification: Notification)
     {
-        self.emulatorCoreQueue.async {
+        self.emulatorCoreQueue.sync {
             _ = self._resumeEmulation()
         }
     }

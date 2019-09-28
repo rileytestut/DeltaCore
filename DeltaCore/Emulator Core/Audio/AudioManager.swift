@@ -228,7 +228,7 @@ private extension AudioManager
             let outputAudioBufferFrameCount = Int(outputAudioFormat.sampleRate * self.frameDuration)
             
             // Allocate enough space to prevent us from overwriting data before we've used it.
-            let ringBufferAudioBufferCount = Int((self.audioFormat.sampleRate / outputAudioFormat.sampleRate).rounded(.up) + 3.0)
+            let ringBufferAudioBufferCount = Int((self.audioFormat.sampleRate / outputAudioFormat.sampleRate).rounded(.up) + 10.0)
             
             let preferredBufferSize = inputAudioBufferFrameCount * self.audioFormat.frameSize * ringBufferAudioBufferCount
             guard let ringBuffer = RingBuffer(preferredBufferSize: preferredBufferSize) else {

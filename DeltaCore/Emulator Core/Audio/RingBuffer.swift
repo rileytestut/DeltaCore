@@ -108,6 +108,13 @@ public extension RingBuffer
         guard self.isEnabled else { return 0 }
         guard self.availableBytesForWriting > 0 else { return 0 }
         
+        if size > self.availableBytesForWriting
+        {
+            print("Ring Buffer Capacity reached. Available: \(self.availableBytesForWriting). Requested: \(size) Max: \(self.bufferLength). Filled: \(self.usedBytesCount).")
+            
+            self.reset()
+        }
+        
         let size = min(size, self.availableBytesForWriting)
         memcpy(self.head, buffer, size)
         
@@ -122,6 +129,13 @@ public extension RingBuffer
     {
         guard self.isEnabled else { return 0 }
         guard self.availableBytesForReading > 0 else { return 0 }
+        
+        if preferredSize > self.availableBytesForReading
+        {
+            print("Ring Buffer Empty. Available: \(self.availableBytesForReading). Requested: \(preferredSize) Max: \(self.bufferLength). Filled: \(self.usedBytesCount).")
+            
+            self.reset()
+        }
         
         let size = min(preferredSize, self.availableBytesForReading)
         memcpy(buffer, self.tail, size)

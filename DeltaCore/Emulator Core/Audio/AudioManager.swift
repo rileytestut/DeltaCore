@@ -108,6 +108,7 @@ public class AudioManager: NSObject, AudioRendering
         self.updateOutputVolume()
         
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
 }
 
@@ -281,7 +282,31 @@ private extension AudioManager
         }
         else
         {
-            self.audioEngine.mainMixerNode.outputVolume = 1.0
+            if self.isHeadsetPluggedIn() && AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
+            {
+                self.audioEngine.mainMixerNode.outputVolume = 0.0
+            }
+            else
+            {
+                self.audioEngine.mainMixerNode.outputVolume = 1.0
+            }
         }
+    }
+    
+    func isHeadsetPluggedIn() -> Bool
+    {
+        let route = AVAudioSession.sharedInstance().currentRoute
+        
+        for description in route.outputs
+        {
+            print(description.portType)
+            
+            if description.portType == .headphones || description.portType == .bluetoothA2DP
+            {
+                return true
+            }
+        }
+        
+        return false
     }
 }

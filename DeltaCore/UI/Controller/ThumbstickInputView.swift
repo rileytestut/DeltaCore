@@ -35,6 +35,8 @@ extension ThumbstickInputView
 
 class ThumbstickInputView: UIView
 {
+    var isHapticFeedbackEnabled = true
+    
     var valueChangedHandler: ((Double, Double) -> Void)?
     
     var thumbstickImage: UIImage? {
@@ -101,8 +103,12 @@ private extension ThumbstickInputView
             let location = gestureRecognizer.location(in: self)
             self.trackingOrigin = location
             
-            self.lightFeedbackGenerator.prepare()
-            self.mediumFeedbackGenerator.prepare()
+            if self.isHapticFeedbackEnabled
+            {
+                self.lightFeedbackGenerator.prepare()
+                self.mediumFeedbackGenerator.prepare()
+            }
+            
             self.update()
             
         case .changed:
@@ -144,7 +150,12 @@ private extension ThumbstickInputView
             self.trackingOrigin = origin
             
         case .ended, .cancelled:
-            self.mediumFeedbackGenerator.impactOccurred()
+            
+            if self.isHapticFeedbackEnabled
+            {
+                self.mediumFeedbackGenerator.impactOccurred()
+            }
+            
             self.update()
             
             self.trackingOrigin = nil
@@ -220,7 +231,7 @@ private extension ThumbstickInputView
         
         if let direction = Direction(xAxis: xAxis, yAxis: yAxis, threshold: threshold)
         {
-            if self.previousDirection != direction
+            if self.previousDirection != direction && self.isHapticFeedbackEnabled
             {
                 self.mediumFeedbackGenerator.impactOccurred()
             }
@@ -229,7 +240,7 @@ private extension ThumbstickInputView
         }
         else
         {
-            if isActivated && !self.isActivated
+            if isActivated && !self.isActivated && self.isHapticFeedbackEnabled
             {
                 self.lightFeedbackGenerator.selectionChanged()
             }

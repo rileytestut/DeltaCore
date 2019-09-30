@@ -74,6 +74,18 @@ public class ControllerView: UIView, GameController
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
     
+    public var isButtonHapticFeedbackEnabled = true {
+        didSet {
+            self.buttonsView.isHapticFeedbackEnabled = self.isButtonHapticFeedbackEnabled
+        }
+    }
+    
+    public var isThumbstickHapticFeedbackEnabled = true {
+        didSet {
+            self.thumbstickViews.values.forEach { $0.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled }
+        }
+    }
+    
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var name: String {
@@ -350,6 +362,8 @@ public extension ControllerView
                         thumbstickView.thumbstickImage = image
                         thumbstickView.thumbstickSize = size
                     }
+                    
+                    thumbstickView.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled
                     
                     thumbstickViews[item] = thumbstickView
                     

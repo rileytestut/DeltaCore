@@ -10,6 +10,8 @@ import Foundation
 
 class ButtonsInputView: UIView
 {
+    var isHapticFeedbackEnabled = true
+    
     var controllerSkin: ControllerSkinProtocol?
     var controllerSkinTraits: ControllerSkin.Traits?
     
@@ -134,10 +136,13 @@ private extension ButtonsInputView
         {
             self.activateInputsHandler?(activatedInputs)
             
-            switch UIDevice.current.feedbackSupportLevel
+            if self.isHapticFeedbackEnabled
             {
-            case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
-            case .basic, .unsupported: UIDevice.current.vibrate()
+                switch UIDevice.current.feedbackSupportLevel
+                {
+                case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
+                case .basic, .unsupported: UIDevice.current.vibrate()
+                }
             }
         }
         

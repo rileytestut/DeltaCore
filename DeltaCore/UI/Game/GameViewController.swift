@@ -95,8 +95,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var gameViewContainerViewLayoutConstraints = [NSLayoutConstraint]()
     
     private var controllerViewCenterYConstraint: NSLayoutConstraint!
+    
     private var controllerViewBottomConstraint: NSLayoutConstraint!
     private var controllerViewBottomSafeAreaConstraint: NSLayoutConstraint!
+    private lazy var controllerViewBottomConstraints = [self.controllerViewBottomConstraint!, self.controllerViewBottomSafeAreaConstraint!]
     
     private var gameViewContainerViewBottomConstraint: NSLayoutConstraint!
     private var gameViewContainerViewControllerViewConstraint: NSLayoutConstraint!
@@ -412,8 +414,9 @@ extension GameViewController
         
         defer
         {
-            NSLayoutConstraint.activate(activatedLayoutConstraints)
+            // Must deactivate first to prevent conflicting constraint errors.
             NSLayoutConstraint.deactivate(deactivatedLayoutConstraints)
+            NSLayoutConstraint.activate(activatedLayoutConstraints)
         }
         
         defer
@@ -444,6 +447,11 @@ extension GameViewController
             
             let controllerViewBottomLayoutConstraint = self.preferredControllerViewBottomLayoutConstraint
             activate(controllerViewBottomLayoutConstraint)
+            
+            for constraint in self.controllerViewBottomConstraints where constraint != controllerViewBottomLayoutConstraint
+            {
+                deactivate(constraint)
+            }
             
             if
                 let controllerSkin = self.controllerView.controllerSkin,

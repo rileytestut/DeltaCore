@@ -117,6 +117,8 @@ public class ControllerView: UIView, GameController
     
     private var controllerInputView: ControllerInputView?
     
+    private(set) var imageCache = NSCache<NSString, NSCache<NSString, UIImage>>()
+    
     public override var intrinsicContentSize: CGSize {
         return self.buttonsView.intrinsicContentSize
     }
@@ -305,7 +307,35 @@ public extension ControllerView
             }
             else
             {
-                let image = self.controllerSkin?.image(for: traits, preferredSize: self.controllerSkinSize)
+                let image: UIImage?
+                
+                if let controllerSkin = self.controllerSkin
+                {
+                    let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
+                    
+                    if
+                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
+                        let cachedImage = cache.object(forKey: cacheKey as NSString)
+                    {
+                        image = cachedImage
+                    }
+                    else
+                    {
+                        image = controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
+                    }
+                    
+                    if let image = image
+                    {
+                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
+                        cache.setObject(image, forKey: cacheKey as NSString)
+                        self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
+                    }                    
+                }
+                else
+                {
+                    image = nil
+                }
+                
                 self.buttonsView.image = image
                 
                 self.isUserInteractionEnabled = true

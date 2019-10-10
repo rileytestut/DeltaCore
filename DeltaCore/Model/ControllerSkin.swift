@@ -171,7 +171,7 @@ public extension ControllerSkin
     
     func thumbstick(for item: ControllerSkin.Item, traits: Traits, preferredSize: Size) -> (UIImage, CGSize)?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         guard let imageName = item.thumbstickImageName, let size = item.thumbstickSize else { return nil }
         guard let entry = self.archive[imageName] else { return nil }
         
@@ -217,7 +217,7 @@ public extension ControllerSkin
     
     func image(for traits: Traits, preferredSize: Size) -> UIImage?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         
         let cacheKey = self.cacheKey(for: traits, size: preferredSize)
         
@@ -267,7 +267,7 @@ public extension ControllerSkin
     
     func inputs(for traits: Traits, at point: CGPoint) -> [Input]?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         
         var inputs: [Input] = []
         
@@ -328,25 +328,25 @@ public extension ControllerSkin
     
     func items(for traits: Traits) -> [Item]?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         return representation.items
     }
     
     func isTranslucent(for traits: Traits) -> Bool?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         return representation.isTranslucent
     }
     
     func gameScreenFrame(for traits: Traits) -> CGRect?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         return representation.gameScreenFrame
     }
     
     func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
     {
-        guard let representation = self.representations[traits] else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
         return representation.aspectRatio
     }
 }
@@ -387,6 +387,21 @@ private extension ControllerSkin
     func cacheKey(for traits: Traits, size: Size) -> String
     {
         return String(describing: traits) + "-" + String(describing: size)
+    }
+    
+    func representation(for traits: Traits) -> Representation?
+    {
+        let representation = self.representations[traits]
+        guard representation == nil else {
+            return representation
+        }
+        
+        guard let fallbackTraits = self.supportedTraits(for: traits) else {
+            return nil
+        }
+        
+        let fallbackRepresentation = self.representations[fallbackTraits]
+        return fallbackRepresentation
     }
 }
 

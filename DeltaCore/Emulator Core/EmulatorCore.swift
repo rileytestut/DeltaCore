@@ -360,6 +360,8 @@ extension EmulatorCore: GameControllerReceiver
             return self.mappedInput(for: mappedInput) == input
         })
         
+        let effectiveValue = input.isContinuous ? value : value.rounded()
+        
         if isSustainedInput && !input.isContinuous
         {
             self.reactivateInputsQueue.async {
@@ -375,12 +377,12 @@ extension EmulatorCore: GameControllerReceiver
 
                 self.reactivateInputsDispatchGroup = nil
                 
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: effectiveValue)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: effectiveValue)
         }
     }
     

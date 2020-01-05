@@ -13,7 +13,7 @@ public extension GameControllerInputType
     static let standard = GameControllerInputType("standard")
 }
 
-public enum StandardGameControllerInput: String, Codable
+public enum StandardGameControllerInput: String, Codable, CaseIterable, Comparable
 {
     case menu
     
@@ -68,6 +68,21 @@ extension StandardGameControllerInput: Input
 public extension StandardGameControllerInput
 {
     private static var inputMappings = [GameType: GameControllerInputMapping]()
+    private static var orderedCases: [StandardGameControllerInput:Int] = {
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        
+        var cases = StandardGameControllerInput.allCases
+        var casesMap: [StandardGameControllerInput:Int] = [:]
+        for (index, inputCase) in cases.enumerated() {
+            print("<><><><    index:\(index), inputCase:\(inputCase.rawValue)")
+            casesMap[inputCase] = index
+        }
+        return casesMap
+    }()
     
     func input(for gameType: GameType) -> Input?
     {
@@ -94,5 +109,34 @@ public extension StandardGameControllerInput
         {
             fatalError(String(describing: error))
         }
+    }
+    
+    static func < (lhs: StandardGameControllerInput, rhs: StandardGameControllerInput) -> Bool {
+        guard let lhsCase = orderedCases[lhs], let rhsCase = orderedCases[rhs] else { return false }
+        return lhsCase < rhsCase
+    }
+    
+    static func sort() {
+        
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<>StandardGameControllerInput.orderedCases<>::::\(StandardGameControllerInput.orderedCases)")
+        
+        
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<><><><>")
+        print("<>StandardGameControllerInput.allCases<>::::\(StandardGameControllerInput.allCases)")
     }
 }

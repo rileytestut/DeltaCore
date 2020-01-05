@@ -9,6 +9,14 @@
 
 import UIKit
 import AVFoundation
+#if os(tvOS)
+import GameController
+// need to inherit from this so that tvOS controller input on
+// game vs UIkit nav works properly since 'b' also acts as menu button
+public typealias GameViewControllerRootClass = GCEventViewController
+#else
+public typealias GameViewControllerRootClass = UIViewController
+#endif
 
 fileprivate extension NSLayoutConstraint
 {
@@ -49,7 +57,7 @@ public extension GameViewControllerDelegate
 
 private var kvoContext = 0
 
-open class GameViewController: UIViewController, GameControllerReceiver
+open class GameViewController: GameViewControllerRootClass, GameControllerReceiver
 {
     open var game: GameProtocol?
     {
@@ -119,9 +127,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
     
     /// UIViewController
+    #if os(iOS)
     open override var prefersStatusBarHidden: Bool {
         return true
     }
+    #endif
     
     public required init()
     {
@@ -142,9 +152,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
         
+        #if os(iOS)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        #endif
     }
     
     deinit
@@ -157,11 +169,13 @@ open class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
+    #if os(iOS)
     open override var prefersHomeIndicatorAutoHidden: Bool
     {
         let prefersHomeIndicatorAutoHidden = self.view.bounds.width > self.view.bounds.height
         return prefersHomeIndicatorAutoHidden
     }
+    #endif
     
     open dynamic override func viewDidLoad()
     {
@@ -303,7 +317,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
             self.gameView.inputImage = self.gameView.outputImage
         }
         
+        #if os(iOS)
         self.setNeedsUpdateOfHomeIndicatorAutoHidden()
+        #endif
     }
     
     // MARK: - KVO -
@@ -637,6 +653,7 @@ private extension GameViewController
         }
     }
     
+    #if os(iOS)
     @objc func keyboardWillShow(with notification: Notification)
     {
         guard let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
@@ -679,4 +696,5 @@ private extension GameViewController
         }
         animator.startAnimation()
     }
+    #endif
 }

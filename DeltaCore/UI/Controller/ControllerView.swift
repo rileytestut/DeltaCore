@@ -158,11 +158,13 @@ public class ControllerView: UIView, GameController
         self.controllerDebugView.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(self.controllerDebugView)
         
+        #if os(iOS)
         self.isMultipleTouchEnabled = true
         
         // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
         self.inputAssistantItem.leadingBarButtonGroups = []
         self.inputAssistantItem.trailingBarButtonGroups = []
+        #endif
         
         NotificationCenter.default.addObserver(self, selector: #selector(ControllerView.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
         

@@ -19,6 +19,9 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 // HACK: Needed because the generated DeltaCore-Swift header file uses @import syntax, which isn't supported in Objective-C++ code.
 #import <GLKit/GLKit.h>
 #import <AVFoundation/AVFoundation.h>
+#if TARGET_OS_TV
+#import <GameController/GameController.h> // for GCEventViewController
+#endif
 
 // Extensible Enums
 typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;

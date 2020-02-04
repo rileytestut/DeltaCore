@@ -15,14 +15,8 @@ FOUNDATION_EXPORT double DeltaCoreVersionNumber;
 FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <DeltaCore/PublicHeader.h>
+#import <DeltaCore/DeltaTypes.h>
 
 // HACK: Needed because the generated DeltaCore-Swift header file uses @import syntax, which isn't supported in Objective-C++ code.
 #import <GLKit/GLKit.h>
 #import <AVFoundation/AVFoundation.h>
-
-// Extensible Enums
-typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;
-typedef NSString *CheatType NS_TYPED_EXTENSIBLE_ENUM;
-typedef NSString *GameControllerInputType NS_TYPED_EXTENSIBLE_ENUM;
-
-extern NSNotificationName const DeltaRegistrationRequestNotification;

@@ -8,7 +8,7 @@
 
 import UIKit
 
-#if FRAMEWORK
+#if FRAMEWORK || STATIC_LIBRARY
 import ZIPFoundation
 #endif
 
@@ -153,7 +153,7 @@ public extension ControllerSkin
     {
         guard
             let deltaCore = Delta.core(for: gameType),
-            let fileURL = deltaCore.bundle.url(forResource: "Standard", withExtension: "deltaskin")
+            let fileURL = deltaCore.resourceBundle.url(forResource: "Standard", withExtension: "deltaskin")
         else { return nil }
         
         let controllerSkin = ControllerSkin(fileURL: fileURL)

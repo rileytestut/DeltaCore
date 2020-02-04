@@ -1,5 +1,5 @@
 //
-//  DeltaCore.m
+//  DeltaTypes.m
 //  DeltaCore
 //
 //  Created by Riley Testut on 6/30/16.

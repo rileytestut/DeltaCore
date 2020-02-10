@@ -23,6 +23,12 @@ public class FilterChain: CIFilter
         })
     }
     
+    public override init()
+    {
+        // Must be declared or else we'll get "Use of unimplemented initializer FilterChain.init()" runtime exception.
+        super.init()
+    }
+    
     public init(filters: [CIFilter])
     {
         self.inputFilters = filters

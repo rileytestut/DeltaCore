@@ -38,6 +38,11 @@ private struct ControllerViewInputMapping: GameControllerInputMappingProtocol
     }
 }
 
+extension ControllerView
+{
+    public static let controllerViewDidChangeControllerSkinNotification = Notification.Name("controllerViewDidChangeControllerSkinNotification")
+}
+
 public class ControllerView: UIView, GameController
 {
     //MARK: - Properties -
@@ -45,6 +50,7 @@ public class ControllerView: UIView, GameController
     public var controllerSkin: ControllerSkinProtocol? {
         didSet {
             self.updateControllerSkin()
+            NotificationCenter.default.post(name: ControllerView.controllerViewDidChangeControllerSkinNotification, object: self)
         }
     }
     

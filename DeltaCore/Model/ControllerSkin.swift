@@ -32,6 +32,17 @@ private extension Archive
     }
 }
 
+extension ControllerSkin
+{
+    public struct Screen
+    {
+        public var inputFrame: CGRect?
+        public var outputFrame: CGRect
+        
+        public var filters: [CIFilter]?
+    }
+}
+
 public struct ControllerSkin: ControllerSkinProtocol
 {
     public let name: String
@@ -341,7 +352,13 @@ public extension ControllerSkin
     func gameScreenFrame(for traits: Traits) -> CGRect?
     {
         guard let representation = self.representation(for: traits) else { return nil }
-        return representation.gameScreenFrame
+        return representation.screens?.first?.outputFrame
+    }
+    
+    func screens(for traits: Traits) -> [ControllerSkin.Screen]?
+    {
+        guard let representation = self.representation(for: traits) else { return nil }
+        return representation.screens
     }
     
     func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
@@ -714,7 +731,7 @@ private extension ControllerSkin
         
         let assets: [AssetSize: String]
         let isTranslucent: Bool
-        let gameScreenFrame: CGRect?
+        let screens: [Screen]?
         let aspectRatio: CGSize
         
         let items: [Item]
@@ -767,11 +784,90 @@ private extension ControllerSkin
                 let gameScreenFrame = CGRect(dictionary: gameScreenFrameDictionary)
             {
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
-                self.gameScreenFrame = gameScreenFrame.applying(scaleTransform)
+                let frame = gameScreenFrame.applying(scaleTransform)
+                
+                self.screens = [Screen(inputFrame: nil, outputFrame: frame)]
+            }
+            else if let screensArray = dictionary["screens"] as? [[String: Any]]
+            {
+                let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+                
+                let screens = screensArray.compactMap { (screenDictionary) -> Screen? in
+                    guard
+                        let outputFrameDictionary = screenDictionary["outputFrame"] as? [String: CGFloat],
+                        let outputFrame = CGRect(dictionary: outputFrameDictionary)
+                    else { return nil }
+                    
+                    let normalizedOutputFrame = outputFrame.applying(scaleTransform)
+                    
+                    var inputFrame: CGRect?
+                    if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
+                    {
+                        inputFrame = frame
+                    }
+                    
+                    var filters: [CIFilter]?
+                    if let filtersArray = screenDictionary["filters"] as? [[String: Any]]
+                    {
+                        filters = filtersArray.compactMap { (dictionary) -> CIFilter? in
+                            guard let name = dictionary["name"] as? String else { return nil }
+                            let parameters = dictionary["parameters"] as? [String: Any]
+                            
+                            guard let filter = CIFilter(name: name) else { return nil }
+                            
+                            var filterParameters = [String: Any]()
+                            
+                            for (parameter, value) in parameters ?? [:]
+                            {
+                                guard let attribute = filter.attributes[parameter] as? [String: Any] else { continue }
+                                guard let className = attribute[kCIAttributeClass] as? String else { continue }
+                                
+                                let mappedValue: Any
+                                
+                                switch (className, value)
+                                {
+                                case (NSStringFromClass(NSNumber.self), let value as NSNumber):
+                                    mappedValue = value
+                                    
+                                case (NSStringFromClass(CIVector.self), let value as [String: CGFloat]):
+                                    guard let x = value["x"], let y = value["y"] else { continue }
+                                    
+                                    if let width = value["width"], let height = value["height"]
+                                    {
+                                        let vector = CIVector(cgRect: CGRect(x: x, y: y, width: width, height: height))
+                                        mappedValue = vector
+                                    }
+                                    else
+                                    {
+                                        let vector = CIVector(x: x, y: y)
+                                        mappedValue = vector
+                                    }
+                                    
+                                case (NSStringFromClass(CIColor.self), let value as [String: CGFloat]):
+                                    guard let red = value["r"], let green = value["g"], let blue = value["b"] else { continue }
+                                    
+                                    let color = CIColor(red: red / 255.0, green: green / 255.0, blue: blue / 255.0)
+                                    mappedValue = color
+                                    
+                                default: continue
+                                }
+                                
+                                filter.setValue(mappedValue, forKey: parameter)
+                            }
+                            
+                            return filter
+                        }
+                    }
+                    
+                    let screen = Screen(inputFrame: inputFrame, outputFrame: normalizedOutputFrame, filters: filters)
+                    return screen
+                }
+                
+                self.screens = screens
             }
             else
             {
-                self.gameScreenFrame = nil
+                self.screens = nil
             }
         }
         

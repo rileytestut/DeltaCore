@@ -120,6 +120,7 @@ public class GameView: UIView
     private func initialize()
     {        
         self.glkView.frame = self.bounds
+        self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self.glkViewDelegate
         self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
@@ -138,20 +139,7 @@ public class GameView: UIView
     {
         super.layoutSubviews()
         
-        if let outputImage = self.outputImage
-        {
-            let frame = AVMakeRect(aspectRatio: outputImage.extent.size, insideRect: self.bounds)
-            self.glkView.frame = frame
-            
-            self.glkView.isHidden = false
-        }
-        else
-        {
-            let frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-            self.glkView.frame = frame
-            
-            self.glkView.isHidden = true
-        }
+        self.glkView.isHidden = (self.outputImage == nil)
     }
 }
 

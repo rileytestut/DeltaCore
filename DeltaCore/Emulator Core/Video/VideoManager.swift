@@ -32,14 +32,17 @@ public class VideoManager: NSObject, VideoRendering
     public var isEnabled = true
     
     private let context: EAGLContext
+    private let ciContext: CIContext
     
     private var processor: VideoProcessor
-    private var processedImage: CIImage?
+    @NSCopying private var processedImage: CIImage?
+    @NSCopying private var displayedImage: CIImage? // Can only accurately snapshot rendered images.
     
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
         self.context = EAGLContext(api: .openGLES2)!
+        self.ciContext = CIContext(eaglContext: self.context, options: [.workingColorSpace: NSNull()])
         
         switch videoFormat.format
         {
@@ -96,7 +99,9 @@ public extension VideoManager
     {
         guard self.isEnabled else { return }
         
-        self.processedImage = self.processor.processFrame()
+        autoreleasepool {
+            self.processedImage = self.processor.processFrame()
+        }
     }
     
     func render()
@@ -111,6 +116,37 @@ public extension VideoManager
             {
                 gameView.inputImage = image
             }
-        }        
+
+            self.displayedImage = image
+        }
+    }
+ 
+    func snapshot() -> UIImage?
+    {
+        guard let displayedImage = self.displayedImage else { return nil }
+        
+        let imageWidth = Int(self.videoFormat.dimensions.width)
+        let imageHeight = Int(self.videoFormat.dimensions.height)
+        let capacity = imageWidth * imageHeight * 4
+        
+        let imageBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: capacity, alignment: 1)
+        defer { imageBuffer.deallocate() }
+        
+        guard let baseAddress = imageBuffer.baseAddress, let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        
+        // Must render to raw buffer first so we can set CGImageAlphaInfo.noneSkipLast flag when creating CGImage.
+        // Otherwise, some parts of images may incorrectly be transparent.
+        self.ciContext.render(displayedImage, toBitmap: baseAddress, rowBytes: imageWidth * 4, bounds: displayedImage.extent, format: .RGBA8, colorSpace: colorSpace)
+        
+        let data = Data(bytes: baseAddress, count: imageBuffer.count)
+        let bitmapInfo: CGBitmapInfo = [CGBitmapInfo.byteOrder32Big, CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)]
+        
+        guard
+            let dataProvider = CGDataProvider(data: data as CFData),
+            let cgImage = CGImage(width: imageWidth, height: imageHeight, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: imageWidth * 4, space: colorSpace, bitmapInfo: bitmapInfo, provider: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+        else { return nil }
+        
+        let image = UIImage(cgImage: cgImage)
+        return image
     }
 }

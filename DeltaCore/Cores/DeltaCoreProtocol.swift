@@ -29,6 +29,8 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     
     /* Emulation */
     var emulatorBridge: EmulatorBridging { get }
+    
+    var resourceBundle: Bundle { get }
 }
 
 public extension DeltaCoreProtocol

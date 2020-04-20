@@ -157,7 +157,7 @@ private extension RingBuffer
     func incrementAvailableBytes(by size: Int)
     {
         self.tailOffset = (self.tailOffset + size) % self.bufferLength
-        self.usedBytesCount -= Int32(size)
+        self.usedBytesCount -= min(Int32(size), self.usedBytesCount) // Prevent going below 0
     }
     
     func decrementAvailableBytes(by size: Int)

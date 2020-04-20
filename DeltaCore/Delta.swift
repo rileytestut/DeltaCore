@@ -44,4 +44,13 @@ public struct Delta
     {
         return self.registeredCores[gameType]
     }
+    
+    public static var coresDirectoryURL: URL = {
+        let documentsDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let coresDirectoryURL = documentsDirectoryURL.appendingPathComponent("Cores", isDirectory: true)
+        
+        try? FileManager.default.createDirectory(at: coresDirectoryURL, withIntermediateDirectories: true, attributes: nil)
+        
+        return coresDirectoryURL
+    }()
 }

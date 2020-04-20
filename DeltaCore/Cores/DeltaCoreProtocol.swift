@@ -63,6 +63,14 @@ public extension DeltaCoreProtocol
         
         return bundle
     }
+    
+    var directoryURL: URL {
+        let directoryURL = Delta.coresDirectoryURL.appendingPathComponent(self.name, isDirectory: true)
+        
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+        
+        return directoryURL
+    }
 }
 
 public extension DeltaCoreProtocol

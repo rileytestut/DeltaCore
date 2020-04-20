@@ -69,7 +69,7 @@ public extension DeltaCoreProtocol
 {
     var description: String {
         let description = "\(self.name) (\(self.identifier))"
-        return self.name
+        return description
     }
 }
 

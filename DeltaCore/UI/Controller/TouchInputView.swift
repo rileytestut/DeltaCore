@@ -38,7 +38,10 @@ private extension TouchInputView
         case .began, .changed:
             let location = gestureRecognizer.location(in: self)
             
-            let adjustedLocation = CGPoint(x: location.x / self.bounds.width, y: location.y / self.bounds.height)
+            var adjustedLocation = CGPoint(x: location.x / self.bounds.width, y: location.y / self.bounds.height)
+            adjustedLocation.x = min(max(adjustedLocation.x, 0), 1)
+            adjustedLocation.y = min(max(adjustedLocation.y, 0), 1)
+            
             self.valueChangedHandler?(adjustedLocation)
             
         case .ended, .cancelled:

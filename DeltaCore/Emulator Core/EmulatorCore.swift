@@ -294,18 +294,7 @@ public extension EmulatorCore
 {
     func activate(_ cheat: CheatProtocol) throws
     {
-        var success = true
-        
-        let codes = cheat.code.split(separator: "\n")
-        for code in codes
-        {
-            if !self.deltaCore.emulatorBridge.addCheatCode(String(code), type: cheat.type.rawValue)
-            {
-                success = false
-                break
-            }
-        }
-        
+        let success = self.deltaCore.emulatorBridge.addCheatCode(String(cheat.code), type: cheat.type.rawValue)
         if success
         {
             self.cheatCodes[cheat.code] = cheat.type
@@ -335,11 +324,7 @@ public extension EmulatorCore
         
         for (cheatCode, type) in self.cheatCodes
         {
-            let codes = cheatCode.split(separator: "\n")
-            for code in codes
-            {
-                self.deltaCore.emulatorBridge.addCheatCode(String(code), type: type.rawValue)
-            }
+            self.deltaCore.emulatorBridge.addCheatCode(String(cheatCode), type: type.rawValue)
         }
         
         self.deltaCore.emulatorBridge.updateCheats()

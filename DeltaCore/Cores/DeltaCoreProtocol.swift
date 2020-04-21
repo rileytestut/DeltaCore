@@ -81,7 +81,17 @@ public extension DeltaCoreProtocol
     }
 }
 
-public func ==(lhs: DeltaCoreProtocol, rhs: DeltaCoreProtocol) -> Bool
+public func ==(lhs: DeltaCoreProtocol?, rhs: DeltaCoreProtocol?) -> Bool
 {
-    return lhs.identifier == rhs.identifier
+    return lhs?.identifier == rhs?.identifier
+}
+
+public func !=(lhs: DeltaCoreProtocol?, rhs: DeltaCoreProtocol?) -> Bool
+{
+    return !(lhs == rhs)
+}
+
+public func ~=(lhs: DeltaCoreProtocol?, rhs: DeltaCoreProtocol?) -> Bool
+{
+    return lhs == rhs
 }

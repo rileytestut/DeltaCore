@@ -55,8 +55,6 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         didSet
         {
-            guard oldValue?.fileURL != self.game?.fileURL else { return }
-            
             if let game = self.game
             {
                 self.emulatorCore = EmulatorCore(game: game)

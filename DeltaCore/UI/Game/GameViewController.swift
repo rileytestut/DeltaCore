@@ -357,7 +357,8 @@ extension GameViewController
         if
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
-            let screens = controllerSkin.screens(for: traits)
+            let screens = controllerSkin.screens(for: traits),
+            !self.controllerView.isHidden
         {
             for screen in screens
             {

@@ -846,7 +846,9 @@ private extension ControllerSkin
                                 case (NSStringFromClass(CIColor.self), let value as [String: CGFloat]):
                                     guard let red = value["r"], let green = value["g"], let blue = value["b"] else { continue }
                                     
-                                    let color = CIColor(red: red / 255.0, green: green / 255.0, blue: blue / 255.0)
+                                    let alpha = value["a"] ?? 255.0
+                                    
+                                    let color = CIColor(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: alpha / 255.0)
                                     mappedValue = color
                                     
                                 default: continue

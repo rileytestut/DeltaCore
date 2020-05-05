@@ -88,7 +88,7 @@ public class GameView: UIView
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
             
-            self.glkView.context = newValue
+            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
             self.context = self.makeContext()
         }
     }

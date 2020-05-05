@@ -63,7 +63,7 @@ public class GameView: UIView
     public var outputImage: CIImage? {
         guard let inputImage = self.inputImage else { return nil }
         
-        var image: CIImage? = inputImage.clampedToExtent()
+        var image: CIImage?
         
         switch self.samplerMode
         {
@@ -77,8 +77,7 @@ public class GameView: UIView
             image = filter.outputImage
         }
         
-        let outputImage = image?.cropped(to: inputImage.extent)
-        return outputImage
+        return image
     }
     
     internal var eaglContext: EAGLContext {

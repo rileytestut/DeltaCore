@@ -364,29 +364,26 @@ extension GameViewController
             {
                 let gameView = previousGameViews.popLast() ?? GameView(frame: .zero)
                 
-                var filters = screen.filters ?? []
+                var filters = [CIFilter]()
                 
                 if let inputFrame = screen.inputFrame
                 {
                     let cropFilter = CIFilter(name: "CICrop", parameters: ["inputRectangle": CIVector(cgRect: inputFrame)])!
-                    filters.insert(cropFilter, at: 0)
-                    
-                    // Translate cropped image back to its origin.
-                    let translation = CGAffineTransform.identity.translatedBy(x: -inputFrame.minX, y: -inputFrame.minY)
-                    let translationFilter = CIFilter(name: "CIAffineTransform", parameters: ["inputTransform": NSValue(cgAffineTransform: translation)])!
-                    filters.insert(translationFilter, at: 1)
+                    filters.append(cropFilter)
+                }
+                
+                if let screenFilters = screen.filters
+                {
+                    filters.append(contentsOf: screenFilters)
                 }
                 
                 if filters.isEmpty
                 {
                     gameView.filter = nil
                 }
-                else if filters.count == 1
-                {
-                    gameView.filter = filters.first
-                }
                 else
                 {
+                    // Always use FilterChain since it has additional logic for chained filters.
                     let filterChain = FilterChain(filters: filters)
                     gameView.filter = filterChain
                 }

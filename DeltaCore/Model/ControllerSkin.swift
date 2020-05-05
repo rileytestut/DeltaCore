@@ -821,6 +821,7 @@ private extension ControllerSkin
                             {
                                 guard let attribute = filter.attributes[parameter] as? [String: Any] else { continue }
                                 guard let className = attribute[kCIAttributeClass] as? String else { continue }
+                                guard let attributeType = attribute[kCIAttributeType] as? String else { continue }
                                 
                                 let mappedValue: Any
                                 
@@ -851,6 +852,25 @@ private extension ControllerSkin
                                     let color = CIColor(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: alpha / 255.0)
                                     mappedValue = color
                                     
+                                case (NSStringFromClass(NSValue.self), let value as [String: CGFloat]) where attributeType == kCIAttributeTypeTransform:
+                                    let transform: CGAffineTransform
+                                    
+                                    if let angle = value["rotation"]
+                                    {
+                                        let radians = angle * .pi / 180
+                                        transform = CGAffineTransform.identity.rotated(by: radians)
+                                    }
+                                    else
+                                    {
+                                        let x = value["scaleX"] ?? 1
+                                        let y = value["scaleY"] ?? 1
+                                        
+                                        transform = CGAffineTransform(scaleX: x, y: y)
+                                    }
+                                    
+                                    let value = NSValue(cgAffineTransform: transform)
+                                    mappedValue = value
+                                                                        
                                 default: continue
                                 }
                                 

@@ -47,26 +47,41 @@ private extension UIResponder
 
 public class KeyboardResponder: UIResponder
 {
-    private let _nextResponder: UIResponder?
+    private let _nextResponder: () -> UIResponder?
     
     public override var next: UIResponder? {
-        return self._nextResponder
+        return self._nextResponder()
     }
     
     // Use KeyPress.keyCode as dictionary key because KeyPress.key may be invalid for keyUp events.
     private static var activeKeyPresses = [Int: KeyPress]()
     private static var activeModifierFlags = UIKeyModifierFlags(rawValue: 0)
     
-    public init(nextResponder: UIResponder?)
+    public init(nextResponder: @autoclosure @escaping () -> UIResponder?)
     {
         self._nextResponder = nextResponder
     }
-}
-
-private extension KeyboardResponder
-{
+    
+    #if targetEnvironment(macCatalyst)
+    
+    override public func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?)
+    {
+        guard let key = presses.first?.key, let pressesEvent = event else { return super.pressesBegan(presses, with: event) }
+        
+        self.handlePress(key: key.charactersIgnoringModifiers, keyCode: key.keyCode.rawValue, modifierFlags: key.modifierFlags, isActive: true, event: pressesEvent)
+    }
+    
+    public override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?)
+    {
+        guard let key = presses.first?.key, let pressesEvent = event else { return super.pressesEnded(presses, with: event) }
+        
+        self.handlePress(key: key.charactersIgnoringModifiers, keyCode: key.keyCode.rawValue, modifierFlags: key.modifierFlags, isActive: false, event: pressesEvent)
+    }
+    
+    #else
+    
     // Implementation based on Steve Troughton-Smith's gist: https://gist.github.com/steventroughtonsmith/7515380
-    override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
+    fileprivate override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
     {
         // Retrieve information from event.
         guard
@@ -75,14 +90,25 @@ private extension KeyboardResponder
             let rawModifierFlags = event.value(forKey: "_modifierFlags") as? Int,
             let isActive = event.value(forKey: "_isKeyDown") as? Bool
         else { return nil }
-        
-        let modifierFlags = UIKeyModifierFlags(rawValue: rawModifierFlags)
+
+        self.handlePress(key: key, keyCode: keyCode, modifierFlags: UIKeyModifierFlags(rawValue: rawModifierFlags), isActive: isActive, event: event)
+
+        return nil
+    }
+    
+    #endif
+}
+
+private extension KeyboardResponder
+{
+    func handlePress(key: String, keyCode: Int, modifierFlags: UIKeyModifierFlags, isActive: Bool, event: UIEvent)
+    {
         defer { KeyboardResponder.activeModifierFlags = modifierFlags }
         
         let previousKeyPress = KeyboardResponder.activeKeyPresses[keyCode]
         
         // Ignore key presses that haven't changed activate state to filter out duplicate key press events.
-        guard previousKeyPress?.isActive != isActive else { return nil }
+        guard previousKeyPress?.isActive != isActive else { return }
         
         // Attempt to use previousKeyPress.key because key may be invalid for keyUp events.
         var pressedKey = previousKeyPress?.key ?? key
@@ -97,7 +123,7 @@ private extension KeyboardResponder
                     // Determine the newly activated modifier key.
                     let activatedModifierFlags = modifierFlags.subtracting(KeyboardResponder.activeModifierFlags)
                     
-                    guard let key = self.key(for: activatedModifierFlags) else { return nil }
+                    guard let key = self.key(for: activatedModifierFlags) else { return }
                     pressedKey = key
                 }
                 else
@@ -105,7 +131,7 @@ private extension KeyboardResponder
                     // Determine the newly deactivated modifier key.
                     let deactivatedModifierFlags = KeyboardResponder.activeModifierFlags.subtracting(modifierFlags)
                     
-                    guard let key = self.key(for: deactivatedModifierFlags) else { return nil }
+                    guard let key = self.key(for: deactivatedModifierFlags) else { return }
                     pressedKey = key
                 }
             }
@@ -150,8 +176,6 @@ private extension KeyboardResponder
             
             KeyboardResponder.activeKeyPresses[keyCode] = nil
         }
-        
-        return nil
     }
     
     func key(for modifierFlags: UIKeyModifierFlags) -> String?

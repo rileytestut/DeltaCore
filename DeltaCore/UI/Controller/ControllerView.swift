@@ -119,6 +119,8 @@ public class ControllerView: UIView, GameController
     private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
     private var touchViews = [ControllerSkin.Item: TouchInputView]()
     
+    private var keyboardResponder: KeyboardResponder!
+    
     private var _performedInitialLayout = false
     
     private var controllerInputView: ControllerInputView?
@@ -169,6 +171,8 @@ public class ControllerView: UIView, GameController
         // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
         self.inputAssistantItem.leadingBarButtonGroups = []
         self.inputAssistantItem.trailingBarButtonGroups = []
+        
+        self.keyboardResponder = KeyboardResponder(nextResponder: super.next)
         
         NotificationCenter.default.addObserver(self, selector: #selector(ControllerView.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
         
@@ -248,7 +252,7 @@ extension ControllerView
     }
     
     public override var next: UIResponder? {
-        return KeyboardResponder(nextResponder: super.next)
+        return self.keyboardResponder
     }
     
     public override var inputView: UIView? {
@@ -627,6 +631,8 @@ extension ControllerView: GameControllerReceiver
     }
 }
 
+#if !targetEnvironment(macCatalyst)
+
 //MARK: - UIKeyInput
 /// UIKeyInput
 // Becoming first responder doesn't steal keyboard focus from other apps in split view unless the first responder conforms to UIKeyInput.
@@ -645,3 +651,9 @@ extension ControllerView: UIKeyInput
     {
     }
 }
+
+#else
+
+// Don't conform ControllerView to UIKeyInput on macOS, otherwise UIPress keyboard APIs won't work correctly.
+
+#endif

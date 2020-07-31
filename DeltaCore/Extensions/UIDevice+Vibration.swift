@@ -9,12 +9,21 @@
 import UIKit
 import AudioToolbox
 
+#if !targetEnvironment(macCatalyst)
+
 @_silgen_name("AudioServicesStopSystemSound")
 func AudioServicesStopSystemSound(_ soundID: SystemSoundID)
 
 // vibrationPattern parameter must be NSDictionary to prevent crash when bridging from Swift.Dictionary.
 @_silgen_name("AudioServicesPlaySystemSoundWithVibration")
 func AudioServicesPlaySystemSoundWithVibration(_ soundID: SystemSoundID, _ idk: Any?, _ vibrationPattern: NSDictionary)
+
+#else
+
+func AudioServicesStopSystemSound(_ soundID: SystemSoundID) {}
+func AudioServicesPlaySystemSoundWithVibration(_ soundID: SystemSoundID, _ idk: Any?, _ vibrationPattern: NSDictionary) {}
+
+#endif
 
 public extension UIDevice
 {

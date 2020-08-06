@@ -12,4 +12,7 @@ import Foundation
 public protocol AudioRendering: NSObjectProtocol
 {
     var audioBuffer: RingBuffer { get }
+    
+    @objc(writeData:)
+    func write(_ data: Data)
 }

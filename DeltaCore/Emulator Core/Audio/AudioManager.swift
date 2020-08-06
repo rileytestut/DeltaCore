@@ -110,6 +110,11 @@ public class AudioManager: NSObject, AudioRendering
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
+    
+    public func write(_ data: Data)
+    {
+        data.withUnsafeBytes { self.audioBuffer.write($0, size: data.count) }
+    }
 }
 
 public extension AudioManager

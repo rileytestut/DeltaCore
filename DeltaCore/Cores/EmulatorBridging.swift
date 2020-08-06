@@ -7,6 +7,14 @@
 //
 
 import Foundation
+import Metal
+
+@available(iOS 13.0, *)
+@objc(DLTAEmulatorBridgingPrivate)
+public protocol EmulatorBridgingPrivate: EmulatorBridging
+{
+    var textureHandle: MTLSharedTextureHandle? { get set }
+}
 
 @objc(DLTAEmulatorBridging)
 public protocol EmulatorBridging: NSObjectProtocol
@@ -21,6 +29,10 @@ public protocol EmulatorBridging: NSObjectProtocol
     var audioRenderer: AudioRendering? { get set }
     
     /// Video
+    var surface: IOSurface? { get set }
+    var surfaceID: IOSurfaceID { get set }
+    var xpcSurface: XPCSurface? { get set }
+    var port: UInt32 { get set }
     var videoRenderer: VideoRendering? { get set }
     
     /// Saves

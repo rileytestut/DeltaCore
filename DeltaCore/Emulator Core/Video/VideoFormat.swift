@@ -15,6 +15,14 @@ extension VideoFormat
     {
         case bitmap(PixelFormat)
         case openGLES
+        
+        var pixelFormat: PixelFormat {
+            switch self
+            {
+            case .bitmap(let format): return format
+            case .openGLES: return .bgra8
+            }
+        }
     }
     
     public enum PixelFormat: Equatable

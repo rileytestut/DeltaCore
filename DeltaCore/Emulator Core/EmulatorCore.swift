@@ -17,7 +17,7 @@ extension EmulatorCore
 
 public extension EmulatorCore
 {
-    @objc enum State: Int
+    @objc enum EmulatorCoreState: Int
     {
         case stopped
         case running
@@ -50,7 +50,7 @@ public final class EmulatorCore: NSObject
     public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
     
     // KVO-Compliant
-    @objc public private(set) dynamic var state = State.stopped
+    @objc public private(set) dynamic var state = EmulatorCoreState.stopped
     @objc public dynamic var rate = 1.0 {
         didSet {
             self.audioManager.rate = self.rate
@@ -60,10 +60,15 @@ public final class EmulatorCore: NSObject
     public let deltaCore: DeltaCoreProtocol
     public var preferredRenderingSize: CGSize { return self.deltaCore.videoFormat.dimensions }
     
+    @available(iOS 13, *)
+    public lazy var emulatorProcess = EmulatorProcess(gameType: self.gameType, surface: self.videoManager.surface)
+    
+    private var emulatorBridge: EmulatorBridging?
+    
     //MARK: - Private Properties
     
     // We privately set this first to clean up before setting self.state, which notifies KVO observers
-    private var _state = State.stopped
+    private var _state = EmulatorCoreState.stopped
     
     private let gameType: GameType
     private let gameSaveURL: URL
@@ -72,7 +77,7 @@ public final class EmulatorCore: NSObject
     
     private var gameControllers = NSHashTable<AnyObject>.weakObjects()
     
-    private var previousState = State.stopped
+    private var previousState = EmulatorCoreState.stopped
     private var previousFrameDuration: TimeInterval? = nil
     
     private var reactivateInputsDispatchGroup: DispatchGroup?
@@ -106,6 +111,16 @@ public final class EmulatorCore: NSObject
         
         NotificationCenter.default.addObserver(self, selector: #selector(EmulatorCore.emulationDidQuit), name: EmulatorCore.emulationDidQuitNotification, object: nil)
     }
+    
+    deinit
+    {
+        if #available(iOS 13, *)
+        {
+            self.emulatorProcess.stop()
+        }
+        
+        print("Deinit EmulatorCore")
+    }
 }
 
 //MARK: - Emulation -
@@ -118,16 +133,46 @@ public extension EmulatorCore
         
         self.emulationLock.lock()
         
+//        self.emulatorBridge = self.deltaCore.emulatorBridge
+        
+        if #available(iOS 13, *)
+        {
+            let dispatchSempahore = DispatchSemaphore(value: 0)
+
+            let subscription = self.emulatorProcess.statusPublisher.sink { (completion) in
+                dispatchSempahore.signal()
+            } receiveValue: { (status) in
+                switch status
+                {
+                case .stopped: print("Stopped")
+                case .paused: print("Paused")
+                case .running(let bridge):
+                    print("Running:", bridge)
+                    self.emulatorBridge = bridge
+                    dispatchSempahore.signal()
+                }
+            }
+
+            self.emulatorProcess.start()
+            
+            dispatchSempahore.wait()
+        }
+        
+        if #available(iOS 13, *)
+        {
+            self.sendIOSurface()
+        }
+        
         self._state = .running
         defer { self.state = self._state }
         
-        self.deltaCore.emulatorBridge.audioRenderer = self.audioManager
-        self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
-        self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
+        self.emulatorBridge?.audioRenderer = self.audioManager
+        self.emulatorBridge?.videoRenderer = self.videoManager
+        self.emulatorBridge?.saveUpdateHandler = { [unowned self] in
             self.save()
         }
         
-        self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
+        self.emulatorBridge?.start(withGameURL: self.game.fileURL)
         
         let videoFormat = self.deltaCore.videoFormat
         if videoFormat != self.videoManager.videoFormat
@@ -135,7 +180,7 @@ public extension EmulatorCore
             self.videoManager.videoFormat = videoFormat
         }
         
-        self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
+        self.emulatorBridge?.loadGameSave(from: self.gameSaveURL)
         
         self.audioManager.start()
         
@@ -145,6 +190,45 @@ public extension EmulatorCore
         self.emulationLock.unlock()
         
         return true
+    }
+    
+    @available(iOS 13, *)
+    func sendIOSurface()
+    {
+        //        self.emulatorBridge?.port = self.videoManager.port.machPort
+        //        self.emulatorBridge?.surfaceID = IOSurfaceGetID(unsafeBitCast(self.videoManager.surface, to: IOSurfaceRef.self))
+        //        self.emulatorBridge?.surface = self.videoManager.surface
+                
+//                let surface = XPCSurface(surface: self.videoManager.surface)
+//                self.emulatorBridge?.xpcSurface = surface
+                
+        if let bridge = self.emulatorBridge as? EmulatorBridgingPrivate
+        {
+            let textureHandle = self.videoManager.metalStuff?.sharedHandle
+            bridge.textureHandle = textureHandle
+        }
+        
+//        let portName = "group.com.rileytestut.Delta.Testut"
+//        
+//        var bootstrapPort: mach_port_t = 0
+//        #if !targetEnvironment(macCatalyst)
+//        task_get_special_port(mach_task_self(), TASK_BOOTSTRAP_PORT, &bootstrapPort)
+//        #else
+//        task_get_special_port(mach_task_self_, TASK_BOOTSTRAP_PORT, &bootstrapPort)
+//        #endif
+////
+//        
+//        let machPort = IOSurfaceCreateMachPort(unsafeBitCast(self.videoManager.surface, to: IOSurfaceRef.self))
+//        
+//        var cName = (portName as NSString).utf8String
+//        let result = bootstrap_register(bootstrapPort, UnsafeMutablePointer(mutating: cName), machPort)
+//        
+//        var receivePort: mach_port_t = 0
+//        let result2 = bootstrap_look_up(bootstrapPort, cName, &receivePort)
+//        
+//        print("Results:", result, result2)
+//        
+//        self.emulatorProcess.remoteObject?.testMyFunction()
     }
     
     @discardableResult func stop() -> Bool
@@ -166,7 +250,7 @@ public extension EmulatorCore
         self.save()
         
         self.audioManager.stop()
-        self.deltaCore.emulatorBridge.stop()
+        self.emulatorBridge?.stop()
         
         self.emulationLock.unlock()
         
@@ -187,7 +271,7 @@ public extension EmulatorCore
         self.save()
         
         self.audioManager.isEnabled = false
-        self.deltaCore.emulatorBridge.pause()
+        self.emulatorBridge?.pause()
         
         self.emulationLock.unlock()
         
@@ -204,7 +288,7 @@ public extension EmulatorCore
         defer { self.state = self._state }
         
         self.audioManager.isEnabled = true
-        self.deltaCore.emulatorBridge.resume()
+        self.emulatorBridge?.resume()
         
         self.runGameLoop()
         self.waitForFrameUpdate()
@@ -256,7 +340,7 @@ public extension EmulatorCore
 {
     func save()
     {
-        self.deltaCore.emulatorBridge.saveGameSave(to: self.gameSaveURL)
+        self.emulatorBridge?.saveGameSave(to: self.gameSaveURL)
         self.saveHandler?(self)
     }
 }
@@ -267,7 +351,7 @@ public extension EmulatorCore
 {
     @discardableResult func saveSaveState(to url: URL) -> SaveStateProtocol
     {
-        self.deltaCore.emulatorBridge.saveSaveState(to: url)
+        self.emulatorBridge?.saveSaveState(to: url)
         
         let saveState = SaveState(fileURL: url, gameType: self.gameType)
         return saveState
@@ -277,10 +361,10 @@ public extension EmulatorCore
     {
         guard FileManager.default.fileExists(atPath: saveState.fileURL.path) else { throw SaveStateError.doesNotExist }
         
-        self.deltaCore.emulatorBridge.loadSaveState(from: saveState.fileURL)
+        self.emulatorBridge?.loadSaveState(from: saveState.fileURL)
         
         self.updateCheats()
-        self.deltaCore.emulatorBridge.resetInputs()
+        self.emulatorBridge?.resetInputs()
         
         // Reactivate activated inputs.
         for gameController in self.gameControllers.allObjects as! [GameController]
@@ -299,7 +383,9 @@ public extension EmulatorCore
 {
     func activate(_ cheat: CheatProtocol) throws
     {
-        let success = self.deltaCore.emulatorBridge.addCheatCode(String(cheat.code), type: cheat.type.rawValue)
+        guard let emulatorBridge = self.emulatorBridge else { return }
+        
+        let success = emulatorBridge.addCheatCode(String(cheat.code), type: cheat.type.rawValue)
         if success
         {
             self.cheatCodes[cheat.code] = cheat.type
@@ -325,14 +411,14 @@ public extension EmulatorCore
     
     private func updateCheats()
     {
-        self.deltaCore.emulatorBridge.resetCheats()
+        self.emulatorBridge?.resetCheats()
         
         for (cheatCode, type) in self.cheatCodes
         {
-            self.deltaCore.emulatorBridge.addCheatCode(String(cheatCode), type: type.rawValue)
+            self.emulatorBridge?.addCheatCode(String(cheatCode), type: type.rawValue)
         }
         
-        self.deltaCore.emulatorBridge.updateCheats()
+        self.emulatorBridge?.updateCheats()
     }
 }
 
@@ -354,7 +440,7 @@ extension EmulatorCore: GameControllerReceiver
         {
             self.reactivateInputsQueue.async {
                 
-                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+                self.emulatorBridge?.deactivateInput(input.intValue!)
                 
                 self.reactivateInputsDispatchGroup = DispatchGroup()
                 
@@ -365,12 +451,12 @@ extension EmulatorCore: GameControllerReceiver
 
                 self.reactivateInputsDispatchGroup = nil
                 
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+                self.emulatorBridge?.activateInput(input.intValue!, value: value)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+            self.emulatorBridge?.activateInput(input.intValue!, value: value)
         }
     }
     
@@ -378,7 +464,7 @@ extension EmulatorCore: GameControllerReceiver
     {
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+        self.emulatorBridge?.deactivateInput(input.intValue!)
     }
     
     private func mappedInput(for input: Input) -> Input?
@@ -394,6 +480,8 @@ private extension EmulatorCore
 {
     func runGameLoop()
     {
+        guard let emulatorBridge = self.emulatorBridge else { return }
+        
         let emulationQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.emulationQueue", qos: .userInitiated)
         emulationQueue.async {
             
@@ -404,7 +492,7 @@ private extension EmulatorCore
             
             while true
             {
-                let frameDuration = self.deltaCore.emulatorBridge.frameDuration / self.rate
+                let frameDuration = (1.0 / 60.0) / self.rate // self.deltaCore.emulatorBridge.frameDuration / self.rate
                 if frameDuration != self.previousFrameDuration
                 {
                     Thread.setRealTimePriority(withPeriod: frameDuration)
@@ -417,7 +505,7 @@ private extension EmulatorCore
                 
                 // Update audio/video configurations if necessary.
                 
-                let internalFrameDuration = self.deltaCore.emulatorBridge.frameDuration
+                let internalFrameDuration = (1.0 / 60.0) // self.deltaCore.emulatorBridge.frameDuration
                 if internalFrameDuration != self.audioManager.frameDuration
                 {
                     self.audioManager.frameDuration = internalFrameDuration
@@ -496,7 +584,7 @@ private extension EmulatorCore
     
     func runFrame(renderGraphics: Bool)
     {
-        self.deltaCore.emulatorBridge.runFrame(processVideo: renderGraphics)
+        self.emulatorBridge?.runFrame(processVideo: renderGraphics)
         
         if renderGraphics
         {

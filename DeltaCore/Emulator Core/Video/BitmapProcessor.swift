@@ -9,7 +9,7 @@
 import CoreImage
 import Accelerate
 
-fileprivate extension VideoFormat.PixelFormat
+extension VideoFormat.PixelFormat
 {
     var nativeCIFormat: CIFormat? {
         switch self
@@ -17,6 +17,15 @@ fileprivate extension VideoFormat.PixelFormat
         case .rgb565: return nil
         case .bgra8: return .BGRA8
         case .rgba8: return .RGBA8
+        }
+    }
+    
+    var nativePixelFormat: CMPixelFormatType {
+        switch self
+        {
+        case .rgb565: return kCMPixelFormat_16LE565
+        case .bgra8: return kCMPixelFormat_32BGRA
+        case .rgba8: return kCVPixelFormatType_32RGBA
         }
     }
 }
@@ -42,7 +51,9 @@ class BitmapProcessor: VideoProcessor
     let videoFormat: VideoFormat
     let videoBuffer: UnsafeMutablePointer<UInt8>?
     
-    private let outputVideoFormat: VideoFormat
+    var surface: IOSurface?
+    
+    let outputVideoFormat: VideoFormat
     private let outputVideoBuffer: UnsafeMutablePointer<UInt8>
     
     init(videoFormat: VideoFormat)
@@ -79,23 +90,36 @@ extension BitmapProcessor
             return nil
         }
         
+        guard let surface = self.surface else { return nil }
+        
         return autoreleasepool {
-            var inputVImageBuffer = vImage_Buffer(data: self.videoBuffer, height: vImagePixelCount(self.videoFormat.dimensions.height), width: vImagePixelCount(self.videoFormat.dimensions.width), rowBytes: self.videoFormat.pixelFormat.bytesPerPixel * Int(self.videoFormat.dimensions.width))
-            var outputVImageBuffer = vImage_Buffer(data: self.outputVideoBuffer, height: vImagePixelCount(self.outputVideoFormat.dimensions.height), width: vImagePixelCount(self.outputVideoFormat.dimensions.width), rowBytes: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width))
-            
-            switch self.videoFormat.pixelFormat
-            {
-            case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &outputVImageBuffer, 0)
-            case .bgra8, .rgba8:
-                // Ensure alpha value is 255, not 0.
-                // 0x1 refers to the Blue channel in ARGB, which corresponds to the Alpha channel in BGRA and RGBA.
-                vImageOverwriteChannelsWithScalar_ARGB8888(255, &inputVImageBuffer, &outputVImageBuffer, 0x1, vImage_Flags(kvImageNoFlags))
-            }
-            
-            let bitmapData = Data(bytes: self.outputVideoBuffer, count: self.outputVideoFormat.bufferSize)
-            
-            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width), size: self.outputVideoFormat.dimensions, format: ciFormat, colorSpace: nil)
-            return image
+//            if self.videoFormat.pixelFormat.nativeCIFormat != nil
+//            {
+//                let image = CIImage(ioSurface: unsafeBitCast(surface, to: IOSurfaceRef.self))
+//                return image
+//            }
+//            else
+//            {
+                surface.lock(options: [], seed: nil)
+                defer { surface.unlock(options: [], seed: nil) }
+                                
+                var inputVImageBuffer = vImage_Buffer(data: surface.baseAddress, height: vImagePixelCount(self.videoFormat.dimensions.height), width: vImagePixelCount(self.videoFormat.dimensions.width), rowBytes: self.videoFormat.pixelFormat.bytesPerPixel * Int(self.videoFormat.dimensions.width))
+                var outputVImageBuffer = vImage_Buffer(data: self.outputVideoBuffer, height: vImagePixelCount(self.outputVideoFormat.dimensions.height), width: vImagePixelCount(self.outputVideoFormat.dimensions.width), rowBytes: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width))
+                
+                switch self.videoFormat.pixelFormat
+                {
+                case .rgb565: vImageConvert_RGB565toBGRA8888(255, &inputVImageBuffer, &outputVImageBuffer, 0)
+                case .bgra8, .rgba8:
+                    // Ensure alpha value is 255, not 0.
+                    // 0x1 refers to the Blue channel in ARGB, which corresponds to the Alpha channel in BGRA and RGBA.
+                    vImageOverwriteChannelsWithScalar_ARGB8888(255, &inputVImageBuffer, &outputVImageBuffer, 0x1, vImage_Flags(kvImageNoFlags))
+                }
+                
+                let bitmapData = Data(bytes: self.outputVideoBuffer, count: self.outputVideoFormat.bufferSize)
+                
+                let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width), size: self.outputVideoFormat.dimensions, format: ciFormat, colorSpace: nil)
+                return image
+//            }
         }
     }
 }

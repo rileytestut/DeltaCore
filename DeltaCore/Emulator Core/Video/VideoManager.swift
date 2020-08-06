@@ -9,7 +9,7 @@
 import Foundation
 import Accelerate
 import CoreImage
-import GLKit
+//import OpenGLES
 
 protocol VideoProcessor
 {
@@ -17,6 +17,21 @@ protocol VideoProcessor
     
     func prepare()
     func processFrame() -> CIImage?
+}
+
+@available(iOS 13, *)
+public class MetalStuff: NSObject
+{
+    public let device: MTLDevice
+    public let sharedTexture: MTLTexture
+    public let sharedHandle: MTLSharedTextureHandle
+    
+    init(device: MTLDevice, sharedTexture: MTLTexture, sharedHandle: MTLSharedTextureHandle)
+    {
+        self.device = device
+        self.sharedTexture = sharedTexture
+        self.sharedHandle = sharedHandle
+    }
 }
 
 public class VideoManager: NSObject, VideoRendering
@@ -31,26 +46,77 @@ public class VideoManager: NSObject, VideoRendering
     
     public var isEnabled = true
     
-    private let context: EAGLContext
+//    private let context: EAGLContext
     private let ciContext: CIContext
     
     private var processor: VideoProcessor
     @NSCopying private var processedImage: CIImage?
     @NSCopying private var displayedImage: CIImage? // Can only accurately snapshot rendered images.
     
+    public let surface: IOSurface
+    
+    @available(iOS 13, *)
+    public lazy var metalStuff: MetalStuff? = nil
+    
+//    public let port: NSMachPort
+    
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
-        self.context = EAGLContext(api: .openGLES2)!
-        self.ciContext = CIContext(eaglContext: self.context, options: [.workingColorSpace: NSNull()])
+//        self.context = EAGLContext(api: .openGLES2)!
+        self.ciContext = CIContext(options: [.workingColorSpace: NSNull()])
+                    
+//        let props: [IOSurfacePropertyKey : Any] = [
+//            .width: self.videoFormat.dimensions.width,
+//            .height: self.videoFormat.dimensions.height,
+//            .pixelFormat: self.videoFormat.format.pixelFormat.nativePixelFormat,
+//            .bytesPerElement: self.videoFormat.format.pixelFormat.bytesPerPixel,
+//            .bytesPerRow: self.videoFormat.format.pixelFormat.bytesPerPixel * Int(self.videoFormat.dimensions.width),
+//            .allocSize: self.videoFormat.format.pixelFormat.bytesPerPixel * Int(self.videoFormat.dimensions.width) * Int(self.videoFormat.dimensions.height),
+//            kIOSurfaceIsGlobal as IOSurfacePropertyKey: NSNumber(value: true)
+//        ]
+//
+//        self.surface = IOSurface(properties: props)!
         
+        
+//
+        
+        
+        guard #available(iOS 13.0, *) else { fatalError() }
+        
+        let device = MTLCreateSystemDefaultDevice()!
+        
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: Int(self.videoFormat.dimensions.width), height: Int(self.videoFormat.dimensions.height), mipmapped: false)
+        descriptor.storageMode = .private
+        
+        let sharedTexture = device.makeSharedTexture(descriptor: descriptor)!
+        
+        let sharedHandle = sharedTexture.makeSharedTextureHandle()!
+        
+        let iosurface = sharedHandle.ioSurface()
+        self.surface = unsafeBitCast(iosurface!, to: IOSurface.self)
+                
         switch videoFormat.format
         {
-        case .bitmap: self.processor = BitmapProcessor(videoFormat: videoFormat)
-        case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
+        case .bitmap:
+            let bitmapProcessor = BitmapProcessor(videoFormat: videoFormat)
+            bitmapProcessor.surface = self.surface
+            self.processor = bitmapProcessor
+            
+        case .openGLES: self.processor = BitmapProcessor(videoFormat: videoFormat)// OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
         }
         
+//        let xpcObject = IOSurfaceCreateXPCObject(unsafeBitCast(self.surface, to: IOSurfaceRef.self))
+//        print(xpcObject)
+        
+//        let rawPort = IOSurfaceCreateMachPort(unsafeBitCast(self.surface, to: IOSurfaceRef.self))
+//        self.port = NSMachPort(machPort: rawPort)
+        
+        
+        
         super.init()
+        
+        self.metalStuff = MetalStuff(device: device, sharedTexture: sharedTexture, sharedHandle: sharedHandle)
     }
     
     private func updateProcessor()
@@ -58,12 +124,20 @@ public class VideoManager: NSObject, VideoRendering
         switch self.videoFormat.format
         {
         case .bitmap:
-            self.processor = BitmapProcessor(videoFormat: self.videoFormat)
+            let bitmapProcessor = BitmapProcessor(videoFormat: self.videoFormat)
+            bitmapProcessor.surface = self.surface
+            self.processor = bitmapProcessor
             
         case .openGLES:
-            guard let processor = self.processor as? OpenGLESProcessor else { return }
-            processor.videoFormat = self.videoFormat
+            self.processor = BitmapProcessor(videoFormat: self.videoFormat)
+//            guard let processor = self.processor as? OpenGLESProcessor else { return }
+//            processor.videoFormat = self.videoFormat
         }
+    }
+    
+    public func getIOSurface(completion: @escaping (IOSurface) -> Void)
+    {
+        completion(self.surface)
     }
 }
 
@@ -71,7 +145,8 @@ public extension VideoManager
 {
     func add(_ gameView: GameView)
     {
-        gameView.eaglContext = self.context
+//        gameView.eaglContext = self.context
+        gameView.surface = self.surface
         self.gameViews.append(gameView)
     }
     
@@ -115,6 +190,7 @@ public extension VideoManager
             for gameView in self.gameViews
             {
                 gameView.inputImage = image
+//                gameView.update()
             }
 
             self.displayedImage = image

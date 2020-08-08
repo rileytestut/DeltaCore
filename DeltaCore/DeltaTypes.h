@@ -19,6 +19,8 @@ typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString *CheatType NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString *GameControllerInputType NS_TYPED_EXTENSIBLE_ENUM;
 
+NS_ASSUME_NONNULL_BEGIN
+
 extern NSNotificationName const DeltaRegistrationRequestNotification;
 
 #if !TARGET_OS_MACCATALYST
@@ -64,3 +66,5 @@ int RSTReceivePort(void *source_data, mach_port_t *value);
 
 
 @end
+
+NS_ASSUME_NONNULL_END

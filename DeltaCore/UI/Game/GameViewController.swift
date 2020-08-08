@@ -9,6 +9,7 @@
 
 import UIKit
 import AVFoundation
+import Combine
 
 fileprivate extension NSLayoutConstraint
 {
@@ -96,6 +97,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var _previousControllerSkin: ControllerSkinProtocol?
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
     
+    @available(iOS 13, *)
+    private lazy var cancellables: Set<AnyCancellable> = []
+        
     /// UIViewController
     open override var prefersStatusBarHidden: Bool {
         return true
@@ -117,8 +121,16 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     private func initialize()
     {
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
+        if #available(iOS 13, *)
+        {
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIScene.willDeactivateNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIScene.didActivateNotification, object: nil)
+        }
+        else
+        {
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
+        }
         
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
@@ -179,6 +191,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
         UIApplication.delta_shared?.isIdleTimerDisabled = true
         
         self.controllerView.becomeFirstResponder()
+        
+        if #available(iOS 13, *)
+        {
+            self.emulatorCore?.scene = self.view.window?.windowScene
+        }
     }
     
     open dynamic override func viewDidDisappear(_ animated: Bool)
@@ -499,7 +516,7 @@ private extension GameViewController
 
 // MARK: - Preparation -
 private extension GameViewController
-{
+{    
     func prepareForGame()
     {
         guard
@@ -528,6 +545,11 @@ private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)
     {
+        if #available(iOS 13.0, *), let scene = notification.object as? UIWindowScene
+        {
+            guard scene == self.view.window?.windowScene else { return }
+        }
+        
         self.emulatorCoreQueue.async {
             _ = self._pauseEmulation()
         }
@@ -535,6 +557,11 @@ private extension GameViewController
     
     @objc func didBecomeActive(with notification: Notification)
     {
+        if #available(iOS 13.0, *), let scene = notification.object as? UIWindowScene
+        {
+            guard scene == self.view.window?.windowScene else { return }
+        }
+        
         self.emulatorCoreQueue.async {
             _ = self._resumeEmulation()
         }

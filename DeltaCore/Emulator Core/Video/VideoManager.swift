@@ -94,7 +94,7 @@ public class VideoManager: NSObject, VideoRendering
         let sharedHandle = sharedTexture.makeSharedTextureHandle()!
         
         let iosurface = sharedHandle.ioSurface()
-        self.surface = unsafeBitCast(iosurface!, to: IOSurface.self)
+        self.surface = unsafeBitCast(iosurface.takeUnretainedValue(), to: IOSurface.self)
                 
         switch videoFormat.format
         {

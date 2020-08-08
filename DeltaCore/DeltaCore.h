@@ -22,6 +22,8 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 #import <MetalKit/MetalKit.h>
 #import <AVFoundation/AVFoundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSXPCConnection ()
 
 // Initialize an NSXPCConnection that will connect to the specified service name. Note: Receiving a non-nil result from this init method does not mean the service name is valid or the service has been launched. The init method simply constructs the local object.
@@ -30,6 +32,8 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 - (instancetype)initWithYourMom:(BOOL)mom;
 
 @end;
+
+NS_ASSUME_NONNULL_END
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -72,7 +76,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-void *RSTGetPort(CFMessagePortRef port);
+
+void * _Nullable RSTGetPort( CFMessagePortRef _Nonnull  port);
 
 
 
@@ -96,17 +101,19 @@ typedef void *xpc_type_t;
 #define    BOOTSTRAP_MAX_NAME_LEN 128
 #define    BOOTSTRAP_MAX_CMD_LEN 512
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef char name_t[BOOTSTRAP_MAX_NAME_LEN];
 
 kern_return_t
-bootstrap_register(mach_port_t bp, name_t service_name, mach_port_t sp);
+bootstrap_register(mach_port_t bp, _Null_unspecified name_t service_name, mach_port_t sp);
 
 //kern_return_t
 //task_get_bootstrap_port (task_t task, mach_port_t *bootstrap_port);
 
 
 kern_return_t
-bootstrap_look_up(mach_port_t bp, const name_t service_name, mach_port_t *sp);
+bootstrap_look_up(mach_port_t bp, const _Null_unspecified name_t service_name, mach_port_t *sp);
 
 typedef struct _xpc_pipe_s* xpc_pipe_t;
 
@@ -124,8 +131,8 @@ void xpc_dictionary_set_uint64(xpc_object_t xdict,
                                uint64_t value);
 void xpc_dictionary_set_string(xpc_object_t xdict, const char* key,
                                const char* string);
-xpc_object_t xpc_dictionary_create(const char* const* keys,
-                                   const xpc_object_t* values,
+xpc_object_t xpc_dictionary_create(const char* _Nullable  const* _Nullable  keys,
+                                   const _Nullable  xpc_object_t*   _Nullable values,
                                    size_t count);
 xpc_object_t xpc_dictionary_create_reply(xpc_object_t original);
 xpc_object_t xpc_dictionary_get_value(xpc_object_t xdict, const char* key);
@@ -141,12 +148,14 @@ void xpc_dictionary_get_audit_token(xpc_object_t dictionary,
 mach_port_t xpc_mach_send_get_right(xpc_object_t value);
 // Pipe methods.
 xpc_pipe_t xpc_pipe_create_from_port(mach_port_t port, int flags);
-int xpc_pipe_receive(mach_port_t port, xpc_object_t* message);
+int xpc_pipe_receive(mach_port_t port, _Nonnull  xpc_object_t* _Nonnull   message);
 int xpc_pipe_routine(xpc_pipe_t pipe,
                      xpc_object_t request,
-                     xpc_object_t* reply);
+                     _Nonnull xpc_object_t* _Nonnull  reply);
 int xpc_pipe_routine_reply(xpc_object_t reply);
 int xpc_pipe_simpleroutine(xpc_pipe_t pipe, xpc_object_t message);
 int xpc_pipe_routine_forward(xpc_pipe_t forward_to, xpc_object_t request);
 
-xpc_type_t RSTXPCDictionaryType();
+//xpc_type_t RSTXPCDictionaryType();
+
+NS_ASSUME_NONNULL_END

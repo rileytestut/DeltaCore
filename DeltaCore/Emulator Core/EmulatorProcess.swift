@@ -55,19 +55,21 @@ public class XPCSurface: NSObject, NSSecureCoding
 //            }
 //            #endif
             
-            guard let dictionary = coder.decodeXPCObject(ofType: RSTXPCDictionaryType(), forKey: "surface") else {
-                return nil
-            }
+//            guard let dictionary = coder.decodeXPCObject(ofType: RSTXPCDictionaryType(), forKey: "surface") else {
+//                return nil
+//            }
             
-            let port_value = xpc_dictionary_get_value(dictionary, "port");
-            let machPort = xpc_mach_send_get_right(port_value);
-            
-            guard let surface = IOSurfaceLookupFromMachPort(machPort) else {
-                return nil
-            }
-
-            self.surface = unsafeBitCast(surface, to: IOSurface.self)
+//            let port_value = xpc_dictionary_get_value(dictionary, "port");
+//            let machPort = xpc_mach_send_get_right(port_value);
+//
+//            guard let surface = IOSurfaceLookupFromMachPort(machPort) else {
+//                return nil
+//            }
+//
+//            self.surface = unsafeBitCast(surface, to: IOSurface.self)
 //            self.surface = surface.takeUnretainedValue()
+            
+            self.surface = IOSurface()
         }
         else
         {

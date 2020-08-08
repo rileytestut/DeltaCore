@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Combine
 
 private struct ControllerViewInputMapping: GameControllerInputMappingProtocol
 {
@@ -109,6 +110,12 @@ public class ControllerView: UIView, GameController
     public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
     internal var isControllerInputView = false
+    
+    @available(iOS 13.0, *)
+    internal var isFirstResponderPublisher: AnyPublisher<Bool, Never> { return self.isFirstReponderSubject.eraseToAnyPublisher() }
+    
+    @available(iOS 13.0, *)
+    private lazy var isFirstReponderSubject = PassthroughSubject<Bool, Never>()
     
     //MARK: - Private Properties
     private let contentView = UIView(frame: .zero)
@@ -247,8 +254,7 @@ public class ControllerView: UIView, GameController
 extension ControllerView
 {
     public override var canBecomeFirstResponder: Bool {
-        let canBecomeFirstResponder = (self.controllerSkinTraits?.displayType == .splitView || ExternalGameControllerManager.shared.isKeyboardConnected)
-        return canBecomeFirstResponder
+        return true
     }
     
     public override var next: UIResponder? {
@@ -256,7 +262,7 @@ extension ControllerView
     }
     
     public override var inputView: UIView? {
-        guard self.playerIndex != nil else { return nil }
+        guard self.playerIndex != nil && self.controllerSkinTraits?.displayType == .splitView else { return nil }
         return self.controllerInputView
     }
     
@@ -264,8 +270,9 @@ extension ControllerView
     {
         guard super.becomeFirstResponder() else { return false }
         
+        self.window?.makeKeyAndVisible()
         self.reloadInputViews()
-        
+
         return self.isFirstResponder
     }
 }
@@ -642,11 +649,11 @@ extension ControllerView: UIKeyInput
     public var hasText: Bool {
         return false
     }
-    
+
     public func insertText(_ text: String)
     {
     }
-    
+
     public func deleteBackward()
     {
     }

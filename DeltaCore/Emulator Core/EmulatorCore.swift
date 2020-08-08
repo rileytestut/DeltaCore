@@ -63,6 +63,27 @@ public final class EmulatorCore: NSObject
     @available(iOS 13, *)
     public lazy var emulatorProcess = EmulatorProcess(gameType: self.gameType, surface: self.videoManager.surface)
     
+    @available(iOS 13, *)
+    public lazy var scene: UIScene? = nil
+    
+    @available(iOS 13, *)
+    public var isSceneActive: Bool {
+        guard let scene = self.scene else { return false }
+        
+        let activeScene: UIWindowScene?
+        
+        switch UIResponder.firstResponder
+        {
+        case let window as UIWindow: activeScene = window.windowScene
+        case let view as UIView: activeScene = view.window?.windowScene
+        case let viewController as UIViewController: activeScene = viewController.view.window?.windowScene
+        default: activeScene = nil
+        }
+        
+        let isSceneActive = (activeScene == scene)
+        return isSceneActive
+    }
+        
     private var emulatorBridge: EmulatorBridging?
     
     //MARK: - Private Properties
@@ -426,6 +447,11 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
+        if #available(iOS 13, *)
+        {
+            guard self.isSceneActive else { return }
+        }
+        
         self.gameControllers.add(gameController)
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
@@ -462,6 +488,11 @@ extension EmulatorCore: GameControllerReceiver
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
+        if #available(iOS 13, *)
+        {
+            guard self.isSceneActive else { return }
+        }
+        
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
         self.emulatorBridge?.deactivateInput(input.intValue!)

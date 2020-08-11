@@ -15,6 +15,4 @@ public protocol VideoRendering: NSObjectProtocol
     
     func prepare()
     func processFrame()
-    
-    func getIOSurface(completion: @escaping (IOSurface) -> Void)
 }

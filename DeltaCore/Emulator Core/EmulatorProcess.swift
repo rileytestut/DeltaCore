@@ -409,7 +409,7 @@ extension EmulatorProcess: NSXPCListenerDelegate, RemoteProcessProtocol
     {
         guard self.xpcConnection == nil else { return false }
         
-        let emulatorBridgeInterface = NSXPCInterface(with: EmulatorBridgingPrivate.self)
+        let emulatorBridgeInterface = NSXPCInterface(with: EmulatorBridging.self)
         emulatorBridgeInterface.setInterface(NSXPCInterface(with: AudioRendering.self), for: #selector(setter: EmulatorBridging.audioRenderer), argumentIndex: 0, ofReply: false)
         emulatorBridgeInterface.setInterface(NSXPCInterface(with: VideoRendering.self), for: #selector(setter: EmulatorBridging.videoRenderer), argumentIndex: 0, ofReply: false)
         

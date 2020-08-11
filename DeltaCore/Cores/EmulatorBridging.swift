@@ -9,17 +9,38 @@
 import Foundation
 import Metal
 
-@available(iOS 13.0, *)
-@objc(DLTAEmulatorBridgingPrivate)
-public protocol EmulatorBridgingPrivate: EmulatorBridging
+@objc(DLTAEmulatorController)
+public protocol EmulatorController: NSObjectProtocol
 {
-    var textureHandle: MTLSharedTextureHandle? { get set }
+    var gameURL: URL? { get set }
+    
+    func updateGameURL(_ gameURL: URL)
+    func updateVideoFrame()
+    func updateSave()
+}
+
+extension EmulatorController
+{
+    func updateGameURL(_ gameURL: URL)
+    {
+        
+    }
+}
+
+@objc(DLTALinkRole)
+public enum LinkRole: Int
+{
+    case none
+    case server
+    case client
 }
 
 @objc(DLTAEmulatorBridging)
 public protocol EmulatorBridging: NSObjectProtocol
 {
     /// State
+//    var emulatorController: EmulatorController? { get }
+    
     var gameURL: URL? { get }
     
     /// System
@@ -30,13 +51,14 @@ public protocol EmulatorBridging: NSObjectProtocol
     
     /// Video
     var surface: IOSurface? { get set }
-    var surfaceID: IOSurfaceID { get set }
-    var xpcSurface: XPCSurface? { get set }
-    var port: UInt32 { get set }
     var videoRenderer: VideoRendering? { get set }
     
     /// Saves
     var saveUpdateHandler: (() -> Void)? { get set }
+    
+    /// Linking
+    @objc optional var linkRole: LinkRole { get }
+    @objc optional func setLinkRole(_ role: LinkRole)
     
     
     /// Emulation State
@@ -65,4 +87,12 @@ public protocol EmulatorBridging: NSObjectProtocol
     @discardableResult func addCheatCode(_ cheatCode: String, type: String) -> Bool
     func resetCheats()
     func updateCheats()
+}
+
+public extension EmulatorBridging
+{
+    func runGameLoop()
+    {
+        
+    }
 }

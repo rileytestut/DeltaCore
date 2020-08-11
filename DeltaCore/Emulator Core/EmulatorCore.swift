@@ -66,6 +66,8 @@ public final class EmulatorCore: NSObject
     @available(iOS 13, *)
     public lazy var scene: UIScene? = nil
     
+    public var linkRole: LinkRole = .none
+    
     @available(iOS 13, *)
     public var isSceneActive: Bool {
         guard let scene = self.scene else { return false }
@@ -179,6 +181,13 @@ public extension EmulatorCore
             dispatchSempahore.wait()
         }
         
+        if self.gameType.rawValue.contains("gba")
+        {
+            self.emulatorBridge?.setLinkRole?(self.linkRole)
+        }
+        
+//        self.emulatorBridge?.linkRole = self.linkRole
+        
         if #available(iOS 13, *)
         {
             self.sendIOSurface()
@@ -218,16 +227,16 @@ public extension EmulatorCore
     {
         //        self.emulatorBridge?.port = self.videoManager.port.machPort
         //        self.emulatorBridge?.surfaceID = IOSurfaceGetID(unsafeBitCast(self.videoManager.surface, to: IOSurfaceRef.self))
-        //        self.emulatorBridge?.surface = self.videoManager.surface
+                self.emulatorBridge?.surface = self.videoManager.surface
                 
 //                let surface = XPCSurface(surface: self.videoManager.surface)
 //                self.emulatorBridge?.xpcSurface = surface
                 
-        if let bridge = self.emulatorBridge as? EmulatorBridgingPrivate
-        {
-            let textureHandle = self.videoManager.metalStuff?.sharedHandle
-            bridge.textureHandle = textureHandle
-        }
+//        if let bridge = self.emulatorBridge as? EmulatorBridgingPrivate
+//        {
+//            let textureHandle = self.videoManager.metalStuff?.sharedHandle
+//            bridge.textureHandle = textureHandle
+//        }
         
 //        let portName = "group.com.rileytestut.Delta.Testut"
 //        

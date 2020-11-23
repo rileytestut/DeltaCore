@@ -35,6 +35,8 @@
 		BF69FBBF23E39CA80051BEEA /* DeltaTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = BF69FBBD23E39C9D0051BEEA /* DeltaTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
+		BF85F4792567494600E4D10E /* DLTAMuteSwitchMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF85F47A2567494600E4D10E /* DLTAMuteSwitchMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */; };
 		BF92794B1D2B01AD003084F3 /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */; };
 		BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */; };
 		BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */; };
@@ -124,6 +126,8 @@
 		BF69FBBD23E39C9D0051BEEA /* DeltaTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaTypes.h; sourceTree = "<group>"; };
 		BF785C9C1B603C1800189DB8 /* Delta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delta.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
+		BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DLTAMuteSwitchMonitor.h; sourceTree = "<group>"; };
+		BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DLTAMuteSwitchMonitor.m; sourceTree = "<group>"; };
 		BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
 		BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIScreen+ControllerSkin.swift"; sourceTree = "<group>"; };
 		BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinTraits.swift; sourceTree = "<group>"; };
@@ -299,6 +303,8 @@
 			children = (
 				BF6834011C459C250052249F /* AudioManager.swift */,
 				BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */,
+				BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */,
+				BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -445,6 +451,7 @@
 			files = (
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
 				BF69FBBF23E39CA80051BEEA /* DeltaTypes.h in Headers */,
+				BF85F4792567494600E4D10E /* DLTAMuteSwitchMonitor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -578,6 +585,7 @@
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
+				BF85F47A2567494600E4D10E /* DLTAMuteSwitchMonitor.m in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF4696BC22F7DB98008DD7F2 /* ButtonsInputView.swift in Sources */,
 				BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */,

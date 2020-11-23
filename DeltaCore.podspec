@@ -11,7 +11,7 @@ Pod::Spec.new do |spec|
   spec.social_media_url   = "https://twitter.com/rileytestut"
   
   spec.source_files  = "DeltaCore/**/*.{h,m,swift}"
-  spec.public_header_files = "DeltaCore/DeltaTypes.h"
+  spec.public_header_files = "DeltaCore/DeltaTypes.h", "DeltaCore/Emulator Core/Audio/DLTAMuteSwitchMonitor.h"
   spec.resource_bundles = {
     "DeltaCore" => ["DeltaCore/**/*.deltamapping"]
   }
@@ -19,7 +19,8 @@ Pod::Spec.new do |spec|
   spec.dependency "ZIPFoundation"
   
   spec.xcconfig = {
-    "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "STATIC_LIBRARY"
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "STATIC_LIBRARY",
+    "OTHER_CFLAGS" => "-DSTATIC_LIBRARY"
   }
   
   spec.script_phase = { :name => 'Copy Swift Header', :script => <<-SCRIPT

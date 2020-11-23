@@ -15,6 +15,15 @@ internal extension AVAudioFormat
     }
 }
 
+private extension AVAudioSession
+{
+    func setDeltaCategory() throws
+    {
+        try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
+                                                        options: [.mixWithOthers, .allowBluetoothA2DP])
+    }
+}
+
 public class AudioManager: NSObject, AudioRendering
 {
     /// Currently only supports 16-bit interleaved Linear PCM.
@@ -77,6 +86,14 @@ public class AudioManager: NSObject, AudioRendering
     
     // Used to synchronize access to self.audioPlayerNode without causing deadlocks.
     private let renderingQueue = DispatchQueue(label: "com.rileytestut.Delta.AudioManager.renderingQueue")
+    
+    private var isMuted: Bool = false {
+        didSet {
+            self.updateOutputVolume()
+        }
+    }
+    
+    private let muteSwitchMonitor = DLTAMuteSwitchMonitor()
         
     public init(audioFormat: AVAudioFormat)
     {
@@ -88,7 +105,7 @@ public class AudioManager: NSObject, AudioRendering
         do
         {
             // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            try AVAudioSession.sharedInstance().setDeltaCategory()
         }
         catch
         {
@@ -116,10 +133,20 @@ public extension AudioManager
 {
     func start()
     {
+        self.muteSwitchMonitor.startMonitoring { [weak self] (isMuted) in
+            self?.isMuted = isMuted
+        }
+        
         do
         {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            try AVAudioSession.sharedInstance().setDeltaCategory()
             try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
+            
+            if #available(iOS 13.0, *)
+            {
+               try AVAudioSession.sharedInstance().setAllowHapticsAndSystemSoundsDuringRecording(true)
+            }
+            
             try AVAudioSession.sharedInstance().setActive(true)
         }
         catch
@@ -132,8 +159,12 @@ public extension AudioManager
     
     func stop()
     {
-        self.audioPlayerNode.stop()
-        self.audioEngine.stop()
+        self.muteSwitchMonitor.stopMonitoring()
+        
+        self.renderingQueue.sync {
+            self.audioPlayerNode.stop()
+            self.audioEngine.stop()
+        }
         
         self.audioBuffer.isEnabled = false
     }
@@ -172,7 +203,7 @@ private extension AudioManager
             let status = audioConverter.convert(to: outputBuffer, error: &conversionError) { (requiredPacketCount, outStatus) -> AVAudioBuffer? in
                 
                 // Copy requiredPacketCount frames into inputBuffer's first channel (since audio is interleaved, no need to modify other channels).
-                let preferredSize = Int(requiredPacketCount) * self.audioFormat.frameSize
+                let preferredSize = min(Int(requiredPacketCount) * self.audioFormat.frameSize, Int(inputBuffer.frameCapacity) * self.audioFormat.frameSize)
                 buffer[0].withMemoryRebound(to: UInt8.self, capacity: preferredSize) { (uint8Buffer) in
                     let readBytes = self.audioBuffer.read(into: uint8Buffer, preferredSize: preferredSize)
                     
@@ -260,18 +291,28 @@ private extension AudioManager
                     self.render(inputBuffer, into: outputBuffer)
                 }
             }
+            
+            do
+            {
+                // Explicitly set output port since .defaultToSpeaker option pauses external audio.
+                if self.isHeadsetPluggedIn()
+                {
+                    try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
+                }
+                else
+                {
+                    try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
+                }
+                
+                try self.audioEngine.start()
+            }
+            catch
+            {
+                print(error)
+            }
+            
+            self.audioPlayerNode.play()
         }
-        
-        do
-        {
-            try self.audioEngine.start()
-        }
-        catch
-        {
-            print(error)
-        }
-        
-        self.audioPlayerNode.play()
     }
     
     @objc func updateOutputVolume()
@@ -282,7 +323,7 @@ private extension AudioManager
         }
         else
         {
-            if self.isHeadsetPluggedIn() && AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
+            if self.isMuted
             {
                 self.audioEngine.mainMixerNode.outputVolume = 0.0
             }
@@ -299,8 +340,6 @@ private extension AudioManager
         
         for description in route.outputs
         {
-            print(description.portType)
-            
             if description.portType == .headphones || description.portType == .bluetoothA2DP
             {
                 return true

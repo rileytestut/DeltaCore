@@ -127,6 +127,7 @@ public extension EmulatorCore
             self.save()
         }
         
+        self.audioManager.start()
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         
         let videoFormat = self.deltaCore.videoFormat
@@ -136,8 +137,6 @@ public extension EmulatorCore
         }
         
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
-        
-        self.audioManager.start()
         
         self.runGameLoop()
         self.waitForFrameUpdate()

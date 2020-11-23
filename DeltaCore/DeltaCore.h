@@ -16,6 +16,7 @@ FOUNDATION_EXPORT const unsigned char DeltaCoreVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <DeltaCore/PublicHeader.h>
 #import <DeltaCore/DeltaTypes.h>
+#import <DeltaCore/DLTAMuteSwitchMonitor.h>
 
 // HACK: Needed because the generated DeltaCore-Swift header file uses @import syntax, which isn't supported in Objective-C++ code.
 #import <GLKit/GLKit.h>

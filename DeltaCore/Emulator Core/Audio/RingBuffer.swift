@@ -50,7 +50,7 @@ public class RingBuffer: NSObject
     private var headOffset = 0
     private var usedBytesCount: Int32 = 0
     
-    init?(preferredBufferSize: Int)
+    public init?(preferredBufferSize: Int)
     {
         assert(preferredBufferSize > 0)
         

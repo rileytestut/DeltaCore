@@ -20,7 +20,28 @@ private extension AVAudioSession
     func setDeltaCategory() throws
     {
         try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
-                                                        options: [.mixWithOthers, .allowBluetoothA2DP])
+                                                        options: [.mixWithOthers, .allowBluetoothA2DP, .allowAirPlay])
+    }
+}
+
+private extension AVAudioSessionRouteDescription
+{
+    var isHeadsetPluggedIn: Bool
+    {
+        let isHeadsetPluggedIn = self.outputs.contains { $0.portType == .headphones || $0.portType == .bluetoothA2DP }
+        return isHeadsetPluggedIn
+    }
+    
+    var isOutputtingToReceiver: Bool
+    {
+        let isOutputtingToReceiver = self.outputs.contains { $0.portType == .builtInReceiver }
+        return isOutputtingToReceiver
+    }
+    
+    var isOutputtingToExternalDevice: Bool
+    {
+        let isOutputtingToExternalDevice = self.outputs.contains { $0.portType != .builtInSpeaker && $0.portType != .builtInReceiver }
+        return isOutputtingToExternalDevice
     }
 }
 
@@ -313,11 +334,7 @@ private extension AudioManager
             do
             {
                 // Explicitly set output port since .defaultToSpeaker option pauses external audio.
-                if self.isHeadsetPluggedIn()
-                {
-                    try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-                }
-                else
+                if AVAudioSession.sharedInstance().currentRoute.isOutputtingToReceiver
                 {
                     try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                 }
@@ -345,30 +362,18 @@ private extension AudioManager
         }
         else
         {
-            if self.isMuted
+            let route = AVAudioSession.sharedInstance().currentRoute
+            if self.isMuted && (route.isHeadsetPluggedIn || !route.isOutputtingToExternalDevice)
             {
+                // Mute if playing through speaker or headphones.
                 self.audioEngine.mainMixerNode.outputVolume = 0.0
             }
             else
             {
+                // Ignore mute switch for other audio routes (e.g. AirPlay).
                 self.audioEngine.mainMixerNode.outputVolume = 1.0
             }
         }
-    }
-    
-    func isHeadsetPluggedIn() -> Bool
-    {
-        let route = AVAudioSession.sharedInstance().currentRoute
-        
-        for description in route.outputs
-        {
-            if description.portType == .headphones || description.portType == .bluetoothA2DP
-            {
-                return true
-            }
-        }
-        
-        return false
     }
     
     @available(iOS 13.0, *)

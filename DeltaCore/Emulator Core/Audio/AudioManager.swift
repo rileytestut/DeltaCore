@@ -79,6 +79,9 @@ public class AudioManager: NSObject, AudioRendering
     private let audioPlayerNode: AVAudioPlayerNode
     private let timePitchEffect: AVAudioUnitTimePitch
     
+    @available(iOS 13.0, *)
+    private lazy var sourceNode = self.makeSourceNode()
+    
     private var audioConverter: AVAudioConverter?
     private var audioConverterRequiredFrameCount: AVAudioFrameCount?
     
@@ -121,6 +124,11 @@ public class AudioManager: NSObject, AudioRendering
         self.audioEngine.attach(self.timePitchEffect)
         
         super.init()
+        
+        if #available(iOS 13.0, *)
+        {
+            self.audioEngine.attach(self.sourceNode)
+        }
         
         self.updateOutputVolume()
         
@@ -273,22 +281,32 @@ private extension AudioManager
             
             self.audioConverterRequiredFrameCount = nil
             
-            self.audioEngine.disconnectNodeOutput(self.audioPlayerNode)
             self.audioEngine.disconnectNodeOutput(self.timePitchEffect)
-            
-            self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputAudioFormat)
             self.audioEngine.connect(self.timePitchEffect, to: self.audioEngine.mainMixerNode, format: outputAudioFormat)
-            
-            self.audioBuffer.reset()
-            
-            for _ in 0 ..< self.audioBufferCount
+
+            if #available(iOS 13.0, *)
             {
-                let inputAudioBufferFrameCapacity = max(inputAudioBufferFrameCount, outputAudioBufferFrameCount)
+                self.audioEngine.detach(self.sourceNode)
                 
-                if let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat, frameCapacity: AVAudioFrameCount(inputAudioBufferFrameCapacity)),
-                    let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
+                self.sourceNode = self.makeSourceNode()
+                self.audioEngine.attach(self.sourceNode)
+                
+                self.audioEngine.connect(self.sourceNode, to: self.timePitchEffect, format: outputAudioFormat)
+            }
+            else
+            {
+                self.audioEngine.disconnectNodeOutput(self.audioPlayerNode)
+                self.audioEngine.connect(self.audioPlayerNode, to: self.timePitchEffect, format: outputAudioFormat)
+                
+                for _ in 0 ..< self.audioBufferCount
                 {
-                    self.render(inputBuffer, into: outputBuffer)
+                    let inputAudioBufferFrameCapacity = max(inputAudioBufferFrameCount, outputAudioBufferFrameCount)
+                    
+                    if let inputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat, frameCapacity: AVAudioFrameCount(inputAudioBufferFrameCapacity)),
+                        let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputAudioFormat, frameCapacity: AVAudioFrameCount(outputAudioBufferFrameCount))
+                    {
+                        self.render(inputBuffer, into: outputBuffer)
+                    }
                 }
             }
             
@@ -305,13 +323,17 @@ private extension AudioManager
                 }
                 
                 try self.audioEngine.start()
+                
+                if #available(iOS 13.0, *) {}
+                else
+                {
+                    self.audioPlayerNode.play()
+                }
             }
             catch
             {
                 print(error)
             }
-            
-            self.audioPlayerNode.play()
         }
     }
     
@@ -347,5 +369,24 @@ private extension AudioManager
         }
         
         return false
+    }
+    
+    @available(iOS 13.0, *)
+    func makeSourceNode() -> AVAudioSourceNode
+    {
+        let sourceNode = AVAudioSourceNode(format: self.audioFormat) { [frameSize = audioFormat.frameSize, audioBuffer] (_, _, frameCount, audioBufferList) -> OSStatus in
+            let unsafeAudioBufferList = UnsafeMutableAudioBufferListPointer(audioBufferList)
+            guard let buffer = unsafeAudioBufferList[0].mData else { return kAudioFileStreamError_UnspecifiedError }
+            
+            let requestedBytes = Int(frameCount) * frameSize
+            guard audioBuffer.availableBytesForReading >= requestedBytes else { return kAudioFileStreamError_DataUnavailable }
+                        
+            let readBytes = audioBuffer.read(into: buffer, preferredSize: requestedBytes)
+            unsafeAudioBufferList[0].mDataByteSize = UInt32(readBytes)
+            
+            return noErr
+        }
+        
+        return sourceNode
     }
 }

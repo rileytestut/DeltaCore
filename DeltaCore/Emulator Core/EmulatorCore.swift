@@ -46,8 +46,8 @@ public final class EmulatorCore: NSObject
     public var updateHandler: ((EmulatorCore) -> Void)?
     public var saveHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat)
-    public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
+    public let audioManager: AudioManager
+    public let videoManager: VideoManager
     
     // KVO-Compliant
     @objc public private(set) dynamic var state = State.stopped
@@ -101,6 +101,11 @@ public final class EmulatorCore: NSObject
         // Store separately in case self.game is an NSManagedObject subclass, and we need to access .type or .gameSaveURL on a different thread than its NSManagedObjectContext
         self.gameType = self.game.type
         self.gameSaveURL = self.game.gameSaveURL
+        
+        // These were previously lazy variables, but turns out Swift lazy variables are not thread-safe.
+        // Since they don't actually need to be lazy, we now explicitly initialize them in the initializer.
+        self.audioManager = AudioManager(audioFormat: deltaCore.audioFormat)
+        self.videoManager = VideoManager(videoFormat: deltaCore.videoFormat)
         
         super.init()
         

@@ -257,15 +257,17 @@ open class GameViewController: UIViewController, GameControllerReceiver
             // - Controller View should be pinned to bottom of self.view and centered horizontally.
             // - Game View should be vertically centered between top of screen and controller view.
             
-            var controllerViewHeight: CGFloat = 0
-            
             let intrinsicContentSize = self.controllerView.intrinsicContentSize
             if intrinsicContentSize.height != UIView.noIntrinsicMetric && intrinsicContentSize.width != UIView.noIntrinsicMetric
             {
-                controllerViewHeight = (self.view.bounds.width / intrinsicContentSize.width) * intrinsicContentSize.height
+                let controllerViewHeight = (self.view.bounds.width / intrinsicContentSize.width) * intrinsicContentSize.height
+                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
             }
-            
-            (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
+            else
+            {
+                controllerViewFrame = self.view.bounds
+                availableGameFrame = self.view.bounds
+            }
             
         case _?:
             // Landscape:
@@ -279,7 +281,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             }
             else
             {
-                controllerViewFrame = CGRect(x: 0, y: self.view.bounds.height, width: self.view.bounds.width, height: 0)
+                controllerViewFrame = self.view.bounds
             }
             
             availableGameFrame = self.view.bounds

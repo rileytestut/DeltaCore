@@ -83,18 +83,22 @@ public class GameView: UIView
     internal var eaglContext: EAGLContext {
         get { return self.glkView.context }
         set {
-            // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
-            // to self.glkView may crash if we've already rendered to a game view.
-            EAGLContext.setCurrent(nil)
-            
-            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
-            self.context = self.makeContext()
+            self.renderQueue.sync {
+                // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
+                // to self.glkView may crash if we've already rendered to a game view.
+                EAGLContext.setCurrent(nil)
+                
+                self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
+                self.context = self.makeContext()
+            }
         }
     }
     private lazy var context: CIContext = self.makeContext()
         
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
+    
+    private let renderQueue = DispatchQueue(label: "DeltaCore.GameView.renderQueue")
     
     public override init(frame: CGRect)
     {
@@ -182,15 +186,17 @@ private extension GameView
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
         guard self.outputImage != nil else { return }
-                
-        self.glkView.display()
+              
+        self.renderQueue.sync {
+            self.glkView.display()
+        }
     }
 }
 
 private extension GameView
 {
     func glkView(_ view: GLKView, drawIn rect: CGRect)
-    {        
+    {
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         

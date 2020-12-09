@@ -50,6 +50,11 @@ public extension ControllerSkinProtocol
         
         return traits
     }
+    
+    func gameScreenFrame(for traits: DeltaCore.ControllerSkin.Traits) -> CGRect?
+    {
+        return self.screens(for: traits)?.first?.outputFrame
+    }
 }
 
 public func ==(lhs: ControllerSkinProtocol?, rhs: ControllerSkinProtocol?) -> Bool

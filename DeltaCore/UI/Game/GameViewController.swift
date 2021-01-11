@@ -127,7 +127,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     deinit
     {
-        self.controllerView.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
+        // controllerView might not be initialized by the time deinit is called.
+        self.controllerView?.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
+        
         self.emulatorCore?.stop()
     }
     

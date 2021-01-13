@@ -379,12 +379,41 @@ private extension AudioManager
     @available(iOS 13.0, *)
     func makeSourceNode() -> AVAudioSourceNode
     {
-        let sourceNode = AVAudioSourceNode(format: self.audioFormat) { [frameSize = audioFormat.frameSize, audioBuffer] (_, _, frameCount, audioBufferList) -> OSStatus in
+        var isPrimed = false
+        var previousSampleCount: Int?
+        
+        // Accessing AVAudioSession.sharedInstance() from render block may cause audio glitches,
+        // so calculate sampleRateRatio now rather than later when needed 🤷‍♂️
+        let sampleRateRatio = (self.audioFormat.sampleRate / AVAudioSession.sharedInstance().sampleRate).rounded(.up)
+        
+        let sourceNode = AVAudioSourceNode(format: self.audioFormat) { [audioFormat, audioBuffer] (_, _, frameCount, audioBufferList) -> OSStatus in
+            defer { previousSampleCount = audioBuffer.availableBytesForReading }
+            
             let unsafeAudioBufferList = UnsafeMutableAudioBufferListPointer(audioBufferList)
             guard let buffer = unsafeAudioBufferList[0].mData else { return kAudioFileStreamError_UnspecifiedError }
             
-            let requestedBytes = Int(frameCount) * frameSize
-            guard audioBuffer.availableBytesForReading >= requestedBytes else { return kAudioFileStreamError_DataUnavailable }
+            let requestedBytes = Int(frameCount) * audioFormat.frameSize
+            
+            if !isPrimed
+            {
+                // Make sure audio buffer has enough initial samples to prevent audio distortion.
+                
+                guard audioBuffer.availableBytesForReading >= requestedBytes * Int(sampleRateRatio) else { return kAudioFileStreamError_DataUnavailable }
+                isPrimed = true
+            }
+            
+            if let previousSampleCount = previousSampleCount, audioBuffer.availableBytesForReading < previousSampleCount
+            {
+                // Audio buffer has been reset, so we need to prime it again.
+                
+                isPrimed = false
+                return kAudioFileStreamError_DataUnavailable
+            }
+            
+            guard audioBuffer.availableBytesForReading >= requestedBytes else {
+                isPrimed = false
+                return kAudioFileStreamError_DataUnavailable
+            }
                         
             let readBytes = audioBuffer.read(into: buffer, preferredSize: requestedBytes)
             unsafeAudioBufferList[0].mDataByteSize = UInt32(readBytes)

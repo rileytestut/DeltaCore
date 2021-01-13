@@ -27,6 +27,7 @@
 		BF5027081F210B05007EF163 /* StandardGameControllerInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */; };
 		BF57D1F81EA6DF840013CB1D /* VideoFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */; };
 		BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5996911EA01DC000595F8D /* FilterChain.swift */; };
+		BF5E0D9125AE67AD00A3E4A8 /* RenderThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */; };
 		BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF64CC5A1F23D7F100CD99AD /* GameControllerInputMapping.swift */; };
 		BF64CC641F267DB100CD99AD /* AnyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF64CC631F267DB100CD99AD /* AnyInput.swift */; };
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
@@ -119,6 +120,7 @@
 		BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardGameControllerInput.swift; sourceTree = "<group>"; };
 		BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoFormat.swift; sourceTree = "<group>"; };
 		BF5996911EA01DC000595F8D /* FilterChain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterChain.swift; sourceTree = "<group>"; };
+		BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderThread.swift; sourceTree = "<group>"; };
 		BF64CC5A1F23D7F100CD99AD /* GameControllerInputMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameControllerInputMapping.swift; sourceTree = "<group>"; };
 		BF64CC631F267DB100CD99AD /* AnyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyInput.swift; sourceTree = "<group>"; };
 		BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatProtocol.swift; sourceTree = "<group>"; };
@@ -404,6 +406,7 @@
 				BFD78F611C994596000441FC /* VideoManager.swift */,
 				BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */,
 				BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */,
+				BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */,
 			);
 			path = Video;
 			sourceTree = "<group>";
@@ -577,6 +580,7 @@
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BFA5FCF620D3804400A3C5AB /* UIResponder+FirstResponder.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
+				BF5E0D9125AE67AD00A3E4A8 /* RenderThread.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
 				BF27601122F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift in Sources */,
 				BF27601D22F91342005D98FE /* TouchInputView.swift in Sources */,

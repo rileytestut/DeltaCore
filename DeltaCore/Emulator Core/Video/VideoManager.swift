@@ -38,6 +38,10 @@ public class VideoManager: NSObject, VideoRendering
     @NSCopying private var processedImage: CIImage?
     @NSCopying private var displayedImage: CIImage? // Can only accurately snapshot rendered images.
     
+    private lazy var renderThread = RenderThread(action: { [weak self] in
+        self?._render()
+    })
+    
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
@@ -51,6 +55,8 @@ public class VideoManager: NSObject, VideoRendering
         }
         
         super.init()
+        
+        self.renderThread.start()
     }
     
     private func updateProcessor()
@@ -64,6 +70,11 @@ public class VideoManager: NSObject, VideoRendering
             guard let processor = self.processor as? OpenGLESProcessor else { return }
             processor.videoFormat = self.videoFormat
         }
+    }
+    
+    deinit
+    {
+        self.renderThread.cancel()
     }
 }
 
@@ -110,17 +121,14 @@ public extension VideoManager
         
         guard let image = self.processedImage else { return }
         
-        // Autoreleasepool necessary to prevent leaking CIImages.
-        autoreleasepool {
-            for gameView in self.gameViews
-            {
-                gameView.inputImage = image
-            }
-
-            self.displayedImage = image
-        }
+        // Skip frame if previous frame is not finished rendering.
+        guard self.renderThread.wait(timeout: .now()) == .success else { return }
+        
+        self.displayedImage = image
+        
+        self.renderThread.run()
     }
- 
+    
     func snapshot() -> UIImage?
     {
         guard let displayedImage = self.displayedImage else { return nil }
@@ -148,5 +156,16 @@ public extension VideoManager
         
         let image = UIImage(cgImage: cgImage)
         return image
+    }
+}
+
+private extension VideoManager
+{
+    func _render()
+    {
+        for gameView in self.gameViews
+        {
+            gameView.inputImage = self.displayedImage
+        }
     }
 }

@@ -83,14 +83,15 @@ public class GameView: UIView
     internal var eaglContext: EAGLContext {
         get { return self.glkView.context }
         set {
-            self.renderQueue.sync {
-                // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
-                // to self.glkView may crash if we've already rendered to a game view.
-                EAGLContext.setCurrent(nil)
-                
-                self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
-                self.context = self.makeContext()
-            }
+            os_unfair_lock_lock(&self.lock)
+            defer { os_unfair_lock_unlock(&self.lock) }
+            
+            // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
+            // to self.glkView may crash if we've already rendered to a game view.
+            EAGLContext.setCurrent(nil)
+            
+            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
+            self.context = self.makeContext()
         }
     }
     private lazy var context: CIContext = self.makeContext()
@@ -98,7 +99,7 @@ public class GameView: UIView
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
     
-    private let renderQueue = DispatchQueue(label: "DeltaCore.GameView.renderQueue")
+    private var lock = os_unfair_lock()
     
     public override init(frame: CGRect)
     {
@@ -187,9 +188,10 @@ private extension GameView
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
         guard self.outputImage != nil else { return }
               
-        self.renderQueue.sync {
-            self.glkView.display()
-        }
+        os_unfair_lock_lock(&self.lock)
+        defer { os_unfair_lock_unlock(&self.lock) }
+        
+        self.glkView.display()        
     }
 }
 

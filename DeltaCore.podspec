@@ -11,7 +11,8 @@ Pod::Spec.new do |spec|
   spec.social_media_url   = "https://twitter.com/rileytestut"
   
   spec.source_files  = "DeltaCore/**/*.{h,m,swift}"
-  spec.public_header_files = "DeltaCore/DeltaTypes.h", "DeltaCore/Emulator Core/Audio/DLTAMuteSwitchMonitor.h"
+  spec.exclude_files = "DeltaCore/DeltaTypes.h", "DeltaCore/Emulator Core/Audio/DLTAMuteSwitchMonitor.h"
+  spec.public_header_files = "DeltaCore/include/*.h"
   spec.resource_bundles = {
     "DeltaCore" => ["DeltaCore/**/*.deltamapping"]
   }

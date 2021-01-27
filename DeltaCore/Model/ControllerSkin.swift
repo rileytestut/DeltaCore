@@ -8,7 +8,7 @@
 
 import UIKit
 
-#if FRAMEWORK || STATIC_LIBRARY
+#if FRAMEWORK || STATIC_LIBRARY || SWIFT_PACKAGE
 import ZIPFoundation
 #endif
 
@@ -79,7 +79,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                 let representationsDictionary = info["representations"] as? RepresentationDictionary
             else { return nil }
             
-            #if FRAMEWORK
+            #if FRAMEWORK || SWIFT_PACKAGE
             guard let gameType = info["gameTypeIdentifier"] as? GameType else { return nil }
             #else
             guard let gameTypeString = info["gameTypeIdentifier"] as? String else { return nil }

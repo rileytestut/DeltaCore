@@ -10,12 +10,6 @@
 
 #import <notify.h>
 
-#if STATIC_LIBRARY
-#import "DeltaCore-Swift.h"
-#else
-#import <DeltaCore/DeltaCore-Swift.h>
-#endif
-
 @import AudioToolbox;
 
 @interface DLTAMuteSwitchMonitor ()

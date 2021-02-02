@@ -46,15 +46,26 @@ extension InputType: Hashable
     }
 }
 
-// Conformance to CodingKey allows compiler to automatically generate intValue/stringValue logic for enums.
-public protocol Input: CodingKey
+/// "Private" parent protocol allows types to conform at declaration without having
+/// to implement the full Input protocol (which might require circular dependencies).
+///
+/// Inheriting from CodingKey allows compiler to automatically generate intValue/stringValue logic for enums.
+public protocol _Input: CodingKey
+{
+    var stringValue: String { get }
+    var intValue: Int? { get }
+    
+    init?(stringValue: String)
+    init?(intValue: Int)
+}
+
+public protocol Input: _Input
 {
     var type: InputType { get }
-    
     var isContinuous: Bool { get }
 }
 
-public extension RawRepresentable where Self: Input, RawValue == String
+public extension Input where Self: RawRepresentable, RawValue == String
 {
     var stringValue: String {
         return self.rawValue

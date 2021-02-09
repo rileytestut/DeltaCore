@@ -13,10 +13,24 @@ import GLKit
 
 protocol VideoProcessor
 {
+    var videoFormat: VideoFormat { get }
     var videoBuffer: UnsafeMutablePointer<UInt8>? { get }
+    
+    var viewport: CGRect { get set }
     
     func prepare()
     func processFrame() -> CIImage?
+}
+
+extension VideoProcessor
+{
+    var correctedViewport: CGRect? {
+        guard self.viewport != .zero else { return nil }
+        
+        let viewport = CGRect(x: self.viewport.minX, y: self.videoFormat.dimensions.height - self.viewport.height,
+                              width: self.viewport.width, height: self.viewport.height)
+        return viewport
+    }
 }
 
 public class VideoManager: NSObject, VideoRendering
@@ -24,6 +38,12 @@ public class VideoManager: NSObject, VideoRendering
     public internal(set) var videoFormat: VideoFormat {
         didSet {
             self.updateProcessor()
+        }
+    }
+    
+    public var viewport: CGRect = .zero {
+        didSet {
+            self.processor.viewport = self.viewport
         }
     }
     
@@ -70,6 +90,8 @@ public class VideoManager: NSObject, VideoRendering
             guard let processor = self.processor as? OpenGLESProcessor else { return }
             processor.videoFormat = self.videoFormat
         }
+        
+        processor.viewport = self.viewport
     }
     
     deinit
@@ -133,8 +155,8 @@ public extension VideoManager
     {
         guard let displayedImage = self.displayedImage else { return nil }
         
-        let imageWidth = Int(self.videoFormat.dimensions.width)
-        let imageHeight = Int(self.videoFormat.dimensions.height)
+        let imageWidth = Int(displayedImage.extent.width)
+        let imageHeight = Int(displayedImage.extent.height)
         let capacity = imageWidth * imageHeight * 4
         
         let imageBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: capacity, alignment: 1)

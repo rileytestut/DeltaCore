@@ -42,6 +42,8 @@ class BitmapProcessor: VideoProcessor
     let videoFormat: VideoFormat
     let videoBuffer: UnsafeMutablePointer<UInt8>?
     
+    var viewport: CGRect = .zero
+    
     private let outputVideoFormat: VideoFormat
     private let outputVideoBuffer: UnsafeMutablePointer<UInt8>
     
@@ -94,7 +96,13 @@ extension BitmapProcessor
             
             let bitmapData = Data(bytes: self.outputVideoBuffer, count: self.outputVideoFormat.bufferSize)
             
-            let image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width), size: self.outputVideoFormat.dimensions, format: ciFormat, colorSpace: nil)
+            var image = CIImage(bitmapData: bitmapData, bytesPerRow: self.outputVideoFormat.pixelFormat.bytesPerPixel * Int(self.outputVideoFormat.dimensions.width), size: self.outputVideoFormat.dimensions, format: ciFormat, colorSpace: nil)
+            
+            if let viewport = self.correctedViewport
+            {
+                image = image.cropped(to: viewport)
+            }
+            
             return image
         }
     }

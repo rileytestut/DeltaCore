@@ -35,11 +35,10 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 
 public extension DeltaCoreProtocol
 {
-#if !SWIFT_PACKAGE
     var resourceBundle: Bundle {
         #if FRAMEWORK
         let bundle = Bundle(for: type(of: self.emulatorBridge))
-        #elseif STATIC_LIBRARY
+        #elseif STATIC_LIBRARY || SWIFT_PACKAGE
         let bundle: Bundle
         if let bundleURL = Bundle.main.url(forResource: self.name, withExtension: "bundle")
         {
@@ -55,7 +54,6 @@ public extension DeltaCoreProtocol
         
         return bundle
     }
-#endif
     
     var directoryURL: URL {
         let directoryURL = Delta.coresDirectoryURL.appendingPathComponent(self.name, isDirectory: true)

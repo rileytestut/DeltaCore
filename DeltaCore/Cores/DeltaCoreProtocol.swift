@@ -46,7 +46,7 @@ public extension DeltaCoreProtocol
         }
         else
         {
-            bundle = .main
+            bundle = Bundle(for: type(of: self.emulatorBridge))
         }
         #else
         let bundle = Bundle.main

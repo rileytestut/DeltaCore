@@ -647,7 +647,7 @@ private extension GameViewController
 {
     @objc func screenDidConnect()
     {
-        self.setupMirroringIfApplicable()
+        self.enableMirroringIfApplicable()
     }
 
     @objc func screenDidDisconnect()
@@ -658,13 +658,13 @@ private extension GameViewController
     @objc func screenModeDidChange()
     {
         self.disableMirroring()
-        self.setupMirroringIfApplicable()
+        self.enableMirroringIfApplicable()
     }
 }
 
 public extension GameViewController
 {
-    func setupMirroringIfApplicable()
+    func enableMirroringIfApplicable()
     {
         guard UIScreen.screens.count > 1, let externalScreen = UIScreen.screens.last else { return }
         self.mirroredScreen = externalScreen

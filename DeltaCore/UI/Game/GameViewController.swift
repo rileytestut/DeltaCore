@@ -259,8 +259,16 @@ open class GameViewController: UIViewController, GameControllerReceiver
             // Controller View Hidden:
             // - Controller View should have a height of 0.
             // - Game View should be centered in self.view.
-             
-            (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
+            
+            if let mirroredScreen = mirroredScreen
+            {
+                availableGameFrame = mirroredScreen.bounds
+                (controllerViewFrame, _) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
+            }
+            else
+            {
+                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
+            }
             
         case let traits? where traits.orientation == .portrait:
             // Portrait:

@@ -96,6 +96,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var _previousControllerSkin: ControllerSkinProtocol?
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
     
+    // Screen Mirroing
+    public var mirroredWindow: UIWindow?
+    public var mirroredScreen: UIScreen?
+    
     /// UIViewController
     open override var prefersStatusBarHidden: Bool {
         return true
@@ -123,6 +127,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenDidConnect), name: UIScreen.didConnectNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenDidDisconnect), name: UIScreen.didDisconnectNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenModeDidChange), name: UIScreen.modeDidChangeNotification, object: nil)
     }
     
     deinit
@@ -263,12 +271,29 @@ open class GameViewController: UIViewController, GameControllerReceiver
             if intrinsicContentSize.height != UIView.noIntrinsicMetric && intrinsicContentSize.width != UIView.noIntrinsicMetric
             {
                 let controllerViewHeight = (self.view.bounds.width / intrinsicContentSize.width) * intrinsicContentSize.height
-                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
+                
+                if let mirroredScreen = mirroredScreen
+                {
+                    availableGameFrame = mirroredScreen.bounds
+                    (controllerViewFrame, _) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
+                }
+                else
+                {
+                    (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
+                }
             }
             else
             {
                 controllerViewFrame = self.view.bounds
-                availableGameFrame = self.view.bounds
+                
+                if let mirroredScreen = mirroredScreen
+                {
+                    availableGameFrame = mirroredScreen.bounds
+                }
+                else
+                {
+                    availableGameFrame = self.view.bounds
+                }
             }
             
         case _?:
@@ -286,7 +311,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 controllerViewFrame = self.view.bounds
             }
             
-            availableGameFrame = self.view.bounds
+            if let mirroredScreen = mirroredScreen
+            {
+                availableGameFrame = mirroredScreen.bounds
+            }
+            else
+            {
+                availableGameFrame = self.view.bounds
+            }
         }
         
         self.controllerView.frame = controllerViewFrame
@@ -300,8 +332,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
         {
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
-                gameView.frame = outputFrame
+                if mirroredScreen == nil
+                {
+                    let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                    gameView.frame = outputFrame
+                }
             }
         }
         else
@@ -392,8 +427,17 @@ extension GameViewController
                     gameView.filter = filterChain
                 }
                 
-                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
-                gameView.frame = outputFrame
+                if let mirroredScreen = mirroredScreen
+                {
+                    let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
+                    let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: mirroredScreen.bounds)
+                    self.gameView.frame = gameViewFrame
+                }
+                else
+                {
+                    let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                    gameView.frame = outputFrame
+                }
                 
                 gameViews.append(gameView)
             }
@@ -587,5 +631,81 @@ private extension GameViewController
             self.view.layoutIfNeeded()
         }
         animator.startAnimation()
+    }
+}
+
+//MARK: - Screen Mirroring -
+private extension GameViewController
+{
+    @objc func screenDidConnect()
+    {
+        self.setupMirroringIfApplicable()
+    }
+
+    @objc func screenDidDisconnect()
+    {
+        self.disableMirroring()
+    }
+    
+    @objc func screenModeDidChange()
+    {
+        self.disableMirroring()
+        self.setupMirroringIfApplicable()
+    }
+}
+
+public extension GameViewController
+{
+    func setupMirroringIfApplicable()
+    {
+        guard UIScreen.screens.count > 1, let externalScreen = UIScreen.screens.last else { return }
+        self.mirroredScreen = externalScreen
+        
+        // Find max resolution
+        var max = CGSize(width: 0, height: 0)
+        var maxScreenMode: UIScreenMode? = nil
+        if let mirroredScreen = mirroredScreen
+        {
+            for mode in mirroredScreen.availableModes
+            {
+                if (maxScreenMode == nil || mode.size.height > max.height || mode.size.width > max.width)
+                {
+                    max = mode.size
+                    maxScreenMode = mode
+                }
+            }
+        }
+        self.mirroredScreen?.currentMode = maxScreenMode
+        
+        // Setup window in external screen
+        if let mirroredScreen = mirroredScreen
+        {
+            self.mirroredWindow = UIWindow(frame: mirroredScreen.bounds)
+            self.mirroredWindow?.isHidden = false
+            self.mirroredWindow?.layer.contentsGravity = .resizeAspect
+            self.mirroredWindow?.screen = mirroredScreen
+        }
+        
+        self.gameView.removeFromSuperview()
+        
+        self.mirroredWindow?.addSubview(self.gameView)
+        self.gameView.frame = mirroredWindow?.frame ?? .zero
+        
+        self.gameView.setNeedsLayout()
+        self.mirroredWindow?.layoutIfNeeded()
+    }
+    
+    func disableMirroring()
+    {
+        self.gameView.removeFromSuperview()
+        self.view.insertSubview(self.gameView, belowSubview: self.controllerView)
+        
+        self.mirroredScreen = nil
+        self.mirroredWindow = nil
+        
+        self.gameView.setNeedsLayout()
+        self.gameView.layoutIfNeeded()
+        self.view.setNeedsLayout()
+        self.view.layoutIfNeeded()
     }
 }

@@ -315,7 +315,17 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
         else
         {
-            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: (mirroredScreen != nil) ? mirroredScreen!.bounds : availableGameFrame)
+            var screenAspectRatioToUse = screenAspectRatio
+            var availableGameFrameToUse = availableGameFrame
+            if let mirroredScreen = mirroredScreen {
+                availableGameFrameToUse = mirroredScreen.bounds
+                if screenAspectRatio.height > screenAspectRatio.width {
+                    // the only VideoFormat where height > width (for now) is melonDS; correct height for non-touch screen
+                    screenAspectRatioToUse = CGSize(width: screenAspectRatio.width, height: screenAspectRatio.height / 2)
+                }
+            }
+            
+            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatioToUse, insideRect: availableGameFrameToUse)
             self.gameView.frame = gameViewFrame
         }
         

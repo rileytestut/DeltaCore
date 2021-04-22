@@ -259,16 +259,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
             // Controller View Hidden:
             // - Controller View should have a height of 0.
             // - Game View should be centered in self.view.
-            
-            if let mirroredScreen = mirroredScreen
-            {
-                availableGameFrame = mirroredScreen.bounds
-                (controllerViewFrame, _) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
-            }
-            else
-            {
-                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
-            }
+             
+            (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
             
         case let traits? where traits.orientation == .portrait:
             // Portrait:
@@ -279,29 +271,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
             if intrinsicContentSize.height != UIView.noIntrinsicMetric && intrinsicContentSize.width != UIView.noIntrinsicMetric
             {
                 let controllerViewHeight = (self.view.bounds.width / intrinsicContentSize.width) * intrinsicContentSize.height
-                
-                if let mirroredScreen = mirroredScreen
-                {
-                    availableGameFrame = mirroredScreen.bounds
-                    (controllerViewFrame, _) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
-                }
-                else
-                {
-                    (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
-                }
+                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
             }
             else
             {
                 controllerViewFrame = self.view.bounds
-                
-                if let mirroredScreen = mirroredScreen
-                {
-                    availableGameFrame = mirroredScreen.bounds
-                }
-                else
-                {
-                    availableGameFrame = self.view.bounds
-                }
+                availableGameFrame = self.view.bounds
             }
             
         case _?:
@@ -319,20 +294,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 controllerViewFrame = self.view.bounds
             }
             
-            if let mirroredScreen = mirroredScreen
-            {
-                availableGameFrame = mirroredScreen.bounds
-            }
-            else
-            {
-                availableGameFrame = self.view.bounds
-            }
+            availableGameFrame = self.view.bounds
         }
         
         self.controllerView.frame = controllerViewFrame
         
         /* Game View */
         if
+            mirroredScreen == nil,
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
             let screens = controllerSkin.screens(for: traits),
@@ -340,16 +309,13 @@ open class GameViewController: UIViewController, GameControllerReceiver
         {
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                if mirroredScreen == nil
-                {
-                    let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
-                    gameView.frame = outputFrame
-                }
+                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                gameView.frame = outputFrame
             }
         }
         else
         {
-            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame)
+            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: (mirroredScreen != nil) ? mirroredScreen!.bounds : availableGameFrame)
             self.gameView.frame = gameViewFrame
         }
         
@@ -435,16 +401,14 @@ extension GameViewController
                     gameView.filter = filterChain
                 }
                 
+                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                gameView.frame = outputFrame
+                
                 if let mirroredScreen = mirroredScreen
                 {
                     let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
                     let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: mirroredScreen.bounds)
                     self.gameView.frame = gameViewFrame
-                }
-                else
-                {
-                    let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
-                    gameView.frame = outputFrame
                 }
                 
                 gameViews.append(gameView)

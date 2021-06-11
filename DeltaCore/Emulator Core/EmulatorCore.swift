@@ -344,6 +344,8 @@ extension EmulatorCore: GameControllerReceiver
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
+        let playerIndex = gameController.playerIndex ?? 0
+        
         // If any of game controller's sustained inputs map to input, treat input as sustained.
         let isSustainedInput = gameController.sustainedInputs.keys.contains(where: {
             guard let mappedInput = gameController.mappedInput(for: $0, receiver: self) else { return false }
@@ -354,7 +356,7 @@ extension EmulatorCore: GameControllerReceiver
         {
             self.reactivateInputsQueue.async {
                 
-                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, at: playerIndex)
                 
                 self.reactivateInputsDispatchGroup = DispatchGroup()
                 
@@ -365,12 +367,12 @@ extension EmulatorCore: GameControllerReceiver
 
                 self.reactivateInputsDispatchGroup = nil
                 
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, at: playerIndex)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, at: playerIndex)
         }
     }
     
@@ -378,7 +380,9 @@ extension EmulatorCore: GameControllerReceiver
     {
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+        let playerIndex = gameController.playerIndex ?? 0
+        
+        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, at: playerIndex)
     }
     
     private func mappedInput(for input: Input) -> Input?

@@ -37,8 +37,8 @@ public protocol EmulatorBridging: NSObjectProtocol
     @objc(runFrameAndProcessVideo:) func runFrame(processVideo: Bool)
     
     /// Inputs
-    func activateInput(_ input: Int, value: Double)
-    func deactivateInput(_ input: Int)
+    func activateInput(_ input: Int, value: Double, at playerIndex: Int)
+    func deactivateInput(_ input: Int, at playerIndex: Int)
     func resetInputs()
     
     /// Save States

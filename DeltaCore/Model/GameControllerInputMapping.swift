@@ -26,6 +26,13 @@ public struct GameControllerInputMapping: GameControllerInputMappingProtocol, Co
         self.inputMappings = [:]
     }
     
+    public init<T: Input>(gameControllerInputType: GameControllerInputType, mappings: [T: Input])
+    {
+        self.gameControllerInputType = gameControllerInputType
+        
+        self.inputMappings = mappings.map { ($0.key.stringValue, AnyInput($0.value)) }.reduce(into: [String: AnyInput]()) { $0[$1.0] = $1.1 }
+    }
+    
     public func input(forControllerInput controllerInput: Input) -> Input?
     {
         precondition(controllerInput.type == .controller(self.gameControllerInputType), "controllerInput.type must match GameControllerInputMapping.gameControllerInputType")

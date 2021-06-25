@@ -13,7 +13,8 @@ public extension GameControllerInputType
     static let standard = GameControllerInputType("standard")
 }
 
-public enum StandardGameControllerInput: String, Codable
+// Ordered (roughly) from "most common" to "least common"
+public enum StandardGameControllerInput: String, Codable, CaseIterable
 {
     case menu
     
@@ -21,6 +22,11 @@ public enum StandardGameControllerInput: String, Codable
     case down
     case left
     case right
+    
+    case a
+    case b
+    case x
+    case y
     
     case leftThumbstickUp
     case leftThumbstickDown
@@ -32,14 +38,6 @@ public enum StandardGameControllerInput: String, Codable
     case rightThumbstickLeft
     case rightThumbstickRight
     
-    case a
-    case b
-    case x
-    case y
-    
-    case start
-    case select
-    
     case l1
     case l2
     case l3
@@ -47,6 +45,10 @@ public enum StandardGameControllerInput: String, Codable
     case r1
     case r2
     case r3
+    
+    // Common game inputs, but not often supported by controllers.
+    case start
+    case select
 }
 
 extension StandardGameControllerInput: Input

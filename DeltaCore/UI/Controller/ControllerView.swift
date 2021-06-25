@@ -115,11 +115,16 @@ public class ControllerView: UIView, GameController
     private var transitionSnapshotView: UIView? = nil
     private let controllerDebugView = ControllerDebugView()
     
+    @available(iOS 15, *)
+    private lazy var virtualMenuButton: VirtualControllerButton! = nil
+    
     private let buttonsView = ButtonsInputView(frame: CGRect.zero)
     private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
     private var touchViews = [ControllerSkin.Item: TouchInputView]()
     
     private var _performedInitialLayout = false
+    
+    private weak var gcControllerView: UIView?
     
     private var controllerInputView: ControllerInputView?
     
@@ -186,6 +191,12 @@ public class ControllerView: UIView, GameController
                                      self.controllerDebugView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
                                      self.controllerDebugView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
                                      self.controllerDebugView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor)])
+        
+        if #available(iOS 15, *)
+        {
+            self.virtualMenuButton = VirtualControllerButton(title: String(localized: "Menu"), primaryAction: UIAction(handler: self.handleMenuButton(_:)))
+            self.virtualMenuButton.translatesAutoresizingMaskIntoConstraints = false
+        }
     }
     
     //MARK: - UIView
@@ -466,6 +477,27 @@ public extension ControllerView
             self.dismissInputControllerView()
         }
         
+        if #available(iOS 15, *)
+        {
+            async {
+                if let controllerSkin = self.controllerSkin, let traits = self.controllerSkinTraits, controllerSkin.isVirtual(for: traits) == true
+                {
+                    do
+                    {
+                        try await self.presentVirtualController()
+                    }
+                    catch
+                    {
+                        print("Failed to show virtual controller.", error)
+                    }
+                }
+                else
+                {
+                    await self.dismissVirtualController()
+                }
+            }
+        }
+        
         self.controllerInputView?.controllerView.overrideControllerSkinTraits = self.controllerSkinTraits
         
         self.invalidateIntrinsicContentSize()
@@ -518,6 +550,103 @@ private extension ControllerView
         guard self.controllerInputView != nil else { return }
         
         self.controllerInputView = nil
+    }
+    
+    @available(iOS 15, *)
+    func presentVirtualController() async throws
+    {
+        guard let controllerSkin = self.controllerSkin else { return }
+        
+        try await ExternalGameControllerManager.shared.virtualController.configure(for: controllerSkin.gameType)
+        try await ExternalGameControllerManager.shared.virtualController.connect()
+        
+//        if let window = self.window, let rootViewController = window.rootViewController
+//        {
+//            for view in rootViewController.view.subviews where NSStringFromClass(type(of: view)).contains("GCController")
+//            {
+//                self.gcControllerView = view
+//                
+//                if self.virtualMenuButton.superview != view
+//                {
+//                    view.addSubview(self.virtualMenuButton)
+//                    
+//                    NSLayoutConstraint.activate([self.virtualMenuButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//                                                 self.virtualMenuButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 20)])
+//                }
+//                
+//                break
+//            }
+//        }
+        
+        struct InputMapping: GameControllerInputMappingProtocol
+        {
+            var gameType: GameType
+            var standardMapping: GameControllerInputMappingProtocol
+            
+            var gameControllerInputType: GameControllerInputType { .mfi }
+            
+            func input(forControllerInput controllerInput: Input) -> Input?
+            {
+                // Map MFi inputs -> Standard Inputs -> Game Inputs -> Controller Skin inputs
+                
+                guard let rawStandardInput = self.standardMapping.input(forControllerInput: controllerInput),
+                      let standardInput = StandardGameControllerInput(input: rawStandardInput),
+                      let gameInput = standardInput.input(for: self.gameType) else { return nil }
+                
+                let mappedInput = AnyInput(stringValue: gameInput.stringValue, intValue: gameInput.intValue,
+                                           type: .controller(.controllerSkin), isContinuous: gameInput.isContinuous)
+                return mappedInput
+            }
+        }
+        
+        let inputMapping: InputMapping?
+        
+        if let defaultMapping = ExternalGameControllerManager.shared.virtualController.defaultInputMapping
+        {
+            inputMapping = InputMapping(gameType: controllerSkin.gameType, standardMapping: defaultMapping)
+        }
+        else
+        {
+            inputMapping = nil
+        }
+        
+        ExternalGameControllerManager.shared.virtualController.addReceiver(self, inputMapping: inputMapping)
+    }
+    
+    @available(iOS 15, *)
+    func dismissVirtualController() async
+    {
+        await ExternalGameControllerManager.shared.virtualController.disconnect()
+        
+        ExternalGameControllerManager.shared.virtualController.removeReceiver(self)
+    }
+    
+    @available(iOS 15, *)
+    func handleMenuButton(_ action: UIAction)
+    {
+        let input = AnyInput(stringValue: "menu", intValue: nil, type: .controller(.controllerSkin))
+        self.activate(input)
+        
+//        guard let gcView = self.gcControllerView else { return }
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//            var format = UIGraphicsImageRendererFormat.preferred()
+//            format.opaque = false
+//
+//            let renderer = UIGraphicsImageRenderer(size: gcView.bounds.size, format: format)
+//
+//            let image = renderer.image { ctx in
+//                gcView.drawHierarchy(in: gcView.bounds, afterScreenUpdates: true)
+//            }
+//
+//            let pngData = image.pngData()!
+//
+//            let activityViewController = UIActivityViewController(activityItems: [pngData], applicationActivities: nil)
+//            if let window = self.window, let rootViewController = window.rootViewController
+//            {
+//                rootViewController.present(activityViewController, animated: true, completion: nil)
+//            }
+//        }
     }
 }
 
@@ -614,14 +743,28 @@ extension ControllerView: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
-        guard gameController == self.controllerInputView?.controllerView else { return }
+        if #available(iOS 15, *)
+        {
+            guard gameController == self.controllerInputView?.controllerView || gameController == ExternalGameControllerManager.shared.virtualController else { return }
+        }
+        else
+        {
+            guard gameController == self.controllerInputView?.controllerView else { return }
+        }
         
         self.activate(input)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        guard gameController == self.controllerInputView?.controllerView else { return }
+        if #available(iOS 15, *)
+        {
+            guard gameController == self.controllerInputView?.controllerView || gameController == ExternalGameControllerManager.shared.virtualController else { return }
+        }
+        else
+        {
+            guard gameController == self.controllerInputView?.controllerView else { return }
+        }
         
         self.deactivate(input)
     }

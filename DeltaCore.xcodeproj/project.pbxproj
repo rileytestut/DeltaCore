@@ -70,6 +70,9 @@
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
+		D540A8FE26827BAD009934CA /* VirtualControllerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D540A8FD26827BAD009934CA /* VirtualControllerButton.swift */; };
+		D555BA71267D34A50053AEBB /* UIBezierPath+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */; };
+		D5A07AD6267AAB4500FA6C8B /* VirtualController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A07AD5267AAB4500FA6C8B /* VirtualController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,7 +108,7 @@
 		BF2722091F40FB2100E19007 /* MFiGameController.deltamapping */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = MFiGameController.deltamapping; sourceTree = "<group>"; };
 		BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmediatePanGestureRecognizer.swift; sourceTree = "<group>"; };
 		BF27601C22F91342005D98FE /* TouchInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchInputView.swift; sourceTree = "<group>"; };
-		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameControllerStateManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameControllerStateManager.swift; sourceTree = "<group>"; };
 		BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbstickInputView.swift; sourceTree = "<group>"; };
 		BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalGameControllerManager.swift; sourceTree = "<group>"; };
 		BF34FA121CF18E40006624C7 /* CheatFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatFormat.swift; sourceTree = "<group>"; };
@@ -153,8 +156,8 @@
 		BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZIPFoundation.xcodeproj; path = External/ZIPFoundation/ZIPFoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		BFD27EF61D261E9B00E081A3 /* DeltaTypes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaTypes.m; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
-		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		BFE438111AF60CDA0095A5F1 /* ControllerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ControllerView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; };
+		BFE438111AF60CDA0095A5F1 /* ControllerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ControllerView.swift; sourceTree = "<group>"; };
 		BFEC23C31D247D1F00B3A6A9 /* VideoRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoRendering.swift; sourceTree = "<group>"; };
 		BFEC23CC1D247E4A00B3A6A9 /* AudioRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRendering.swift; sourceTree = "<group>"; };
 		BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
@@ -162,6 +165,9 @@
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
+		D540A8FD26827BAD009934CA /* VirtualControllerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualControllerButton.swift; sourceTree = "<group>"; };
+		D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBezierPath+String.swift"; sourceTree = "<group>"; };
+		D5A07AD5267AAB4500FA6C8B /* VirtualController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -187,6 +193,7 @@
 				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
 				BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */,
 				BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */,
+				D540A8FD26827BAD009934CA /* VirtualControllerButton.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -355,6 +362,7 @@
 				BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */,
 				BFA5FCF020D37FFF00A3C5AB /* MFi */,
 				BFA5FCEB20D37FF800A3C5AB /* Keyboard */,
+				D57062BE2682C3CC00BE8220 /* Virtual */,
 			);
 			path = "Game Controllers";
 			sourceTree = "<group>";
@@ -371,6 +379,7 @@
 				BFA5FCF320D3804300A3C5AB /* UIApplication+AppExtension.swift */,
 				BFA5FCF420D3804400A3C5AB /* UIResponder+FirstResponder.swift */,
 				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
+				D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -446,6 +455,14 @@
 				BF9437FE1C46F42400E527B2 /* Audio */,
 			);
 			path = "Emulator Core";
+			sourceTree = "<group>";
+		};
+		D57062BE2682C3CC00BE8220 /* Virtual */ = {
+			isa = PBXGroup;
+			children = (
+				D5A07AD5267AAB4500FA6C8B /* VirtualController.swift */,
+			);
+			path = Virtual;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -534,7 +551,7 @@
 		};
 		BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */ = {
 			isa = PBXReferenceProxy;
-			fileType = file;
+			fileType = wrapper.cfbundle;
 			path = ZIPFoundationTests.xctest;
 			remoteRef = BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -569,6 +586,7 @@
 				BFA5FCEE20D37FF800A3C5AB /* KeyboardResponder.swift in Sources */,
 				BF57D1F81EA6DF840013CB1D /* VideoFormat.swift in Sources */,
 				BFA5FCF520D3804400A3C5AB /* UIApplication+AppExtension.swift in Sources */,
+				D540A8FE26827BAD009934CA /* VirtualControllerButton.swift in Sources */,
 				BFA5FCEF20D37FF800A3C5AB /* KeyboardGameController.swift in Sources */,
 				BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */,
 				BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,
@@ -579,6 +597,7 @@
 				BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */,
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BFA5FCF620D3804400A3C5AB /* UIResponder+FirstResponder.swift in Sources */,
+				D5A07AD6267AAB4500FA6C8B /* VirtualController.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
 				BF5E0D9125AE67AD00A3E4A8 /* RenderThread.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
@@ -612,6 +631,7 @@
 				BF9279541D2B53E2003084F3 /* GameViewController.swift in Sources */,
 				BF9873C11AB6C8BF0001D8C9 /* GameView.swift in Sources */,
 				BFA352471DEC19D70085A0BD /* UIDevice+Vibration.swift in Sources */,
+				D555BA71267D34A50053AEBB /* UIBezierPath+String.swift in Sources */,
 				BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */,
 				BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */,
 				BF31A1F62268DE5700C64A1B /* ThumbstickInputView.swift in Sources */,

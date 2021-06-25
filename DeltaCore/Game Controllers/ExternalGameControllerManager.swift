@@ -64,6 +64,9 @@ public class ExternalGameControllerManager: UIResponder
         return nextPlayerIndex
     }
     
+    @available(iOS 15, *)
+    public private(set) lazy var virtualController = VirtualController()
+    
     private override init()
     {
 #if targetEnvironment(simulator)
@@ -196,6 +199,11 @@ private extension ExternalGameControllerManager
     @objc func mfiGameControllerDidConnect(_ notification: Notification)
     {
         guard let controller = notification.object as? GCController else { return }
+        
+        if #available(iOS 15, *)
+        {
+            guard controller != self.virtualController.gcController else { return }
+        }
         
         let externalController = MFiGameController(controller: controller)
         self.add(externalController)

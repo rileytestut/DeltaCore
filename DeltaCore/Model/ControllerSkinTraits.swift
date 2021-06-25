@@ -32,6 +32,7 @@ extension ControllerSkin
     
     public enum Size: String
     {
+        case thumbnail
         case small
         case medium
         case large

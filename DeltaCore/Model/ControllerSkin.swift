@@ -170,6 +170,17 @@ public extension ControllerSkin
         let controllerSkin = ControllerSkin(fileURL: fileURL)
         return controllerSkin
     }
+    
+    static func virtualControllerSkin(for gameType: GameType) -> ControllerSkin?
+    {
+        guard
+            let deltaCore = Delta.core(for: gameType),
+            let fileURL = deltaCore.resourceBundle.url(forResource: "System", withExtension: "deltaskin")
+        else { return nil }
+        
+        let controllerSkin = ControllerSkin(fileURL: fileURL)
+        return controllerSkin
+    }
 }
 
 public extension ControllerSkin
@@ -241,6 +252,13 @@ public extension ControllerSkin
         
         switch preferredSize
         {
+        case .thumbnail:
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .thumbnail)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .thumbnail, resizable: true)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+            
         case .small:
             if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
             else if let image = self.image(for: representation, assetSize: AssetSize(size: .small, resizable: true)) { returnedImage = image }
@@ -349,6 +367,12 @@ public extension ControllerSkin
         return representation.isTranslucent
     }
     
+    func isVirtual(for traits: Traits) -> Bool?
+    {
+        guard let representation = self.representation(for: traits) else { return nil }
+        return representation.isVirtual
+    }
+    
     func gameScreenFrame(for traits: Traits) -> CGRect?
     {
         guard let representation = self.representation(for: traits) else { return nil }
@@ -382,7 +406,7 @@ private extension ControllerSkin
             
             switch assetSize
             {
-            case .small, .medium, .large:
+            case .thumbnail, .small, .medium, .large:
                 guard let imageScale = assetSize.imageScale(for: representation.traits) else { return nil }
                 image = UIImage(data: data, scale: imageScale)
                 
@@ -600,6 +624,7 @@ private extension ControllerSkin
     
     enum AssetSize: RawRepresentable, Hashable
     {
+        case thumbnail
         case small
         case medium
         case large
@@ -637,6 +662,7 @@ private extension ControllerSkin
         var rawValue: String {
             switch self
             {
+            case .thumbnail: return "thumbnail"
             case .small:     return "small"
             case .medium:    return "medium"
             case .large:     return "large"
@@ -648,6 +674,7 @@ private extension ControllerSkin
         {
             switch rawValue
             {
+            case "thumbnail": self = .thumbnail
             case "small":     self = .small
             case "medium":    self = .medium
             case "large":     self = .large
@@ -660,6 +687,7 @@ private extension ControllerSkin
         {
             switch size
             {
+            case .thumbnail: self = .thumbnail
             case .small:  self = .small
             case .medium: self = .medium
             case .large:  self = .large
@@ -686,11 +714,12 @@ private extension ControllerSkin
                 
             case (.iphone, .edgeToEdge, _): targetSize = CGSize(width: 375, height: 812)
             case (.iphone, .splitView, _): return nil
-                
-            case (.ipad, _,  .small): targetSize = CGSize(width: 768, height: 1024)
+            
+            case (.ipad, _, .small): targetSize = CGSize(width: 768, height: 1024)
             case (.ipad, _, .medium): targetSize = CGSize(width: 834, height: 1112)
             case (.ipad, _, .large): targetSize = CGSize(width: 1024, height: 1366)
                 
+            case (_, _, .thumbnail): targetSize = CGSize(width: 375, height: 375)
             case (_, _, .resizable): return nil
             }
             
@@ -709,6 +738,7 @@ private extension ControllerSkin
             
             switch (traits.device, traits.displayType, assetSize)
             {
+            case (.iphone, .standard, .thumbnail): return 2.0
             case (.iphone, .standard, .small): return 2.0
             case (.iphone, .standard, .medium): return 2.0
             case (.iphone, .standard, .large): return 3.0
@@ -720,7 +750,7 @@ private extension ControllerSkin
             case (.ipad, .edgeToEdge, _): return nil
             case (.ipad, .splitView, _): return 2.0
                 
-            case (_, _, .resizable): return nil
+            case (_, _, .resizable), (_, _, .thumbnail): return nil
             }
         }
     }
@@ -733,6 +763,7 @@ private extension ControllerSkin
         let isTranslucent: Bool
         let screens: [Screen]?
         let aspectRatio: CGSize
+        let isVirtual: Bool
         
         let items: [Item]
         
@@ -743,41 +774,74 @@ private extension ControllerSkin
         
         init?(traits: Traits, dictionary: [String: AnyObject])
         {
-            guard
-                let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
-                let itemsArray = dictionary["items"] as? [[String: AnyObject]],
-                let assetsDictionary = dictionary["assets"] as? [String: String]
-            else { return nil }
-            
-            self.aspectRatio = mappingSize
-            
             self.traits = traits
             
-            let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
-            
-            var items = [Item]()
-            for dictionary in itemsArray
-            {
-                if let item = Item(dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
-                {
-                    items.append(item)
-                }
-            }
-            self.items = items
-            
-            var assets = [AssetSize: String]()
-            for (key, value) in assetsDictionary
-            {
-                if let size = AssetSize(rawValue: key)
-                {
-                    assets[size] = value
-                }
-            }
-            self.assets = assets
-            
-            guard self.assets.count > 0 else { return nil }
-            
             self.isTranslucent = dictionary["translucent"] as? Bool ?? false
+            self.isVirtual = dictionary["system"] as? Bool ?? false
+            
+            // Assets
+            if let assetsDictionary = dictionary["assets"] as? [String: String]
+            {
+                var assets = [AssetSize: String]()
+                for (key, value) in assetsDictionary
+                {
+                    if let size = AssetSize(rawValue: key)
+                    {
+                        assets[size] = value
+                    }
+                }
+                self.assets = assets
+            }
+            else if self.isVirtual
+            {
+                self.assets = [:]
+            }
+            else
+            {
+                return nil
+            }
+            
+            // Mapping Size
+            if let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary)
+            {
+                self.aspectRatio = mappingSize
+            }
+            else if self.isVirtual
+            {
+                self.aspectRatio = CGSize(width: 1, height: 1)
+            }
+            else
+            {
+                return nil
+            }
+            
+            // Items
+            if let itemsArray = dictionary["items"] as? [[String: AnyObject]]
+            {
+                let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
+                
+                var items = [Item]()
+                for dictionary in itemsArray
+                {
+                    if let item = Item(dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: self.aspectRatio)
+                    {
+                        items.append(item)
+                    }
+                }
+                self.items = items
+            }
+            else if self.isVirtual
+            {
+                self.items = []
+            }
+            else
+            {
+                return nil
+            }
+            
+            guard self.isVirtual || self.assets.count > 0 else { return nil }
+            
+            let mappingSize = self.aspectRatio
             
             if
                 let gameScreenFrameDictionary = dictionary["gameScreenFrame"] as? [String: CGFloat],

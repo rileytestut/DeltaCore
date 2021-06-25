@@ -115,6 +115,11 @@ extension TouchControllerSkin: ControllerSkinProtocol
     {
         return false
     }
+    
+    public func isVirtual(for traits: ControllerSkin.Traits) -> Bool?
+    {
+        return false
+    }
 
     public func screens(for traits: ControllerSkin.Traits) -> [ControllerSkin.Screen]?
     {

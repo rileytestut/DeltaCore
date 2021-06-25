@@ -17,6 +17,8 @@ public struct GameControllerInputMapping: GameControllerInputMappingProtocol, Co
         return self.inputMappings.keys.map { AnyInput(stringValue: $0, intValue: nil, type: .controller(self.gameControllerInputType)) }
     }
     
+    public var ignoresUnmappedInputs: Bool = true
+    
     private var inputMappings: [String: AnyInput]
     
     public init(gameControllerInputType: GameControllerInputType)
@@ -37,8 +39,15 @@ public struct GameControllerInputMapping: GameControllerInputMappingProtocol, Co
     {
         precondition(controllerInput.type == .controller(self.gameControllerInputType), "controllerInput.type must match GameControllerInputMapping.gameControllerInputType")
         
-        let input = self.inputMappings[controllerInput.stringValue]
+        let input = self.inputMappings[controllerInput.stringValue] ?? (self.ignoresUnmappedInputs ? nil : controllerInput)
         return input
+    }
+    
+    private enum CodingKeys: CodingKey
+    {
+        case name
+        case gameControllerInputType
+        case inputMappings
     }
 }
 

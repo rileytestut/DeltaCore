@@ -6,7 +6,7 @@
 //  Copyright © 2019 Riley Testut. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 class ButtonsInputView: UIView
 {

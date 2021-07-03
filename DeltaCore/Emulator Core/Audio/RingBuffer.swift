@@ -50,7 +50,7 @@ public class RingBuffer: NSObject
     private var headOffset = 0
     private var usedBytesCount: Int32 = 0
     
-    init?(preferredBufferSize: Int)
+    public init?(preferredBufferSize: Int)
     {
         assert(preferredBufferSize > 0)
         
@@ -157,12 +157,12 @@ private extension RingBuffer
     func incrementAvailableBytes(by size: Int)
     {
         self.tailOffset = (self.tailOffset + size) % self.bufferLength
-        self.usedBytesCount -= Int32(size)
+        OSAtomicAdd32(-Int32(size), &self.usedBytesCount)
     }
     
     func decrementAvailableBytes(by size: Int)
     {
         self.headOffset = (self.headOffset + size) % self.bufferLength
-        self.usedBytesCount += Int32(size)
+        OSAtomicAdd32(Int32(size), &self.usedBytesCount)
     }
 }

@@ -63,7 +63,7 @@ public class GameView: UIView
     public var outputImage: CIImage? {
         guard let inputImage = self.inputImage else { return nil }
         
-        var image: CIImage? = inputImage.clampedToExtent()
+        var image: CIImage?
         
         switch self.samplerMode
         {
@@ -77,18 +77,20 @@ public class GameView: UIView
             image = filter.outputImage
         }
         
-        let outputImage = image?.cropped(to: inputImage.extent)
-        return outputImage
+        return image
     }
     
     internal var eaglContext: EAGLContext {
         get { return self.glkView.context }
         set {
+            os_unfair_lock_lock(&self.lock)
+            defer { os_unfair_lock_unlock(&self.lock) }
+            
             // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
             
-            self.glkView.context = newValue
+            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
             self.context = self.makeContext()
         }
     }
@@ -96,6 +98,8 @@ public class GameView: UIView
         
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
+    
+    private var lock = os_unfair_lock()
     
     public override init(frame: CGRect)
     {
@@ -120,6 +124,7 @@ public class GameView: UIView
     private func initialize()
     {        
         self.glkView.frame = self.bounds
+        self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self.glkViewDelegate
         self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
@@ -138,20 +143,7 @@ public class GameView: UIView
     {
         super.layoutSubviews()
         
-        if let outputImage = self.outputImage
-        {
-            let frame = AVMakeRect(aspectRatio: outputImage.extent.size, insideRect: self.bounds)
-            self.glkView.frame = frame
-            
-            self.glkView.isHidden = false
-        }
-        else
-        {
-            let frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
-            self.glkView.frame = frame
-            
-            self.glkView.isHidden = true
-        }
+        self.glkView.isHidden = (self.outputImage == nil)
     }
 }
 
@@ -195,15 +187,18 @@ private extension GameView
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
         guard self.outputImage != nil else { return }
-                
-        self.glkView.display()
+              
+        os_unfair_lock_lock(&self.lock)
+        defer { os_unfair_lock_unlock(&self.lock) }
+        
+        self.glkView.display()        
     }
 }
 
 private extension GameView
 {
     func glkView(_ view: GLKView, drawIn rect: CGRect)
-    {        
+    {
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         

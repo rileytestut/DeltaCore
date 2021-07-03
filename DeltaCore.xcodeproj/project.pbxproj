@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF0B260B23E91745007BE38B /* Bundle+Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B260A23E91745007BE38B /* Bundle+Resources.swift */; };
 		BF0BC4FA225C138A000151C6 /* BitmapProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */; };
 		BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */; };
 		BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */; };
@@ -26,13 +27,17 @@
 		BF5027081F210B05007EF163 /* StandardGameControllerInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */; };
 		BF57D1F81EA6DF840013CB1D /* VideoFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */; };
 		BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5996911EA01DC000595F8D /* FilterChain.swift */; };
+		BF5E0D9125AE67AD00A3E4A8 /* RenderThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */; };
 		BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF64CC5A1F23D7F100CD99AD /* GameControllerInputMapping.swift */; };
 		BF64CC641F267DB100CD99AD /* AnyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF64CC631F267DB100CD99AD /* AnyInput.swift */; };
 		BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */; };
 		BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF65E86D1CEE68F300CD3247 /* Cheat.swift */; };
 		BF6834021C459C250052249F /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6834011C459C250052249F /* AudioManager.swift */; };
+		BF69FBBF23E39CA80051BEEA /* DeltaTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = BF69FBBD23E39C9D0051BEEA /* DeltaTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF785C9D1B603C1800189DB8 /* Delta.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF785C9C1B603C1800189DB8 /* Delta.swift */; };
 		BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */; };
+		BF85F4792567494600E4D10E /* DLTAMuteSwitchMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF85F47A2567494600E4D10E /* DLTAMuteSwitchMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */; };
 		BF92794B1D2B01AD003084F3 /* ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */; };
 		BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */; };
 		BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */; };
@@ -54,7 +59,7 @@
 		BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */; };
 		BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */; };
 		BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */; };
-		BFD27EF71D261E9B00E081A3 /* DeltaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaCore.m */; };
+		BFD27EF71D261E9B00E081A3 /* DeltaTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaTypes.m */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
 		BFE438101AF606980095A5F1 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameController.swift */; };
 		BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE438111AF60CDA0095A5F1 /* ControllerView.swift */; };
@@ -63,6 +68,7 @@
 		BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */; };
 		BFEC24131D24DAE800B3A6A9 /* Thread+RealTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */; };
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
+		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 /* End PBXBuildFile section */
 
@@ -91,6 +97,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BF0B260A23E91745007BE38B /* Bundle+Resources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Resources.swift"; sourceTree = "<group>"; };
 		BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapProcessor.swift; sourceTree = "<group>"; };
 		BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGLESProcessor.swift; sourceTree = "<group>"; };
 		BF1FB1781C5EE4B7007E2494 /* SaveStateProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SaveStateProtocol.swift; sourceTree = "<group>"; };
@@ -113,13 +120,17 @@
 		BF5027071F210B05007EF163 /* StandardGameControllerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardGameControllerInput.swift; sourceTree = "<group>"; };
 		BF57D1F71EA6DF840013CB1D /* VideoFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoFormat.swift; sourceTree = "<group>"; };
 		BF5996911EA01DC000595F8D /* FilterChain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterChain.swift; sourceTree = "<group>"; };
+		BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderThread.swift; sourceTree = "<group>"; };
 		BF64CC5A1F23D7F100CD99AD /* GameControllerInputMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameControllerInputMapping.swift; sourceTree = "<group>"; };
 		BF64CC631F267DB100CD99AD /* AnyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyInput.swift; sourceTree = "<group>"; };
 		BF65E8641CEE5DA700CD3247 /* CheatProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatProtocol.swift; sourceTree = "<group>"; };
 		BF65E86D1CEE68F300CD3247 /* Cheat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cheat.swift; sourceTree = "<group>"; };
 		BF6834011C459C250052249F /* AudioManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		BF69FBBD23E39C9D0051BEEA /* DeltaTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeltaTypes.h; sourceTree = "<group>"; };
 		BF785C9C1B603C1800189DB8 /* Delta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Delta.swift; sourceTree = "<group>"; };
 		BF78880C1C27F5AB0088084C /* UIImage+PDF.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+PDF.swift"; sourceTree = "<group>"; };
+		BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DLTAMuteSwitchMonitor.h; sourceTree = "<group>"; };
+		BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DLTAMuteSwitchMonitor.m; sourceTree = "<group>"; };
 		BF92794A1D2B01AD003084F3 /* ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkin.swift; sourceTree = "<group>"; };
 		BF92794E1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIScreen+ControllerSkin.swift"; sourceTree = "<group>"; };
 		BF9279501D2B2FC6003084F3 /* ControllerSkinTraits.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinTraits.swift; sourceTree = "<group>"; };
@@ -140,7 +151,7 @@
 		BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExtensibleEnums.swift; path = DeltaCore/Types/ExtensibleEnums.swift; sourceTree = SOURCE_ROOT; };
 		BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerSkinProtocol.swift; sourceTree = "<group>"; };
 		BFCBD90B20CC6F6F0028E309 /* ZIPFoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ZIPFoundation.xcodeproj; path = External/ZIPFoundation/ZIPFoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
-		BFD27EF61D261E9B00E081A3 /* DeltaCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaCore.m; sourceTree = "<group>"; };
+		BFD27EF61D261E9B00E081A3 /* DeltaTypes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeltaTypes.m; sourceTree = "<group>"; };
 		BFD78F611C994596000441FC /* VideoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoManager.swift; sourceTree = "<group>"; };
 		BFE4380F1AF606980095A5F1 /* GameController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BFE438111AF60CDA0095A5F1 /* ControllerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = ControllerView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -149,7 +160,8 @@
 		BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
 		BFEC24121D24DAE800B3A6A9 /* Thread+RealTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Thread+RealTime.swift"; sourceTree = "<group>"; };
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
-		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
+		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +186,7 @@
 				BF46348E20D882F900CD12FD /* ControllerInputView.swift */,
 				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
 				BF27601022F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift */,
+				BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -238,7 +251,8 @@
 			isa = PBXGroup;
 			children = (
 				BF4689621AACF36800A2586D /* DeltaCore.h */,
-				BFD27EF61D261E9B00E081A3 /* DeltaCore.m */,
+				BF69FBBD23E39C9D0051BEEA /* DeltaTypes.h */,
+				BFD27EF61D261E9B00E081A3 /* DeltaTypes.m */,
 				BF785C9C1B603C1800189DB8 /* Delta.swift */,
 				BF425A931D23BD2D00F48ED9 /* Cores */,
 				BFF912D11AB08E7400AC07A1 /* Emulator Core */,
@@ -294,6 +308,8 @@
 			children = (
 				BF6834011C459C250052249F /* AudioManager.swift */,
 				BFEC23CF1D24821B00B3A6A9 /* RingBuffer.swift */,
+				BF85F4772567494600E4D10E /* DLTAMuteSwitchMonitor.h */,
+				BF85F4782567494600E4D10E /* DLTAMuteSwitchMonitor.m */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -354,6 +370,7 @@
 				BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */,
 				BFA5FCF320D3804300A3C5AB /* UIApplication+AppExtension.swift */,
 				BFA5FCF420D3804400A3C5AB /* UIResponder+FirstResponder.swift */,
+				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -389,6 +406,7 @@
 				BFD78F611C994596000441FC /* VideoManager.swift */,
 				BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */,
 				BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */,
+				BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */,
 			);
 			path = Video;
 			sourceTree = "<group>";
@@ -438,6 +456,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF4689631AACF36800A2586D /* DeltaCore.h in Headers */,
+				BF69FBBF23E39CA80051BEEA /* DeltaTypes.h in Headers */,
+				BF85F4792567494600E4D10E /* DLTAMuteSwitchMonitor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,14 +575,16 @@
 				BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */,
 				BF425A7E1D23B15800F48ED9 /* DeltaCoreProtocol.swift in Sources */,
 				BF64CC641F267DB100CD99AD /* AnyInput.swift in Sources */,
-				BFD27EF71D261E9B00E081A3 /* DeltaCore.m in Sources */,
+				BFD27EF71D261E9B00E081A3 /* DeltaTypes.m in Sources */,
 				BFE438121AF60CDA0095A5F1 /* ControllerView.swift in Sources */,
 				BFAAB95B1C2780C40001B7C4 /* ControllerDebugView.swift in Sources */,
 				BFA5FCF620D3804400A3C5AB /* UIResponder+FirstResponder.swift in Sources */,
 				BF1FB1891C5EEC14007E2494 /* SaveState.swift in Sources */,
+				BF5E0D9125AE67AD00A3E4A8 /* RenderThread.swift in Sources */,
 				BF4689821AAD703500A2586D /* GameProtocol.swift in Sources */,
 				BF27601122F8CE3C005D98FE /* ImmediatePanGestureRecognizer.swift in Sources */,
 				BF27601D22F91342005D98FE /* TouchInputView.swift in Sources */,
+				BF0B260B23E91745007BE38B /* Bundle+Resources.swift in Sources */,
 				BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */,
 				BF0BC4FA225C138A000151C6 /* BitmapProcessor.swift in Sources */,
 				BF9279511D2B2FC6003084F3 /* ControllerSkinTraits.swift in Sources */,
@@ -570,6 +592,8 @@
 				BFB355D91C263C8A00D2F25F /* CGGeometry+Dictionary.swift in Sources */,
 				BF64CC5B1F23D7F100CD99AD /* GameControllerInputMapping.swift in Sources */,
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
+				BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */,
+				BF85F47A2567494600E4D10E /* DLTAMuteSwitchMonitor.m in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF4696BC22F7DB98008DD7F2 /* ButtonsInputView.swift in Sources */,
 				BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */,

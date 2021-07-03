@@ -55,8 +55,6 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         didSet
         {
-            guard oldValue?.fileURL != self.game?.fileURL else { return }
-            
             if let game = self.game
             {
                 self.emulatorCore = EmulatorCore(game: game)
@@ -85,35 +83,15 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     open weak var delegate: GameViewControllerDelegate?
     
-    open private(set) var gameView: GameView!
+    public var gameView: GameView! {
+        return self.gameViews.first
+    }
+    public private(set) var gameViews: [GameView] = []
+        
     open private(set) var controllerView: ControllerView!
-    
-    private var gameViewContainerView: UIView!
+    private var splitViewInputViewHeight: CGFloat = 0
     
     private let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
-    
-    private var gameViewContainerViewLayoutConstraints = [NSLayoutConstraint]()
-    
-    private var controllerViewCenterYConstraint: NSLayoutConstraint!
-    
-    private var controllerViewBottomConstraint: NSLayoutConstraint!
-    private var controllerViewBottomSafeAreaConstraint: NSLayoutConstraint!
-    private lazy var controllerViewBottomConstraints = [self.controllerViewBottomConstraint!, self.controllerViewBottomSafeAreaConstraint!]
-    
-    private var gameViewContainerViewBottomConstraint: NSLayoutConstraint!
-    private var gameViewContainerViewControllerViewConstraint: NSLayoutConstraint!
-    
-    private var gameViewAspectRatioConstraint: NSLayoutConstraint! {
-        didSet {
-            oldValue?.isActive = false
-        }
-    }
-    
-    private var controllerViewAspectRatioConstraint: NSLayoutConstraint! {
-        didSet {
-            oldValue?.isActive = false
-        }
-    }
     
     private var _previousControllerSkin: ControllerSkinProtocol?
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
@@ -149,7 +127,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     deinit
     {
-        self.controllerView.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
+        // controllerView might not be initialized by the time deinit is called.
+        self.controllerView?.removeObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), context: &kvoContext)
+        
         self.emulatorCore?.stop()
     }
     
@@ -169,25 +149,18 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.view.backgroundColor = UIColor.black
         
-        self.gameViewContainerView = UIView(frame: CGRect.zero)
-        self.gameViewContainerView.translatesAutoresizingMaskIntoConstraints = false
-        self.gameViewContainerView.isUserInteractionEnabled = false
-        self.view.addSubview(self.gameViewContainerView)
-        
-        self.gameView = GameView(frame: CGRect.zero)
-        self.gameView.translatesAutoresizingMaskIntoConstraints = false
-        self.gameViewContainerView.addSubview(self.gameView)
+        let gameView = GameView(frame: CGRect.zero)
+        self.view.addSubview(gameView)
+        self.gameViews.append(gameView)
         
         self.controllerView = ControllerView(frame: CGRect.zero)
-        self.controllerView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(self.controllerView)
         
         self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.updateGameViews), name: ControllerView.controllerViewDidChangeControllerSkinNotification, object: self.controllerView)
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self.controllerView, action: #selector(ControllerView.becomeFirstResponder))
         self.view.addGestureRecognizer(tapGestureRecognizer)
-        
-        self.prepareConstraints()
         
         self.prepareForGame()
     }
@@ -227,6 +200,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.controllerView.beginAnimatingUpdateControllerSkin()
         
+        // Disable VideoManager temporarily to prevent random Metal crashes due to rendering while adjusting layout.
+        let isVideoManagerEnabled = self.emulatorCore?.videoManager.isEnabled ?? true
+        self.emulatorCore?.videoManager.isEnabled = false
+        
         // As of iOS 11, the keyboard NSNotifications may return incorrect values for split view controller input view when rotating device.
         // As a workaround, we explicitly resign controllerView as first responder, then restore first responder status after rotation.
         let isControllerViewFirstResponder = self.controllerView.isFirstResponder
@@ -234,13 +211,18 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.view.setNeedsUpdateConstraints()
         
-        coordinator.animate(alongsideTransition: nil) { (context) in
+        coordinator.animate(alongsideTransition: { (context) in
+            self.updateGameViews()
+        }) { (context) in
             self.controllerView.finishAnimatingUpdateControllerSkin()
             
             if isControllerViewFirstResponder
             {
                 self.controllerView.becomeFirstResponder()
             }
+            
+            // Re-enable VideoManager if necessary.
+            self.emulatorCore?.videoManager.isEnabled = isVideoManagerEnabled
         }
     }
     
@@ -248,51 +230,84 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
-        for constraint in self.gameViewContainerViewLayoutConstraints + [self.gameViewContainerViewBottomConstraint!]
+        let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
+        
+        let controllerViewFrame: CGRect
+        let availableGameFrame: CGRect
+        
+        /* Controller View */
+        switch self.controllerView.controllerSkinTraits
         {
-            func setConstraintConstant(_ constant: CGFloat)
-            {
-                guard constraint.constant != constant else { return }
-                constraint.constant = constant
-            }
+        case let traits? where traits.displayType == .splitView:
+            // Split-View:
+            // - Controller View is pinned to bottom and spans width of device as keyboard input view.
+            // - Game View should be vertically centered between top of screen and input view.
             
-            if
-                let controllerSkin = self.controllerView.controllerSkin,
-                let traits = self.controllerView.controllerSkinTraits,
-                let gameScreenFrame = controllerSkin.gameScreenFrame(for: traits),
-                !self.controllerView.isHidden, traits.displayType != .splitView
+            controllerViewFrame = CGRect(x: 0, y: self.view.bounds.maxY, width: self.view.bounds.width, height: 0)
+            (_, availableGameFrame) = self.view.bounds.divided(atDistance: self.splitViewInputViewHeight, from: .maxYEdge)
+            
+        case .none: fallthrough
+        case _? where self.controllerView.isHidden:
+            // Controller View Hidden:
+            // - Controller View should have a height of 0.
+            // - Game View should be centered in self.view.
+             
+            (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
+            
+        case let traits? where traits.orientation == .portrait:
+            // Portrait:
+            // - Controller View should be pinned to bottom of self.view and centered horizontally.
+            // - Game View should be vertically centered between top of screen and controller view.
+            
+            let intrinsicContentSize = self.controllerView.intrinsicContentSize
+            if intrinsicContentSize.height != UIView.noIntrinsicMetric && intrinsicContentSize.width != UIView.noIntrinsicMetric
             {
-                // The controller skin has specified a custom game screen frame, so we manually update the layout constraint constants appropriately.
-                
-                let scaleTransform = CGAffineTransform(scaleX: self.controllerView.bounds.width, y: self.controllerView.bounds.height)
-                
-                var frame = gameScreenFrame.applying(scaleTransform)
-                frame.origin.x += self.controllerView.frame.minX
-                frame.origin.y += self.controllerView.frame.minY
-                
-                switch constraint.firstAttribute
-                {
-                case .top: setConstraintConstant(frame.minY)
-                case .bottom: setConstraintConstant(-(self.view.bounds.height - frame.maxY))
-                case .left: setConstraintConstant(frame.minX)
-                case .right: setConstraintConstant(-(self.view.bounds.width - frame.maxX))
-                default: break
-                }
+                let controllerViewHeight = (self.view.bounds.width / intrinsicContentSize.width) * intrinsicContentSize.height
+                (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: controllerViewHeight, from: .maxYEdge)
             }
             else
             {
-                // No custom game screen frame, so reset constants to 0.
-                
-                switch constraint.firstAttribute
-                {
-                case .top, .left, .right: setConstraintConstant(0)
-                case .bottom:
-                    guard self.controllerView.controllerSkinTraits?.displayType != .splitView else { break }
-                    setConstraintConstant(0)
-                    
-                default: break
-                }
+                controllerViewFrame = self.view.bounds
+                availableGameFrame = self.view.bounds
             }
+            
+        case _?:
+            // Landscape:
+            // - Controller View should be centered vertically in view (though most of the time its height will == self.view height).
+            // - Game View should be centered in self.view.
+                        
+            let intrinsicContentSize = self.controllerView.intrinsicContentSize
+            if intrinsicContentSize.height != UIView.noIntrinsicMetric && intrinsicContentSize.width != UIView.noIntrinsicMetric
+            {
+                controllerViewFrame = AVMakeRect(aspectRatio: intrinsicContentSize, insideRect: self.view.bounds)
+            }
+            else
+            {
+                controllerViewFrame = self.view.bounds
+            }
+            
+            availableGameFrame = self.view.bounds
+        }
+        
+        self.controllerView.frame = controllerViewFrame
+        
+        /* Game View */
+        if
+            let controllerSkin = self.controllerView.controllerSkin,
+            let traits = self.controllerView.controllerSkinTraits,
+            let screens = controllerSkin.screens(for: traits),
+            !self.controllerView.isHidden
+        {
+            for (screen, gameView) in zip(screens, self.gameViews)
+            {
+                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                gameView.frame = outputFrame
+            }
+        }
+        else
+        {
+            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame)
+            self.gameView.frame = gameViewFrame
         }
         
         if self.emulatorCore?.state != .running
@@ -315,9 +330,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         // Ensures the value is actually different, or else we might potentially run into an infinite loop if subclasses hide/show controllerView in viewDidLayoutSubviews()
         guard (change?[.newKey] as? Bool) != (change?[.oldKey] as? Bool) else { return }
         
-        self.view.setNeedsUpdateConstraints()
         self.view.setNeedsLayout()
-        
         self.view.layoutIfNeeded()
     }
     
@@ -340,184 +353,79 @@ open class GameViewController: UIViewController, GameControllerReceiver
 /// Layout
 extension GameViewController
 {
-    private var preferredControllerViewBottomLayoutConstraint: NSLayoutConstraint {
-        guard let traits = self.controllerView.controllerSkinTraits else { return self.controllerViewBottomConstraint }
-        
-        if let window = self.view.window, traits.device == .iphone, self.controllerView.overrideControllerSkinTraits == nil
-        {
-            let defaultTraits = ControllerSkin.Traits.defaults(for: window)
-            if defaultTraits.displayType == .edgeToEdge && traits.displayType == .standard
-            {
-                // This is a device with an edge-to-edge screen, but controllerView's controllerSkinTraits are for standard display types.
-                // This means that the controller skin we are using doesn't include edge-to-edge assets, and we're falling back to standard assets.
-                // As a result, we need to ensure controllerView respects safe area, otherwise we may have unwanted cutoffs due to rounded corners.
-                
-                return self.controllerViewBottomSafeAreaConstraint
-            }
-        }
-        
-        return self.controllerViewBottomConstraint
-    }
-    
-    private func prepareConstraints()
+    @objc func updateGameViews()
     {
-        // ControllerView
-        let controllerViewConstraints = NSLayoutConstraint.constraints(aspectFitting: self.controllerView, to: self.view) + [self.controllerView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor)]
-        self.controllerViewCenterYConstraint = self.controllerView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
+        var previousGameViews = Array(self.gameViews.reversed())
+        var gameViews = [GameView]()
         
-        self.controllerViewBottomConstraint = self.controllerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        
-        self.controllerViewBottomSafeAreaConstraint = self.controllerView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
-        
-        self.controllerViewAspectRatioConstraint = self.controllerView.heightAnchor.constraint(equalToConstant: 0)
-        
-        // GameView
-        let gameViewConstraints = {
-            NSLayoutConstraint.constraints(aspectFitting: self.gameView, to: self.gameViewContainerView) + [self.gameView.centerXAnchor.constraint(equalTo: self.gameViewContainerView.centerXAnchor),
-                                                                                                                  self.gameView.centerYAnchor.constraint(equalTo: self.gameViewContainerView.centerYAnchor)]
-        }()
-        
-        self.gameViewAspectRatioConstraint = self.gameView.heightAnchor.constraint(equalTo: self.gameView.widthAnchor)
-        
-        // GameView Container View
-        self.gameViewContainerViewLayoutConstraints = [self.gameViewContainerView.topAnchor.constraint(equalTo: self.view.topAnchor),
-                                                       self.gameViewContainerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-                                                       self.gameViewContainerView.rightAnchor.constraint(equalTo: self.view.rightAnchor)]
-        
-        self.gameViewContainerViewBottomConstraint = self.gameViewContainerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        self.gameViewContainerViewControllerViewConstraint = self.gameViewContainerView.bottomAnchor.constraint(equalTo: self.controllerView.topAnchor)
-        
-        NSLayoutConstraint.activate(controllerViewConstraints + gameViewConstraints + self.gameViewContainerViewLayoutConstraints)
-        NSLayoutConstraint.activate([self.controllerViewAspectRatioConstraint, self.gameViewAspectRatioConstraint])
-        
-        self.view.setNeedsUpdateConstraints()
-    }
-    
-    open override func updateViewConstraints()
-    {
-        super.updateViewConstraints()
-        
-        var activatedLayoutConstraints = [NSLayoutConstraint]()
-        var deactivatedLayoutConstraints = [NSLayoutConstraint]()
-        
-        func activate(_ constraint: NSLayoutConstraint)
+        if
+            let controllerSkin = self.controllerView.controllerSkin,
+            let traits = self.controllerView.controllerSkinTraits,
+            let screens = controllerSkin.screens(for: traits),
+            !self.controllerView.isHidden
         {
-            guard !constraint.isActive else { return }
-            activatedLayoutConstraints.append(constraint)
-        }
-        
-        func deactivate(_ constraint: NSLayoutConstraint)
-        {
-            guard constraint.isActive else { return }
-            deactivatedLayoutConstraints.append(constraint)
-        }
-        
-        defer
-        {
-            // Must deactivate first to prevent conflicting constraint errors.
-            NSLayoutConstraint.deactivate(deactivatedLayoutConstraints)
-            NSLayoutConstraint.activate(activatedLayoutConstraints)
-        }
-        
-        defer
-        {
-            self._previousControllerSkin = self.controllerView.controllerSkin
-            self._previousControllerSkinTraits = self.controllerView.controllerSkinTraits
-        }
-        
-        switch (self.controllerView.controllerSkinTraits)
-        {
-        case let traits? where traits.displayType == .splitView: fallthrough
-        case .none: fallthrough
-        case _ where self.controllerView.controllerSkin == nil:
-            // - Controller View should be hidden.
-            // - Game View should be centered.
-            
-            activate(self.controllerViewBottomConstraint)
-            activate(self.gameViewContainerViewBottomConstraint)
-            
-            deactivate(self.controllerViewCenterYConstraint)
-            deactivate(self.controllerViewBottomSafeAreaConstraint)
-            deactivate(self.gameViewContainerViewControllerViewConstraint)
-            
-        case _? where self.view.bounds.height >= self.view.bounds.width:
-            // Portrait:
-            // - Controller View should be pinned to bottom of self.view and centered horizontally.
-            // - Game View container view should fill space above controller view to top of self.view.
-            
-            let controllerViewBottomLayoutConstraint = self.preferredControllerViewBottomLayoutConstraint
-            activate(controllerViewBottomLayoutConstraint)
-            
-            for constraint in self.controllerViewBottomConstraints where constraint != controllerViewBottomLayoutConstraint
+            for screen in screens
             {
-                deactivate(constraint)
-            }
-            
-            if
-                let controllerSkin = self.controllerView.controllerSkin,
-                let traits = self.controllerView.controllerSkinTraits,
-                controllerSkin.gameScreenFrame(for: traits) != nil
-            {
-                // Custom game frame
+                let gameView = previousGameViews.popLast() ?? GameView(frame: .zero)
                 
-                activate(self.gameViewContainerViewBottomConstraint)
-                deactivate(self.gameViewContainerViewControllerViewConstraint)
-            }
-            else
-            {
-                // Standard game frame
+                var filters = [CIFilter]()
                 
-                activate(self.gameViewContainerViewControllerViewConstraint)
-                deactivate(self.gameViewContainerViewBottomConstraint)
-            }
-            
-            deactivate(self.controllerViewCenterYConstraint)
-            
-        case _?:
-            // Landscape:
-            // - Controller View should be centered vertically in view (though most of the time its height will == self.view height).
-            // - Game View container view should match bounds of self.view.
-            
-            activate(self.controllerViewCenterYConstraint)
-            activate(self.gameViewContainerViewBottomConstraint)
-            
-            deactivate(self.controllerViewBottomConstraint)
-            deactivate(self.controllerViewBottomSafeAreaConstraint)
-            deactivate(self.gameViewContainerViewControllerViewConstraint)
-        }
-        
-        self.updateControllerSkinAspectRatioConstraint()
-    }
-    
-    private func updateControllerSkinAspectRatioConstraint()
-    {
-        var updatedAspectRatioConstraint: NSLayoutConstraint?
-        
-        // Update controller view aspect ratio constraint.
-        if !self.controllerView.isHidden, let traits = self.controllerView.controllerSkinTraits, let aspectRatio = self.controllerView.controllerSkin?.aspectRatio(for: traits)
-        {
-            let multiplier = aspectRatio.height / aspectRatio.width
-            
-            // Update constraint only if multiplier has changed or the current constraint is a constant height constraint.
-            if multiplier != self.controllerViewAspectRatioConstraint.multiplier || self.controllerViewAspectRatioConstraint.secondItem == nil
-            {
-                updatedAspectRatioConstraint = self.controllerView.heightAnchor.constraint(equalTo: self.controllerView.widthAnchor, multiplier: multiplier)
+                if let inputFrame = screen.inputFrame
+                {
+                    let cropFilter = CIFilter(name: "CICrop", parameters: ["inputRectangle": CIVector(cgRect: inputFrame)])!
+                    filters.append(cropFilter)
+                }
+                
+                if let screenFilters = screen.filters
+                {
+                    filters.append(contentsOf: screenFilters)
+                }
+                
+                if filters.isEmpty
+                {
+                    gameView.filter = nil
+                }
+                else
+                {
+                    // Always use FilterChain since it has additional logic for chained filters.
+                    let filterChain = FilterChain(filters: filters)
+                    gameView.filter = filterChain
+                }
+                
+                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                gameView.frame = outputFrame
+                
+                gameViews.append(gameView)
             }
         }
         else
         {
-            // Update constraint only if current constraint is not already a constant height constraint.
-            if self.controllerViewAspectRatioConstraint.secondItem != nil
+            for gameView in self.gameViews
             {
-                updatedAspectRatioConstraint = self.controllerView.heightAnchor.constraint(equalToConstant: 0)
+                gameView.filter = nil
             }
+            
+            gameViews.append(self.gameView)
         }
         
-        if let constraint = updatedAspectRatioConstraint
+        for gameView in gameViews
         {
-            self.controllerViewAspectRatioConstraint = constraint
-            self.controllerViewAspectRatioConstraint.isActive = true
+            guard !self.gameViews.contains(gameView) else { continue }
+            
+            self.view.insertSubview(gameView, aboveSubview: self.gameView)
+            self.emulatorCore?.add(gameView)
         }
+        
+        for gameView in previousGameViews
+        {
+            guard !gameViews.contains(gameView) else { continue }
+            
+            gameView.removeFromSuperview()
+            self.emulatorCore?.remove(gameView)
+        }
+        
+        self.gameViews = gameViews
+        self.view.setNeedsLayout()
     }
 }
 
@@ -599,22 +507,21 @@ private extension GameViewController
     func prepareForGame()
     {
         guard
-            let gameView = self.gameView,
             let controllerView = self.controllerView,
             let emulatorCore = self.emulatorCore,
             let game = self.game
         else { return }
         
-        emulatorCore.add(gameView)
+        for gameView in self.gameViews
+        {
+            emulatorCore.add(gameView)
+        }
         
         controllerView.addReceiver(self)
         controllerView.addReceiver(emulatorCore)
         
         let controllerSkin = ControllerSkin.standardControllerSkin(for: game.type)
         controllerView.controllerSkin = controllerSkin
-        
-        let multiplier = emulatorCore.preferredRenderingSize.height / emulatorCore.preferredRenderingSize.width
-        self.gameViewAspectRatioConstraint = self.gameView.heightAnchor.constraint(equalTo: self.gameView.widthAnchor, multiplier: multiplier)
         
         self.view.setNeedsUpdateConstraints()
     }
@@ -644,7 +551,7 @@ private extension GameViewController
         let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
         guard keyboardFrame.height > 0 else { return }
         
-        self.gameViewContainerViewBottomConstraint.constant = -keyboardFrame.height
+        self.splitViewInputViewHeight = keyboardFrame.height
         
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
@@ -652,6 +559,7 @@ private extension GameViewController
         let animationCurve = UIView.AnimationCurve(rawValue: rawAnimationCurve)!
         
         let animator = UIViewPropertyAnimator(duration: duration, curve: animationCurve) {
+            self.view.setNeedsLayout()
             self.view.layoutIfNeeded()
         }
         animator.startAnimation()
@@ -672,9 +580,10 @@ private extension GameViewController
         let rawAnimationCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! Int
         let animationCurve = UIView.AnimationCurve(rawValue: rawAnimationCurve)!
         
-        self.gameViewContainerViewBottomConstraint.constant = 0
+        self.splitViewInputViewHeight = 0
         
         let animator = UIViewPropertyAnimator(duration: duration, curve: animationCurve) {
+            self.view.setNeedsLayout()
             self.view.layoutIfNeeded()
         }
         animator.startAnimation()

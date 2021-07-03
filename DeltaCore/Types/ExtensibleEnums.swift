@@ -32,7 +32,7 @@ public extension ExtensibleEnum
     }
 }
 
-#if FRAMEWORK
+#if FRAMEWORK || STATIC_LIBRARY || SWIFT_PACKAGE
 
 // Conform types to ExtensibleEnum to receive automatic Codable conformance + implementation.
 extension GameType: ExtensibleEnum {}

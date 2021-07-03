@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import simd
 
 extension ThumbstickInputView
 {

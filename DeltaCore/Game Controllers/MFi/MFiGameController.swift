@@ -48,6 +48,15 @@ extension MFiGameController
         case rightShoulder
         case rightTrigger
         case rightThumbstickButton
+        
+        // specific to GCDualShockGamepad/GCDualSenseGamepad
+        case psTouchpadButton
+        
+        // specific to GCXboxGamepad
+        case xboxPaddleButton1
+        case xboxPaddleButton2
+        case xboxPaddleButton3
+        case xboxPaddleButton4
     }
 }
 
@@ -207,6 +216,27 @@ public class MFiGameController: NSObject, GameController
             if #available(iOS 14, *)
             {
                 extendedGamepad.buttonHome?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.home, pressed) }
+                
+                if let dualShockGamepad = extendedGamepad as? GCDualShockGamepad
+                {
+                    dualShockGamepad.touchpadButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.psTouchpadButton, pressed) }
+                }
+                
+                if let xboxGamepad = extendedGamepad as? GCXboxGamepad
+                {
+                    xboxGamepad.paddleButton1?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.xboxPaddleButton1, pressed) }
+                    xboxGamepad.paddleButton2?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.xboxPaddleButton2, pressed) }
+                    xboxGamepad.paddleButton3?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.xboxPaddleButton3, pressed) }
+                    xboxGamepad.paddleButton4?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.xboxPaddleButton4, pressed) }
+                }
+            }
+            
+            if #available(iOS 14.5, *)
+            {
+                if let dualSenseGamepad = extendedGamepad as? GCDualSenseGamepad
+                {
+                    dualSenseGamepad.touchpadButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.psTouchpadButton, pressed) }
+                }
             }
         }
     }

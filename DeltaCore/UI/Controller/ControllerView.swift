@@ -293,17 +293,7 @@ public extension ControllerView
         self.buttonsView.controllerSkin = self.controllerSkin
         self.buttonsView.controllerSkinTraits = self.controllerSkinTraits
         
-        var debugModeEnabled = false
-        if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
-        {
-            debugModeEnabled = isDebugModeEnabled
-        }
-        if self.isDebugModeEnabled == true
-        {
-            debugModeEnabled = self.isDebugModeEnabled
-        }
-        
-        self.controllerDebugView.isHidden = !debugModeEnabled
+        self.controllerDebugView.isHidden = !self.isDebugModeEnabled
         
         var isTranslucent = false
         

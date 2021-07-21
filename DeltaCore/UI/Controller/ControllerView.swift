@@ -79,6 +79,7 @@ public class ControllerView: UIView, GameController
     public var overrideControllerSkinSize: ControllerSkin.Size?
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
+    public var isDebugModeEnabled: Bool = false
     
     public var isButtonHapticFeedbackEnabled = true {
         didSet {
@@ -292,10 +293,7 @@ public extension ControllerView
         self.buttonsView.controllerSkin = self.controllerSkin
         self.buttonsView.controllerSkinTraits = self.controllerSkinTraits
         
-        if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
-        {
-            self.controllerDebugView.isHidden = !isDebugModeEnabled
-        }
+        self.controllerDebugView.isHidden = !self.isDebugModeEnabled
         
         var isTranslucent = false
         
@@ -335,7 +333,7 @@ public extension ControllerView
                         let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
                         cache.setObject(image, forKey: cacheKey as NSString)
                         self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
-                    }                    
+                    }
                 }
                 else
                 {

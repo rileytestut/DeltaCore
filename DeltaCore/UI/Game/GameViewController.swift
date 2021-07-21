@@ -96,6 +96,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var _previousControllerSkin: ControllerSkinProtocol?
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
     
+    public var isAirplayEnabled: Bool = false
+    public var airplayWindow: UIWindow?
+    
     /// UIViewController
     open override var prefersStatusBarHidden: Bool {
         return true
@@ -123,6 +126,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenDidConnect), name: UIScreen.didConnectNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenDidDisconnect), name: UIScreen.didDisconnectNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.screenModeDidChange), name: UIScreen.modeDidChangeNotification, object: nil)
     }
     
     deinit
@@ -161,6 +168,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self.controllerView, action: #selector(ControllerView.becomeFirstResponder))
         self.view.addGestureRecognizer(tapGestureRecognizer)
+        
+        self.handleAirplayScreen()
         
         self.prepareForGame()
     }
@@ -293,6 +302,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         /* Game View */
         if
+            self.airplayWindow == nil,
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
             let screens = controllerSkin.screens(for: traits),
@@ -306,7 +316,19 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
         else
         {
-            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame)
+            var screenAspectRatioToUse = screenAspectRatio
+            var availableGameFrameToUse = availableGameFrame
+            if let airplayWindow = self.airplayWindow
+            {
+                availableGameFrameToUse = airplayWindow.bounds
+                if screenAspectRatio.height > screenAspectRatio.width
+                {
+                    // the only VideoFormat where height > width (for now) is melonDS; correct height for non-touch screen
+                    screenAspectRatioToUse = CGSize(width: screenAspectRatio.width, height: screenAspectRatio.height / 2)
+                }
+            }
+            
+            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatioToUse, insideRect: availableGameFrameToUse)
             self.gameView.frame = gameViewFrame
         }
         
@@ -324,7 +346,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // MARK: - KVO -
     /// KVO
     open dynamic override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
-    {        
+    {
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
 
         // Ensures the value is actually different, or else we might potentially run into an infinite loop if subclasses hide/show controllerView in viewDidLayoutSubviews()
@@ -394,6 +416,13 @@ extension GameViewController
                 
                 let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
                 gameView.frame = outputFrame
+                
+                if let airplayWindow = self.airplayWindow
+                {
+                    let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
+                    let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: airplayWindow.bounds)
+                    self.gameView.frame = gameViewFrame
+                }
                 
                 gameViews.append(gameView)
             }
@@ -527,7 +556,7 @@ private extension GameViewController
     }
 }
 
-// MARK: - Notifications - 
+// MARK: - Notifications -
 private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)
@@ -587,5 +616,79 @@ private extension GameViewController
             self.view.layoutIfNeeded()
         }
         animator.startAnimation()
+    }
+}
+
+//MARK: - AirPlay -
+private extension GameViewController
+{
+    @objc func screenDidConnect()
+    {
+        self.handleAirplayScreen()
+    }
+
+    @objc func screenDidDisconnect()
+    {
+        self.handleAirplayScreen()
+    }
+    
+    @objc func screenModeDidChange()
+    {
+        self.handleAirplayScreen()
+    }
+}
+
+public extension GameViewController
+{
+    func handleAirplayScreen()
+    {
+        // perform teardown first if already AirPlaying and screens are being switched
+        if self.airplayWindow != nil
+        {
+            self.gameView.removeFromSuperview()
+            self.view.insertSubview(self.gameView, belowSubview: self.controllerView)
+            
+            self.airplayWindow = nil
+            
+            self.gameView.setNeedsLayout()
+            self.gameView.layoutIfNeeded()
+            self.view.setNeedsLayout()
+            self.view.layoutIfNeeded()
+        }
+        
+        // now perform setup of AirPlay screen
+        guard
+            self.isAirplayEnabled,
+            UIScreen.screens.count > 1
+        else { return }
+        
+        let secondScreen = UIScreen.screens[1]
+        
+        // find max resolution
+        var max = CGSize(width: 0, height: 0)
+        var maxScreenMode: UIScreenMode? = nil
+        for mode in secondScreen.availableModes
+        {
+            if (maxScreenMode == nil || mode.size.height > max.height || mode.size.width > max.width)
+            {
+                max = mode.size
+                maxScreenMode = mode
+            }
+        }
+        secondScreen.currentMode = maxScreenMode
+        
+        // setup window on second screen
+        self.airplayWindow = UIWindow(frame: secondScreen.bounds)
+        self.airplayWindow?.isHidden = false
+        self.airplayWindow?.layer.contentsGravity = .resizeAspect
+        self.airplayWindow?.screen = secondScreen
+        
+        self.gameView.removeFromSuperview()
+        
+        self.airplayWindow?.addSubview(self.gameView)
+        self.gameView.frame = self.airplayWindow?.frame ?? .zero
+        
+        self.gameView.setNeedsLayout()
+        self.airplayWindow?.layoutIfNeeded()
     }
 }

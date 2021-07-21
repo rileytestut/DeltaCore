@@ -79,7 +79,7 @@ public class ControllerView: UIView, GameController
     public var overrideControllerSkinSize: ControllerSkin.Size?
     
     public var translucentControllerSkinOpacity: CGFloat = 0.7
-    public var isControllerSkinDebugModeEnabled: Bool = false
+    public var isDebugModeEnabled: Bool = false
     
     public var isButtonHapticFeedbackEnabled = true {
         didSet {
@@ -298,9 +298,9 @@ public extension ControllerView
         {
             debugModeEnabled = isDebugModeEnabled
         }
-        if self.isControllerSkinDebugModeEnabled == true
+        if self.isDebugModeEnabled == true
         {
-            debugModeEnabled = self.isControllerSkinDebugModeEnabled
+            debugModeEnabled = self.isDebugModeEnabled
         }
         
         self.controllerDebugView.isHidden = !debugModeEnabled

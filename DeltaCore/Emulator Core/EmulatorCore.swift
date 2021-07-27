@@ -127,20 +127,14 @@ public extension EmulatorCore
         defer { self.state = self._state }
         
         self.deltaCore.emulatorBridge.audioRenderer = self.audioManager
-        self.deltaCore.emulatorBridge.videoRenderer = self.videoManager
+        self.deltaCore.emulatorBridge.videoRenderer = self.videoManager.processor
         self.deltaCore.emulatorBridge.saveUpdateHandler = { [unowned self] in
             self.save()
         }
         
         self.audioManager.start()
+        
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
-        
-        let videoFormat = self.deltaCore.videoFormat
-        if videoFormat != self.videoManager.videoFormat
-        {
-            self.videoManager.videoFormat = videoFormat
-        }
-        
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
         
         self.runGameLoop()
@@ -431,12 +425,6 @@ private extension EmulatorCore
                 if audioFormat != self.audioManager.audioFormat
                 {
                     self.audioManager.audioFormat = audioFormat
-                }
-                
-                let videoFormat = self.deltaCore.videoFormat
-                if videoFormat != self.videoManager.videoFormat
-                {
-                    self.videoManager.videoFormat = videoFormat
                 }
                 
                 if counter >= screenRefreshRate

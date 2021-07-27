@@ -11,52 +11,41 @@ import Accelerate
 import CoreImage
 import GLKit
 
-protocol VideoProcessor
+protocol VideoProcessor: VideoRendering
 {
     var videoFormat: VideoFormat { get }
-    var videoBuffer: UnsafeMutablePointer<UInt8>? { get }
-    
-    var viewport: CGRect { get set }
-    
-    func prepare()
-    func processFrame() -> CIImage?
+    var surface: IOSurface { get }
 }
 
-extension VideoProcessor
+public class VideoManager: NSObject
 {
-    var correctedViewport: CGRect? {
-        guard self.viewport != .zero else { return nil }
-        
-        let viewport = CGRect(x: self.viewport.minX, y: self.videoFormat.dimensions.height - self.viewport.height,
-                              width: self.viewport.width, height: self.viewport.height)
-        return viewport
-    }
-}
-
-public class VideoManager: NSObject, VideoRendering
-{
-    public internal(set) var videoFormat: VideoFormat {
-        didSet {
-            self.updateProcessor()
-        }
-    }
-    
-    public var viewport: CGRect = .zero {
-        didSet {
-            self.processor.viewport = self.viewport
-        }
-    }
+    public let videoFormat: VideoFormat
     
     public private(set) var gameViews = [GameView]()
     
-    public var isEnabled = true
+    public var isEnabled = true {
+        didSet {
+            guard !self.isEnabled else { return }
+            
+            // Cache snapshot so that even if IOSurface changes underneath us,
+            // we'll continue using the same snapshot image.
+            if let snapshot = self.snapshot()
+            {
+                self.processedImage = CIImage(image: snapshot)
+            }
+        }
+    }
     
-    private let context: EAGLContext
+    public var surface: IOSurface {
+        return self.processor.surface
+    }
+    
+    let processor: VideoProcessor
+    
     private let ciContext: CIContext
-    
-    private var processor: VideoProcessor
     @NSCopying private var processedImage: CIImage?
-    @NSCopying private var displayedImage: CIImage? // Can only accurately snapshot rendered images.
+    
+    private var previousSurfaceSeed: UInt32?
     
     private lazy var renderThread = RenderThread(action: { [weak self] in
         self?._render()
@@ -65,33 +54,17 @@ public class VideoManager: NSObject, VideoRendering
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
-        self.context = EAGLContext(api: .openGLES2)!
-        self.ciContext = CIContext(eaglContext: self.context, options: [.workingColorSpace: NSNull()])
+        self.ciContext = CIContext(options: [.workingColorSpace: NSNull()])
         
         switch videoFormat.format
         {
         case .bitmap: self.processor = BitmapProcessor(videoFormat: videoFormat)
-        case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
+        case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat)
         }
         
         super.init()
         
         self.renderThread.start()
-    }
-    
-    private func updateProcessor()
-    {
-        switch self.videoFormat.format
-        {
-        case .bitmap:
-            self.processor = BitmapProcessor(videoFormat: self.videoFormat)
-            
-        case .openGLES:
-            guard let processor = self.processor as? OpenGLESProcessor else { return }
-            processor.videoFormat = self.videoFormat
-        }
-        
-        processor.viewport = self.viewport
     }
     
     deinit
@@ -104,7 +77,6 @@ public extension VideoManager
 {
     func add(_ gameView: GameView)
     {
-        gameView.eaglContext = self.context
         self.gameViews.append(gameView)
     }
     
@@ -119,44 +91,29 @@ public extension VideoManager
 
 public extension VideoManager
 {
-    var videoBuffer: UnsafeMutablePointer<UInt8>? {
-        return self.processor.videoBuffer
-    }
-    
-    func prepare()
-    {
-        self.processor.prepare()
-    }
-    
-    func processFrame()
-    {
-        guard self.isEnabled else { return }
-        
-        autoreleasepool {
-            self.processedImage = self.processor.processFrame()
-        }
-    }
-    
     func render()
     {
         guard self.isEnabled else { return }
-        
-        guard let image = self.processedImage else { return }
+                
+        guard self.surface.seed != self.previousSurfaceSeed else { return }
+        self.previousSurfaceSeed = self.surface.seed
         
         // Skip frame if previous frame is not finished rendering.
         guard self.renderThread.wait(timeout: .now()) == .success else { return }
         
-        self.displayedImage = image
+        autoreleasepool {
+            self.processedImage = self.processFrame()
+        }
         
         self.renderThread.run()
     }
     
     func snapshot() -> UIImage?
     {
-        guard let displayedImage = self.displayedImage else { return nil }
+        guard let processedImage = self.processedImage else { return nil }
         
-        let imageWidth = Int(displayedImage.extent.width)
-        let imageHeight = Int(displayedImage.extent.height)
+        let imageWidth = Int(processedImage.extent.width)
+        let imageHeight = Int(processedImage.extent.height)
         let capacity = imageWidth * imageHeight * 4
         
         let imageBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: capacity, alignment: 1)
@@ -166,7 +123,7 @@ public extension VideoManager
         
         // Must render to raw buffer first so we can set CGImageAlphaInfo.noneSkipLast flag when creating CGImage.
         // Otherwise, some parts of images may incorrectly be transparent.
-        self.ciContext.render(displayedImage, toBitmap: baseAddress, rowBytes: imageWidth * 4, bounds: displayedImage.extent, format: .RGBA8, colorSpace: colorSpace)
+        self.ciContext.render(processedImage, toBitmap: baseAddress, rowBytes: imageWidth * 4, bounds: processedImage.extent, format: .RGBA8, colorSpace: colorSpace)
         
         let data = Data(bytes: baseAddress, count: imageBuffer.count)
         let bitmapInfo: CGBitmapInfo = [CGBitmapInfo.byteOrder32Big, CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)]
@@ -183,11 +140,36 @@ public extension VideoManager
 
 private extension VideoManager
 {
+    func processFrame() -> CIImage
+    {
+        var processedImage = CIImage(ioSurface: self.surface)
+        
+        if self.surface.isYAxisFlipped
+        {
+            processedImage = processedImage.transformed(by: processedImage.orientationTransform(for: .downMirrored))
+            processedImage = processedImage.transformed(by: .identity.translatedBy(x: -processedImage.extent.origin.x, y: -processedImage.extent.origin.y))
+        }
+        
+        if var viewport = self.surface.viewport
+        {
+            if !self.surface.isYAxisFlipped
+            {
+                // Viewport origin is top-left but Core Image's origin is bottom-left,
+                // so convert between the two.
+                viewport.origin.y = self.videoFormat.dimensions.height - viewport.height
+            }
+
+            processedImage = processedImage.cropped(to: viewport)
+        }
+        
+        return processedImage
+    }
+    
     func _render()
     {
         for gameView in self.gameViews
         {
-            gameView.inputImage = self.displayedImage
+            gameView.inputImage = self.processedImage
         }
     }
 }

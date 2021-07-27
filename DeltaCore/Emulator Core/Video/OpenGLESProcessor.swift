@@ -9,42 +9,65 @@
 import CoreImage
 import GLKit
 
-class OpenGLESProcessor: VideoProcessor
+#if os(iOS)
+private let GL_UNSIGNED_INT_8_8_8_8_REV = 0x8367
+#endif
+
+class OpenGLESProcessor: NSObject, VideoProcessor
 {
-    var videoFormat: VideoFormat {
-        didSet {
-            self.resizeVideoBuffers()
-        }
-    }
+    let videoFormat: VideoFormat
+    let surface: IOSurface    
     
-    var viewport: CGRect = .zero {
-        didSet {
-            self.resizeVideoBuffers()
-        }
+    var viewport: CGRect {
+        get { self.surface.viewport ?? .zero }
+        set { self.surface.viewport = newValue }
     }
     
     private let context: EAGLContext
     
     private var framebuffer: GLuint = 0
     private var texture: GLuint = 0
-    private var renderbuffer: GLuint = 0
     
-    private var indexBuffer: GLuint = 0
-    private var vertexBuffer: GLuint = 0
+    private let cvPixelBuffer: CVPixelBuffer
+    private let cvTextureCache: CVOpenGLESTextureCache
+    private var cvOpenGLESTexture: CVOpenGLESTexture?
     
-    init(videoFormat: VideoFormat, context: EAGLContext)
+    init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
-        self.context = EAGLContext(api: .openGLES2, sharegroup: context.sharegroup)!
+        self.context = EAGLContext(api: .openGLES2)!
+        
+        let properties: [IOSurfacePropertyKey : Any] = [
+            .width: videoFormat.dimensions.width,
+            .height: videoFormat.dimensions.height,
+            .pixelFormat: videoFormat.format.pixelFormat.nativePixelFormat,
+            .bytesPerElement: videoFormat.format.pixelFormat.bytesPerPixel,
+            .bytesPerRow: videoFormat.format.pixelFormat.bytesPerPixel * Int(videoFormat.dimensions.width) // Necessary or else games will have distorted video
+        ]
+        
+        let cvBufferProperties = [
+            kCVPixelBufferOpenGLCompatibilityKey: true,
+            kCVPixelBufferMetalCompatibilityKey: true,
+            kCVPixelBufferIOSurfacePropertiesKey: properties
+        ] as [CFString : Any]
+        
+        var pixelBuffer: CVPixelBuffer?
+        var result = CVPixelBufferCreate(kCFAllocatorDefault, Int(videoFormat.dimensions.width), Int(videoFormat.dimensions.height), kCVPixelFormatType_32BGRA, cvBufferProperties as CFDictionary, &pixelBuffer)
+        guard let cvPixelBuffer = pixelBuffer, result == kCVReturnSuccess else { fatalError() }
+        self.cvPixelBuffer = cvPixelBuffer
+        
+        var textureCache: CVOpenGLESTextureCache?
+        result = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, nil, self.context, nil, &textureCache)
+        guard let cvTextureCache = textureCache, result == kCVReturnSuccess else { fatalError() }
+        self.cvTextureCache = cvTextureCache
+        
+        let surface: IOSurface = CVPixelBufferGetIOSurface(cvPixelBuffer)!.takeUnretainedValue()
+        surface.isYAxisFlipped = true
+        self.surface = surface
     }
     
     deinit
     {
-        if self.renderbuffer > 0
-        {
-            glDeleteRenderbuffers(1, &self.renderbuffer)
-        }
-        
         if self.texture > 0
         {
             glDeleteTextures(1, &self.texture)
@@ -53,16 +76,6 @@ class OpenGLESProcessor: VideoProcessor
         if self.framebuffer > 0
         {
             glDeleteFramebuffers(1, &self.framebuffer)
-        }
-        
-        if self.indexBuffer > 0
-        {
-            glDeleteBuffers(1, &self.indexBuffer)
-        }
-        
-        if self.vertexBuffer > 0
-        {
-            glDeleteBuffers(1, &self.vertexBuffer)
         }
     }
 }
@@ -75,93 +88,47 @@ extension OpenGLESProcessor
     
     func prepare()
     {
-        struct Vertex
-        {
-            var x: GLfloat
-            var y: GLfloat
-            var z: GLfloat
-            
-            var u: GLfloat
-            var v: GLfloat
-        }
-        
         EAGLContext.setCurrent(self.context)
         
-        // Vertex buffer
-        let vertices = [Vertex(x: -1.0, y: -1.0, z: 1.0, u: 0.0, v: 0.0),
-                        Vertex(x: 1.0, y: -1.0, z: 1.0, u: 1.0, v: 0.0),
-                        Vertex(x: 1.0, y: 1.0, z: 1.0, u: 1.0, v: 1.0),
-                        Vertex(x: -1.0, y: 1.0, z: 1.0, u: 0.0, v: 1.0)]
-        glGenBuffers(1, &self.vertexBuffer)
-        glBindBuffer(GLenum(GL_ARRAY_BUFFER), self.vertexBuffer)
-        glBufferData(GLenum(GL_ARRAY_BUFFER), MemoryLayout<Vertex>.size * vertices.count, vertices, GLenum(GL_DYNAMIC_DRAW))
-        glBindBuffer(GLenum(GL_ARRAY_BUFFER), 0)
-        
-        // Index buffer
-        let indices: [GLushort] = [0, 1, 2, 0, 2, 3]
-        glGenBuffers(1, &self.indexBuffer)
-        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), self.indexBuffer)
-        glBufferData(GLenum(GL_ELEMENT_ARRAY_BUFFER), MemoryLayout<GLushort>.size * indices.count, indices, GLenum(GL_STATIC_DRAW))
-        glBindBuffer(GLenum(GL_ELEMENT_ARRAY_BUFFER), 0)
-        
         // Framebuffer
-        glGenFramebuffers(1, &self.framebuffer)
-        glBindFramebuffer(GLenum(GL_FRAMEBUFFER), self.framebuffer)
+        if self.framebuffer == 0
+        {
+            glGenFramebuffers(1, &self.framebuffer)
+            glBindFramebuffer(GLenum(GL_FRAMEBUFFER), self.framebuffer)
+        }
         
         // Texture
-        glGenTextures(1, &self.texture)
-        glBindTexture(GLenum(GL_TEXTURE_2D), self.texture)
-        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GLint(GL_LINEAR))
-        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MAG_FILTER), GLint(GL_LINEAR))
-        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_WRAP_S), GLint(GL_CLAMP_TO_EDGE))
-        glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_WRAP_T), GLint(GL_CLAMP_TO_EDGE))
-        glBindTexture(GLenum(GL_TEXTURE_2D), 0)
-        glFramebufferTexture2D(GLenum(GL_FRAMEBUFFER), GLenum(GL_COLOR_ATTACHMENT0), GLenum(GL_TEXTURE_2D), self.texture, 0)
-        
-        // Renderbuffer
-        glGenRenderbuffers(1, &self.renderbuffer)
-        glBindRenderbuffer(GLenum(GL_RENDERBUFFER), self.renderbuffer)
-        glFramebufferRenderbuffer(GLenum(GL_FRAMEBUFFER), GLenum(GL_DEPTH_ATTACHMENT), GLenum(GL_RENDERBUFFER), self.renderbuffer)
-        
-        self.resizeVideoBuffers()
+        if self.texture == 0
+        {
+            let glInternalFormat = GL_RGBA
+            let glFormat = GL_BGRA_EXT
+            let glType = GL_UNSIGNED_INT_8_8_8_8_REV
+            
+            let result = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                      self.cvTextureCache,
+                                                                      self.cvPixelBuffer,
+                                                                      nil,
+                                                                      GLenum(GL_TEXTURE_2D),
+                                                                      glInternalFormat,
+                                                                      GLsizei(self.videoFormat.dimensions.width),
+                                                                      GLsizei(self.videoFormat.dimensions.height),
+                                                                      GLenum(glFormat),
+                                                                      GLenum(glType),
+                                                                      0,
+                                                                      &self.cvOpenGLESTexture)
+            guard let cvOpenGLESTexture = self.cvOpenGLESTexture, result == kCVReturnSuccess else { return }
+            self.texture = CVOpenGLESTextureGetName(cvOpenGLESTexture)
+            
+            glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_WRAP_S), GLint(GL_CLAMP_TO_EDGE))
+            glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_WRAP_T), GLint(GL_CLAMP_TO_EDGE))
+            glFramebufferTexture2D(GLenum(GL_FRAMEBUFFER), GLenum(GL_COLOR_ATTACHMENT0), GLenum(GL_TEXTURE_2D), self.texture, 0)
+        }
     }
     
-    func processFrame() -> CIImage?
+    func processFrame()
     {
         glFlush()
         
-        var image = CIImage(texture: self.texture, size: self.videoFormat.dimensions, flipped: false, colorSpace: nil)
-        
-        if let viewport = self.correctedViewport
-        {
-            image = image.cropped(to: viewport)
-        }
-        
-        return image
-    }
-}
-
-private extension OpenGLESProcessor
-{
-    func resizeVideoBuffers()
-    {
-        guard self.texture > 0 && self.renderbuffer > 0 else { return }
-        
-        EAGLContext.setCurrent(self.context)
-        
-        glBindTexture(GLenum(GL_TEXTURE_2D), self.texture)
-        glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(self.videoFormat.dimensions.width), GLsizei(self.videoFormat.dimensions.height), 0, GLenum(GL_RGBA), GLenum(GL_UNSIGNED_BYTE), nil)
-        glBindTexture(GLenum(GL_TEXTURE_2D), 0)
-        
-        glBindRenderbuffer(GLenum(GL_RENDERBUFFER), self.renderbuffer)
-        glRenderbufferStorage(GLenum(GL_RENDERBUFFER), GLenum(GL_DEPTH_COMPONENT16), GLsizei(self.videoFormat.dimensions.width), GLsizei(self.videoFormat.dimensions.height))
-        
-        var viewport = CGRect(origin: .zero, size: self.videoFormat.dimensions)
-        if let correctedViewport = self.correctedViewport
-        {
-            viewport = correctedViewport
-        }
-        
-        glViewport(GLsizei(viewport.minX), GLsizei(viewport.minY), GLsizei(viewport.width), GLsizei(viewport.height))
+        // IOSurface is now updated to match texture.
     }
 }

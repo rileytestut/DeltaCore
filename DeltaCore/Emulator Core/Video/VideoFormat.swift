@@ -8,6 +8,7 @@
 
 import CoreGraphics
 import CoreImage
+import CoreMedia
 
 extension VideoFormat
 {
@@ -15,6 +16,14 @@ extension VideoFormat
     {
         case bitmap(PixelFormat)
         case openGLES
+        
+        var pixelFormat: PixelFormat {
+            switch self
+            {
+            case .bitmap(let format): return format
+            case .openGLES: return .bgra8
+            }
+        }
     }
     
     public enum PixelFormat: Equatable
@@ -29,6 +38,15 @@ extension VideoFormat
             case .rgb565: return 2
             case .bgra8: return 4
             case .rgba8: return 4
+            }
+        }
+        
+        public var nativePixelFormat: CMPixelFormatType {
+            switch self
+            {
+            case .rgb565: return kCMPixelFormat_16LE565
+            case .bgra8: return kCMPixelFormat_32BGRA
+            case .rgba8: return kCVPixelFormatType_32RGBA
             }
         }
     }

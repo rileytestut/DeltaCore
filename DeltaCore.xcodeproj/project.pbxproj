@@ -70,6 +70,7 @@
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
+		D507082726AF6413006E6C22 /* IOSurface+VideoRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = D507082626AF6413006E6C22 /* IOSurface+VideoRendering.swift */; };
 		D540A8FE26827BAD009934CA /* VirtualControllerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D540A8FD26827BAD009934CA /* VirtualControllerButton.swift */; };
 		D555BA71267D34A50053AEBB /* UIBezierPath+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */; };
 		D5A07AD6267AAB4500FA6C8B /* VirtualController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A07AD5267AAB4500FA6C8B /* VirtualController.swift */; };
@@ -165,6 +166,7 @@
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
+		D507082626AF6413006E6C22 /* IOSurface+VideoRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IOSurface+VideoRendering.swift"; sourceTree = "<group>"; };
 		D540A8FD26827BAD009934CA /* VirtualControllerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualControllerButton.swift; sourceTree = "<group>"; };
 		D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBezierPath+String.swift"; sourceTree = "<group>"; };
 		D5A07AD5267AAB4500FA6C8B /* VirtualController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualController.swift; sourceTree = "<group>"; };
@@ -380,6 +382,7 @@
 				BFA5FCF420D3804400A3C5AB /* UIResponder+FirstResponder.swift */,
 				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
 				D555BA70267D34A50053AEBB /* UIBezierPath+String.swift */,
+				D507082626AF6413006E6C22 /* IOSurface+VideoRendering.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -613,6 +616,7 @@
 				BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */,
 				BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */,
 				BF85F47A2567494600E4D10E /* DLTAMuteSwitchMonitor.m in Sources */,
+				D507082726AF6413006E6C22 /* IOSurface+VideoRendering.swift in Sources */,
 				BF6834021C459C250052249F /* AudioManager.swift in Sources */,
 				BF4696BC22F7DB98008DD7F2 /* ButtonsInputView.swift in Sources */,
 				BF5996921EA01DC000595F8D /* FilterChain.swift in Sources */,

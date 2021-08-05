@@ -9,7 +9,7 @@
 import UIKit
 import CoreImage
 import GLKit
-import AVFoundation
+import AVKit
 
 // Create wrapper class to prevent exposing GLKView (and its annoying deprecation warnings) to clients.
 private class GameViewGLKViewDelegate: NSObject, GLKViewDelegate
@@ -31,6 +31,15 @@ public enum SamplerMode
 {
     case linear
     case nearestNeighbor
+}
+
+extension GameView
+{
+    enum RenderMode
+    {
+        case openGLES
+        case sampleBufferLayer(AVSampleBufferDisplayLayer)
+    }
 }
 
 public class GameView: UIView
@@ -95,9 +104,17 @@ public class GameView: UIView
         }
     }
     private lazy var context: CIContext = self.makeContext()
+    
+    internal var renderMode: RenderMode = .openGLES {
+        didSet {
+            self.updateRenderMode()
+        }
+    }
         
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
+    
+    private weak var sampleBufferLayer: AVSampleBufferDisplayLayer?
     
     private var lock = os_unfair_lock()
     
@@ -122,7 +139,7 @@ public class GameView: UIView
     }
     
     private func initialize()
-    {        
+    {
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self.glkViewDelegate
@@ -143,7 +160,11 @@ public class GameView: UIView
     {
         super.layoutSubviews()
         
-        self.glkView.isHidden = (self.outputImage == nil)
+        switch self.renderMode
+        {
+        case .openGLES: self.glkView.isHidden = (self.outputImage == nil)
+        case .sampleBufferLayer(let layer): layer.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height)
+        }
     }
 }
 
@@ -183,15 +204,36 @@ private extension GameView
         return context
     }
     
+    func updateRenderMode()
+    {
+        switch self.renderMode
+        {
+        case .openGLES:
+            self.glkView.isHidden = false
+            
+            self.sampleBufferLayer?.removeFromSuperlayer()
+            self.sampleBufferLayer = nil
+            
+        case .sampleBufferLayer(let layer):
+            self.glkView.isHidden = true
+            
+            self.sampleBufferLayer?.removeFromSuperlayer()
+            self.layer.addSublayer(layer)
+            self.sampleBufferLayer = layer
+        }
+        
+        self.setNeedsLayout()
+    }
+    
     func update()
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
-        guard self.outputImage != nil else { return }
+        guard self.outputImage != nil, case .openGLES = self.renderMode else { return }
               
         os_unfair_lock_lock(&self.lock)
         defer { os_unfair_lock_unlock(&self.lock) }
         
-        self.glkView.display()        
+        self.glkView.display()
     }
 }
 

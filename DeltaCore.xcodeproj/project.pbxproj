@@ -71,6 +71,7 @@
 		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 		D507082726AF6413006E6C22 /* IOSurface+VideoRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = D507082626AF6413006E6C22 /* IOSurface+VideoRendering.swift */; };
+		D5B6D21326B0D108005D8873 /* PictureInPictureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B6D21226B0D108005D8873 /* PictureInPictureController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -164,6 +165,7 @@
 		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
 		D507082626AF6413006E6C22 /* IOSurface+VideoRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IOSurface+VideoRendering.swift"; sourceTree = "<group>"; };
+		D5B6D21226B0D108005D8873 /* PictureInPictureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureInPictureController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -410,6 +412,7 @@
 				BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */,
 				BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */,
 				BF5E0D9025AE67AD00A3E4A8 /* RenderThread.swift */,
+				D5B6D21226B0D108005D8873 /* PictureInPictureController.swift */,
 			);
 			path = Video;
 			sourceTree = "<group>";
@@ -605,6 +608,7 @@
 				BFE438101AF606980095A5F1 /* GameController.swift in Sources */,
 				BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */,
 				BFEC24131D24DAE800B3A6A9 /* Thread+RealTime.swift in Sources */,
+				D5B6D21326B0D108005D8873 /* PictureInPictureController.swift in Sources */,
 				BF46349120D882F900CD12FD /* ControllerInputView.swift in Sources */,
 				BFD78F621C994596000441FC /* VideoManager.swift in Sources */,
 				BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */,

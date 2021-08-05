@@ -41,9 +41,9 @@ public class VideoManager: NSObject
     }
     
     let processor: VideoProcessor
+    @NSCopying private(set) var processedImage: CIImage?
     
     private let ciContext: CIContext
-    @NSCopying private var processedImage: CIImage?
     
     private var previousSurfaceSeed: UInt32?
     

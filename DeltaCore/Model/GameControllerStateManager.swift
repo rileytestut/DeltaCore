@@ -60,11 +60,14 @@ extension GameControllerStateManager
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
-        // Some external controllers' analog sticks report both x/y axis values incredibly granularly,
-        // hindering the ability to use the analog stick for only a single x/y axis value at a time.
-        // Solution: apply a higher deadzone to the analog sticks (currently the only continuous inputs)
-        // TODO: this could be a user-configurable threshold, but DeltaCore doesn't yet support configurable settings
-        guard !input.isContinuous || (input.isContinuous && value > 0.15) else { return }
+        if input.isContinuous
+        {
+            // Some external controllers' analog sticks report both x/y axis values incredibly granularly,
+            // hindering the ability to use the analog stick for only a single x/y axis value at a time.
+            // Solution: apply a higher deadzone to the analog sticks (currently the only continuous inputs)
+            // TODO: this could be a user-configurable threshold, but DeltaCore doesn't yet support configurable settings
+            guard value > 0.15 else { return }
+        }
         
         // An input may be "activated" multiple times, such as by pressing different buttons that map to same input, or moving an analog stick.
         self.activatedInputs[AnyInput(input)] = value

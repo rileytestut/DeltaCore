@@ -35,6 +35,9 @@ public protocol GameViewControllerDelegate: class
     func gameViewController(_ gameViewController: GameViewController, handleMenuInputFrom gameController: GameController)
     
     func gameViewControllerDidUpdate(_ gameViewController: GameViewController)
+    
+    func gameViewControllerDidEnterAirplay(_ gameViewController: GameViewController)
+    func gameViewControllerDidExitAirplay(_ gameViewController: GameViewController)
 }
 
 public extension GameViewControllerDelegate
@@ -45,6 +48,9 @@ public extension GameViewControllerDelegate
     func gameViewController(_ gameViewController: GameViewController, handleMenuInputFrom gameController: GameController) {}
     
     func gameViewControllerDidUpdate(_ gameViewController: GameViewController) {}
+    
+    func gameViewControllerDidEnterAirplay(_ gameViewController: GameViewController) {}
+    func gameViewControllerDidExitAirplay(_ gameViewController: GameViewController) {}
 }
 
 private var kvoContext = 0
@@ -645,7 +651,6 @@ public extension GameViewController
         // perform teardown first if already AirPlaying and screens are being switched
         if self.airplayWindow != nil
         {
-            self.gameView.removeFromSuperview()
             self.view.insertSubview(self.gameView, belowSubview: self.controllerView)
             
             self.airplayWindow = nil
@@ -654,6 +659,8 @@ public extension GameViewController
             self.gameView.layoutIfNeeded()
             self.view.setNeedsLayout()
             self.view.layoutIfNeeded()
+            
+            self.delegate?.gameViewControllerDidExitAirplay(self)
         }
         
         // now perform setup of AirPlay screen
@@ -683,12 +690,12 @@ public extension GameViewController
         self.airplayWindow?.layer.contentsGravity = .resizeAspect
         self.airplayWindow?.screen = secondScreen
         
-        self.gameView.removeFromSuperview()
-        
         self.airplayWindow?.addSubview(self.gameView)
         self.gameView.frame = self.airplayWindow?.frame ?? .zero
         
         self.gameView.setNeedsLayout()
         self.airplayWindow?.layoutIfNeeded()
+        
+        self.delegate?.gameViewControllerDidEnterAirplay(self)
     }
 }

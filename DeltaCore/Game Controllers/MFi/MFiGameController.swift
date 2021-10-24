@@ -7,7 +7,7 @@
 //
 
 import GameController
-import SteamControll
+import SteamController
 public extension GameControllerInputType
 {
     static let mfi = GameControllerInputType("mfi")

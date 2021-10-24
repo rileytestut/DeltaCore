@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BF284A22725FD4E000913E5 /* SteamController in Frameworks */ = {isa = PBXBuildFile; productRef = 2BF284A12725FD4E000913E5 /* SteamController */; };
 		BF0B260B23E91745007BE38B /* Bundle+Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B260A23E91745007BE38B /* Bundle+Resources.swift */; };
 		BF0BC4FA225C138A000151C6 /* BitmapProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */; };
 		BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */; };
@@ -170,6 +171,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */,
+				2BF284A22725FD4E000913E5 /* SteamController in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,6 +481,9 @@
 				BFA07F07221F3A070012699D /* PBXTargetDependency */,
 			);
 			name = DeltaCore;
+			packageProductDependencies = (
+				2BF284A12725FD4E000913E5 /* SteamController */,
+			);
 			productName = DeltaCore;
 			productReference = BF46895D1AACF36800A2586D /* DeltaCore.framework */;
 			productType = "com.apple.product-type.framework";
@@ -509,6 +514,9 @@
 				Base,
 			);
 			mainGroup = BF4689531AACF36800A2586D;
+			packageReferences = (
+				2BF284A02725FD4E000913E5 /* XCRemoteSwiftPackageReference "SteamController" */,
+			);
 			productRefGroup = BF46895E1AACF36800A2586D /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -534,7 +542,7 @@
 		};
 		BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */ = {
 			isa = PBXReferenceProxy;
-			fileType = file;
+			fileType = wrapper.cfbundle;
 			path = ZIPFoundationTests.xctest;
 			remoteRef = BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -759,7 +767,11 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
@@ -780,12 +792,17 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = FRAMEWORK;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -812,6 +829,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2BF284A02725FD4E000913E5 /* XCRemoteSwiftPackageReference "SteamController" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zydeco/SteamController";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2BF284A12725FD4E000913E5 /* SteamController */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2BF284A02725FD4E000913E5 /* XCRemoteSwiftPackageReference "SteamController" */;
+			productName = SteamController;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BF4689541AACF36800A2586D /* Project object */;
 }

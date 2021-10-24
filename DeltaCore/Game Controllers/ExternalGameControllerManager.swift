@@ -8,6 +8,7 @@
 
 import Foundation
 import GameController
+import SteamController
 
 private let ExternalKeyboardStatusDidChange: @convention(c) (CFNotificationCenter?, UnsafeMutableRawPointer?, CFNotificationName?, UnsafeRawPointer?, CFDictionary?) -> Void = {
     (notificationCenter, observer, name, object, userInfo) in

@@ -245,6 +245,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
+        self.calculateGameFrame()
+    }
+    
+    @discardableResult public func calculateGameFrame(returnFrame: Bool = false) -> CGRect?
+    {
         let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
         
         let controllerViewFrame: CGRect
@@ -307,7 +312,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
         self.controllerView.frame = controllerViewFrame
         
         /* Game View */
-        if
+        if returnFrame
+        {
+            return AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame)
+        }
+        else if
             self.airplayWindow == nil,
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
@@ -347,6 +356,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
         
         self.setNeedsUpdateOfHomeIndicatorAutoHidden()
+        
+        return nil
     }
     
     // MARK: - KVO -

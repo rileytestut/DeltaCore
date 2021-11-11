@@ -9,7 +9,11 @@ let package = Package(
         .iOS(.v12)
     ],
     products: [
-        .library(name: "DeltaCore", targets: ["DeltaCore", "CDeltaCore"]),
+        .library(
+            name: "DeltaCore",
+            type: .dynamic,
+            targets: ["DeltaCore", "CDeltaCore"]
+        ),
     ],
     dependencies: [
         .package(name: "ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation.git", .upToNextMinor(from: "0.9.11"))

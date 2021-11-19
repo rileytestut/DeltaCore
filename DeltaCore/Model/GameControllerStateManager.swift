@@ -60,7 +60,7 @@ extension GameControllerStateManager
     {
         precondition(input.type == .controller(self.gameController.inputType), "input.type must match self.gameController.inputType")
         
-        if input.isContinuous
+        if input.type == .controller(.mfi) && input.isContinuous
         {
             // Some external controllers' analog sticks report both x/y axis values incredibly granularly,
             // hindering the ability to use the analog stick for only a single x/y axis value at a time.

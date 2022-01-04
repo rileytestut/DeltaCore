@@ -79,7 +79,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                 let representationsDictionary = info["representations"] as? RepresentationDictionary
             else { return nil }
             
-            #if FRAMEWORK || SWIFT_PACKAGE
+            #if FRAMEWORK || (SWIFT_PACKAGE && canImport(CDeltaCore))
             guard let gameType = info["gameTypeIdentifier"] as? GameType else { return nil }
             #else
             guard let gameTypeString = info["gameTypeIdentifier"] as? String else { return nil }

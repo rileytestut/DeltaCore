@@ -57,6 +57,9 @@ let package = Package(
             cSettings: [
                 .define("GLES_SILENCE_DEPRECATION"),
                 .define("CI_SILENCE_GL_DEPRECATION")
+            ],
+            swiftSettings: [
+                .define("SWIFT_PACKAGE")
             ]
         ),
     ]

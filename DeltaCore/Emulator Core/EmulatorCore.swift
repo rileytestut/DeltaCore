@@ -7,6 +7,7 @@
 //
 
 import AVFoundation
+import UIKit
 
 extension EmulatorCore
 {
@@ -110,6 +111,35 @@ public final class EmulatorCore: NSObject
         super.init()
         
         NotificationCenter.default.addObserver(self, selector: #selector(EmulatorCore.emulationDidQuit), name: EmulatorCore.emulationDidQuitNotification, object: nil)
+        
+//        if let emulatorBridge = deltaCore.emulatorBridge as? EmulatorBridge
+//        {
+//            print("Using Javascript core!")
+//
+////            let scriptURL = deltaCore.resourceBundle.url(forResource: "vbam", withExtension: "js")!
+//            let scriptURL = deltaCore.resourceBundle.url(forResource: "vbam", withExtension: "html")!
+//
+//            let bridge = JSEmulatorBridge(prefix: "GBA", fileURL: scriptURL)
+//            bridge.audioRenderer = self.audioManager
+//            bridge.videoRenderer = self.videoManager
+//
+//            bridge.emulatorCore = self
+//            emulatorBridge.bridge = bridge
+//        }
+        
+//        if deltaCore.emulatorBridge.coreAdaptor != nil
+//        {
+//            let scriptURL = deltaCore.resourceBundle.url(forResource: "vbam", withExtension: "html")!
+//            
+//            let bridge = JSEmulatorBridge(prefix: "GBA", fileURL: scriptURL)
+//            bridge.audioRenderer = self.audioManager
+//            bridge.videoRenderer = self.videoManager
+//        }
+        
+        if let adaptableBridge = deltaCore.emulatorBridge as? AdaptableDeltaBridge
+        {
+            adaptableBridge.emulatorCore = self
+        }
     }
 }
 

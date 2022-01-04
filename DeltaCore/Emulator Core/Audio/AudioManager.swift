@@ -117,7 +117,9 @@ public class AudioManager: NSObject, AudioRendering
         }
     }
     
+#if canImport(CDeltaCore)
     private let muteSwitchMonitor = DLTAMuteSwitchMonitor()
+#endif
         
     public init(audioFormat: AVAudioFormat)
     {
@@ -162,9 +164,11 @@ public extension AudioManager
 {
     func start()
     {
+#if canImport(CDeltaCore)
         self.muteSwitchMonitor.startMonitoring { [weak self] (isMuted) in
             self?.isMuted = isMuted
         }
+#endif
         
         do
         {
@@ -188,7 +192,9 @@ public extension AudioManager
     
     func stop()
     {
+#if canImport(CDeltaCore)
         self.muteSwitchMonitor.stopMonitoring()
+#endif
         
         self.renderingQueue.sync {
             self.audioPlayerNode.stop()

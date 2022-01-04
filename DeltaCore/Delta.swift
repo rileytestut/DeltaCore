@@ -8,7 +8,7 @@
 
 import Foundation
 
-#if SWIFT_PACKAGE
+#if canImport(CDeltaCore)
 @_exported import CDeltaCore
 #endif
 

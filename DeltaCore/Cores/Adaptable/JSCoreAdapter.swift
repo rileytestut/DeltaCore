@@ -9,8 +9,6 @@
 import Foundation
 import WebKit
 
-import Swifter
-
 extension JSCoreAdapter
 {
     private enum MessageType: String
@@ -47,14 +45,10 @@ public class JSCoreAdapter: NSObject, EmulatorBridging
     private let readySemaphore = DispatchSemaphore(value: 0)
     private let frameSemaphore = DispatchSemaphore(value: 1)
     
-    private let server: HttpServer
-    
     public init(prefix: String, fileURL: URL)
     {
         self.prefix = prefix
         self.scriptURL = fileURL
-        
-        self.server = HttpServer()
         
         super.init()
         
@@ -65,25 +59,6 @@ public class JSCoreAdapter: NSObject, EmulatorBridging
             self.webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 100, height: 100), configuration: configuration)
             self.webView.navigationDelegate = self
         }
-        
-//        self.webView.isHidden = true
-        
-//        self.server["/audio"] = websocket(binary: { (session, bytes) in
-//            self.audioRenderer?.audioBuffer.write(bytes, size: bytes.count)
-//        }, connected: { session in
-//            print("Connected audio socket")
-//        }, disconnected: { session in
-//            print("Disconnected audio socket")
-//        })
-//
-//        self.server["/video"] = websocket(binary: { (session, bytes) in
-//            _ = memcpy(self.videoRenderer?.videoBuffer, bytes, bytes.count)
-//            self.videoRenderer?.processFrame()
-//        }, connected: { session in
-//            print("Connected video socket")
-//        }, disconnected: { session in
-//            print("Disconnected video socket")
-//        })
     }
 }
 
@@ -93,11 +68,6 @@ public extension JSCoreAdapter
     {
         do
         {
-            if self.server.state == .stopped
-            {
-                try self.server.start()
-            }
-            
             if !self.isReady
             {
                 DispatchQueue.main.sync {

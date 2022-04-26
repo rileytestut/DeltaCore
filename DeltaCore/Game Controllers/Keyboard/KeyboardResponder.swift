@@ -22,7 +22,7 @@ public extension UIResponder
     }
 }
 
-private extension UIResponder
+extension UIResponder
 {
     @objc(_keyCommandForEvent:target:)
     @NSManaged func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
@@ -63,10 +63,10 @@ public class KeyboardResponder: UIResponder
     }
 }
 
-private extension KeyboardResponder
+extension KeyboardResponder
 {
     // Implementation based on Steve Troughton-Smith's gist: https://gist.github.com/steventroughtonsmith/7515380
-    override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
+    internal override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
     {
         // Retrieve information from event.
         guard
@@ -154,7 +154,7 @@ private extension KeyboardResponder
         return nil
     }
     
-    func key(for modifierFlags: UIKeyModifierFlags) -> String?
+    private func key(for modifierFlags: UIKeyModifierFlags) -> String?
     {
         switch modifierFlags
         {

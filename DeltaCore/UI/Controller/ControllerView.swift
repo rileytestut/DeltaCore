@@ -129,6 +129,8 @@ public class ControllerView: UIView, GameController
         return self.buttonsView.intrinsicContentSize
     }
     
+    private let keyboardResponder = KeyboardResponder(nextResponder: nil)
+    
     //MARK: - Initializers -
     /** Initializers **/
     public override init(frame: CGRect)
@@ -248,7 +250,14 @@ extension ControllerView
     }
     
     public override var next: UIResponder? {
-        return KeyboardResponder(nextResponder: super.next)
+        if #available(iOS 15, *)
+        {
+            return super.next
+        }
+        else
+        {
+            return KeyboardResponder(nextResponder: super.next)
+        }
     }
     
     public override var inputView: UIView? {
@@ -263,6 +272,18 @@ extension ControllerView
         self.reloadInputViews()
         
         return self.isFirstResponder
+    }
+    
+    internal override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
+    {
+        let keyCommand = super._keyCommand(for: event, target: target)
+        
+        if #available(iOS 15, *)
+        {
+            _ = self.keyboardResponder._keyCommand(for: event, target: target)
+        }
+        
+        return keyCommand
     }
 }
 

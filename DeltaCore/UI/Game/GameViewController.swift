@@ -296,11 +296,16 @@ open class GameViewController: UIViewController, GameControllerReceiver
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
             let screens = controllerSkin.screens(for: traits),
+            let aspectRatio = controllerSkin.aspectRatio(for: traits),
             !self.controllerView.isHidden
         {
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
+                let containerFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: self.view.bounds)
+                
+                var outputFrame = screen.outputFrame.applying(.init(scaleX: containerFrame.width, y: containerFrame.height))
+                outputFrame.origin.x += containerFrame.minX
+                outputFrame.origin.y += containerFrame.minY
                 gameView.frame = outputFrame
             }
         }

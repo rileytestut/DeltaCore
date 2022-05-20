@@ -18,8 +18,8 @@ public extension UIScreen
         {
             switch fixedBounds.width
             {
-            case 768: return .small
-            case 834: return .medium
+            case (...768): return .small
+            case (...834): return .medium
             default: return .large
             }
         }

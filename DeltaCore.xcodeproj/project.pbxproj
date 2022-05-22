@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9B6047D8283A4AAB00589F2E /* EAGLContext+BestAvailable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B6047D5283A496E00589F2E /* EAGLContext+BestAvailable.swift */; };
 		BF0B260B23E91745007BE38B /* Bundle+Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B260A23E91745007BE38B /* Bundle+Resources.swift */; };
 		BF0BC4FA225C138A000151C6 /* BitmapProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */; };
 		BF0BC4FD225C15E8000151C6 /* OpenGLESProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */; };
@@ -97,6 +98,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9B6047D5283A496E00589F2E /* EAGLContext+BestAvailable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EAGLContext+BestAvailable.swift"; sourceTree = "<group>"; };
 		BF0B260A23E91745007BE38B /* Bundle+Resources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Resources.swift"; sourceTree = "<group>"; };
 		BF0BC4F9225C138A000151C6 /* BitmapProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapProcessor.swift; sourceTree = "<group>"; };
 		BF0BC4FC225C15E8000151C6 /* OpenGLESProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGLESProcessor.swift; sourceTree = "<group>"; };
@@ -371,6 +373,7 @@
 				BFA5FCF320D3804300A3C5AB /* UIApplication+AppExtension.swift */,
 				BFA5FCF420D3804400A3C5AB /* UIResponder+FirstResponder.swift */,
 				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
+				9B6047D5283A496E00589F2E /* EAGLContext+BestAvailable.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -606,6 +609,7 @@
 				BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */,
 				BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */,
 				BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */,
+				9B6047D8283A4AAB00589F2E /* EAGLContext+BestAvailable.swift in Sources */,
 				BFEC23CD1D247E4A00B3A6A9 /* AudioRendering.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalGameControllerManager.swift in Sources */,
 				BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */,

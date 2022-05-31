@@ -254,8 +254,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
              
             (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
             
-        case let traits? where traits.orientation == .portrait:
-            // Portrait:
+        case let traits? where traits.orientation == .portrait && self.controllerView.controllerSkin?.screens(for: traits) == nil:
+            // Portrait (no custom screens):
             // - Controller View should be pinned to bottom of self.view and centered horizontally.
             // - Game View should be vertically centered between top of screen and controller view.
             
@@ -272,7 +272,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             }
             
         case _?:
-            // Landscape:
+            // Landscape (or Portrait with custom screens):
             // - Controller View should be centered vertically in view (though most of the time its height will == self.view height).
             // - Game View should be centered in self.view.
                         
@@ -301,7 +301,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         {
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                let containerFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: self.view.bounds)
+                let containerFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: controllerViewFrame)
                 
                 var outputFrame = screen.outputFrame.applying(.init(scaleX: containerFrame.width, y: containerFrame.height))
                 outputFrame.origin.x += containerFrame.minX

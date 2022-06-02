@@ -90,7 +90,7 @@ public class GameView: UIView
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
             
-            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
+            self.glkView.context = EAGLContext.createUsingBestAvailableAPI(sharegroup: newValue.sharegroup)
             self.context = self.makeContext()
         }
     }
@@ -103,7 +103,7 @@ public class GameView: UIView
     
     public override init(frame: CGRect)
     {
-        let eaglContext = EAGLContext(api: .openGLES2)!
+        let eaglContext = EAGLContext.createUsingBestAvailableAPI()
         self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
         
         super.init(frame: frame)
@@ -113,7 +113,7 @@ public class GameView: UIView
     
     public required init?(coder aDecoder: NSCoder)
     {
-        let eaglContext = EAGLContext(api: .openGLES2)!
+        let eaglContext = EAGLContext.createUsingBestAvailableAPI()
         self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
         
         super.init(coder: aDecoder)

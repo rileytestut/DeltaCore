@@ -101,7 +101,20 @@ public class AudioManager: NSObject, AudioRendering
     private let timePitchEffect: AVAudioUnitTimePitch
     
     @available(iOS 13.0, *)
-    private lazy var sourceNode = self.makeSourceNode()
+    private var sourceNode: AVAudioSourceNode {
+        get {
+            if _sourceNode == nil
+            {
+                _sourceNode = self.makeSourceNode()
+            }
+            
+            return _sourceNode as! AVAudioSourceNode
+        }
+        set {
+            _sourceNode = newValue
+        }
+    }
+    private var _sourceNode: Any! = nil
     
     private var audioConverter: AVAudioConverter?
     private var audioConverterRequiredFrameCount: AVAudioFrameCount?

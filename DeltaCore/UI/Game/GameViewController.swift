@@ -551,12 +551,15 @@ private extension GameViewController
     
     @objc func keyboardWillShow(with notification: Notification)
     {
-        guard let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
+        guard let window = self.view.window, let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
         
-        let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
-        guard keyboardFrame.height > 0 else { return }
+        let systemKeyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
+        guard systemKeyboardFrame.height > 0 else { return }
         
-        self.splitViewInputViewHeight = keyboardFrame.height
+        let sceneKeyboardFrame = self.view.convert(systemKeyboardFrame, from: window.screen.coordinateSpace)
+        
+        let relativeHeight = self.view.bounds.height - sceneKeyboardFrame.minY
+        self.splitViewInputViewHeight = relativeHeight
         
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         

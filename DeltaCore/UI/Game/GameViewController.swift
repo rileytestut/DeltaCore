@@ -344,13 +344,15 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
     open func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
-        guard let standardInput = StandardGameControllerInput(input: input), standardInput == .menu else { return }
-        self.delegate?.gameViewController(self, handleMenuInputFrom: gameController)
+        // This method intentionally left blank
     }
     
     open func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        // This method intentionally left blank
+        // Wait until menu button is released before calling handleMenuInputFrom:
+        // Fixes potentially missing key-up inputs due to showing pause menu.
+        guard let standardInput = StandardGameControllerInput(input: input), standardInput == .menu else { return }
+        self.delegate?.gameViewController(self, handleMenuInputFrom: gameController)
     }
 }
 

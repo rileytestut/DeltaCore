@@ -86,6 +86,8 @@ public class GameView: UIView
             os_unfair_lock_lock(&self.lock)
             defer { os_unfair_lock_unlock(&self.lock) }
             
+            self.didLayoutSubviews = false
+            
             // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
@@ -100,6 +102,7 @@ public class GameView: UIView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
     
     private var lock = os_unfair_lock()
+    private var didLayoutSubviews = false
     
     public override init(frame: CGRect)
     {
@@ -144,6 +147,8 @@ public class GameView: UIView
         super.layoutSubviews()
         
         self.glkView.isHidden = (self.outputImage == nil)
+        
+        self.didLayoutSubviews = true
     }
 }
 
@@ -187,11 +192,15 @@ private extension GameView
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
         guard self.outputImage != nil else { return }
-              
+        
         os_unfair_lock_lock(&self.lock)
         defer { os_unfair_lock_unlock(&self.lock) }
         
-        self.glkView.display()        
+        // layoutSubviews() must be called after setting self.eaglContext before we can display anything.
+        // Otherwise, the app may crash due to race conditions when creating framebuffer from background thread.
+        guard self.didLayoutSubviews else { return }
+
+        self.glkView.display()
     }
 }
 

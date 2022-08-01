@@ -70,6 +70,8 @@
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
+		D5537CFA2887558B00A66016 /* UIScene+KeyboardFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */; };
+		D5777512289882F5005E8B05 /* UIWindowScene+StageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -162,6 +164,8 @@
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
+		D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScene+KeyboardFocus.swift"; sourceTree = "<group>"; };
+		D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIWindowScene+StageManager.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -371,6 +375,8 @@
 				BFA5FCF320D3804300A3C5AB /* UIApplication+AppExtension.swift */,
 				BFA5FCF420D3804400A3C5AB /* UIResponder+FirstResponder.swift */,
 				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
+				D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */,
+				D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -606,6 +612,7 @@
 				BFB8F0D41D186D6000D9CD05 /* Game.swift in Sources */,
 				BFEC24031D24CE7B00B3A6A9 /* RingBuffer.swift in Sources */,
 				BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */,
+				D5537CFA2887558B00A66016 /* UIScene+KeyboardFocus.swift in Sources */,
 				BFEC23CD1D247E4A00B3A6A9 /* AudioRendering.swift in Sources */,
 				BF3273D51B86428200494CFC /* ExternalGameControllerManager.swift in Sources */,
 				BF78880D1C27F5AB0088084C /* UIImage+PDF.swift in Sources */,
@@ -614,6 +621,7 @@
 				BFA352471DEC19D70085A0BD /* UIDevice+Vibration.swift in Sources */,
 				BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */,
 				BF65E86E1CEE68F300CD3247 /* Cheat.swift in Sources */,
+				D5777512289882F5005E8B05 /* UIWindowScene+StageManager.swift in Sources */,
 				BF31A1F62268DE5700C64A1B /* ThumbstickInputView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -117,12 +117,22 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     private func initialize()
     {
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
-        
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        if #available(iOS 13, *)
+        {
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIScene.willDeactivateNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIScene.didActivateNotification, object: nil)
+
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.sceneKeyboardFocusDidChange(_:)), name: UIScene.keyboardFocusDidChangeNotification, object: nil)
+        }
+        else
+        {
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIApplication.willResignActiveNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIApplication.didBecomeActiveNotification, object: nil)
+        }
     }
     
     deinit
@@ -159,7 +169,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.updateGameViews), name: ControllerView.controllerViewDidChangeControllerSkinNotification, object: self.controllerView)
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self.controllerView, action: #selector(ControllerView.becomeFirstResponder))
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resumeEmulationIfNeeded))
         self.view.addGestureRecognizer(tapGestureRecognizer)
         
         self.prepareForGame()
@@ -181,6 +191,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
         UIApplication.delta_shared?.isIdleTimerDisabled = true
         
         self.controllerView.becomeFirstResponder()
+        
+        if #available(iOS 13, *)
+        {
+            if let scene = self.view.window?.windowScene
+            {
+                scene.startTrackingKeyboardFocus()
+            }
+        }
     }
     
     open dynamic override func viewDidDisappear(_ animated: Bool)
@@ -532,6 +550,16 @@ private extension GameViewController
         
         self.view.setNeedsUpdateConstraints()
     }
+    
+    @objc func resumeEmulationIfNeeded()
+    {
+        self.controllerView.becomeFirstResponder()
+        
+        self.emulatorCoreQueue.async {
+            guard self.emulatorCore?.state == .paused else { return }
+            _ = self._resumeEmulation()
+        }
+    }
 }
 
 // MARK: - Notifications - 
@@ -539,14 +567,34 @@ private extension GameViewController
 {
     @objc func willResignActive(with notification: Notification)
     {
+        if #available(iOS 13, *)
+        {
+            guard let scene = notification.object as? UIScene, scene == self.view.window?.windowScene else { return }
+        }
+        
         self.emulatorCoreQueue.async {
+            guard self.emulatorCore?.state == .running else { return }
             _ = self._pauseEmulation()
         }
     }
     
     @objc func didBecomeActive(with notification: Notification)
     {
+        if #available(iOS 13, *)
+        {
+            // Make sure scene has keyboard focus before automatically resuming.
+            guard let scene = notification.object as? UIWindowScene, scene == self.view.window?.windowScene, scene.hasKeyboardFocus else { return }
+            
+            if #available(iOS 16, *), scene.isStageManagerEnabled
+            {
+                // When Stage Manager is active, only resume emulation if self.controllerView is still the first responder.
+                // This prevents us from automatically resuming emulation when we're not the frontmost app.
+                guard self.controllerView.isFirstResponder else { return }
+            }
+        }
+        
         self.emulatorCoreQueue.async {
+            guard self.emulatorCore?.state == .paused else { return }
             _ = self._resumeEmulation()
         }
     }
@@ -597,5 +645,38 @@ private extension GameViewController
             self.view.layoutIfNeeded()
         }
         animator.startAnimation()
+        
+        let isLocalKeyboard = notification.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? false
+        if #available(iOS 13, *), let scene = self.view.window?.windowScene, scene.activationState == .foregroundInactive, isLocalKeyboard
+        {
+            // Explicitly resign first responder to prevent keyboard controller automatically appearing when not frontmost app.
+            self.controllerView.resignFirstResponder()
+        }
+    }
+    
+    @available(iOS 13.0, *)
+    @objc func sceneKeyboardFocusDidChange(_ notification: Notification)
+    {
+        guard let scene = notification.object as? UIScene, scene == self.view.window?.windowScene else { return }
+        
+        if !scene.hasKeyboardFocus && scene.activationState == .foregroundActive
+        {
+            // Explicitly resign first responder to prevent emulation resuming automatically when not frontmost app.
+            self.controllerView.resignFirstResponder()
+        }
+        
+        // Must run on emulatorCoreQueue to ensure emulatorCore state is accurate.
+        self.emulatorCoreQueue.async {
+            if scene.hasKeyboardFocus
+            {
+                guard self.emulatorCore?.state == .paused else { return }
+                _ = self._resumeEmulation()
+            }
+            else
+            {
+                guard self.emulatorCore?.state == .running else { return }
+                _ = self._pauseEmulation()
+            }
+        }
     }
 }

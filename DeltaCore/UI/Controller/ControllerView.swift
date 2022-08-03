@@ -245,6 +245,9 @@ public class ControllerView: UIView, GameController
 extension ControllerView
 {
     public override var canBecomeFirstResponder: Bool {
+        // "canBecomeFirstResponder" = "should display keyboard controller view" OR "should receive hardware keyboard events"
+        // In latter case, we return a nil inputView to prevent software keyboard from appearing.
+        
         let canBecomeFirstResponder = (self.controllerSkinTraits?.displayType == .splitView || ExternalGameControllerManager.shared.isKeyboardConnected)
         return canBecomeFirstResponder
     }
@@ -261,7 +264,13 @@ extension ControllerView
     }
     
     public override var inputView: UIView? {
+        // Don't display any inputView if a hardware keyboard is attached.
+        // inputView is cropped to app coodinate space (not screen) when hardware keyboard is connected.
+        guard !ExternalGameControllerManager.shared.isKeyboardConnected else { return nil }
+        
+        // Don't display inputView if controllerView does not have active playerIndex.
         guard self.playerIndex != nil else { return nil }
+        
         return self.controllerInputView
     }
     

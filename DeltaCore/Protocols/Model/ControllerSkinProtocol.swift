@@ -20,9 +20,6 @@ public protocol ControllerSkinProtocol
     func image(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
     
-    /// Provided point should be normalized [0,1] for both axies.
-    func inputs(for traits: ControllerSkin.Traits, at point: CGPoint) -> [Input]?
-    
     func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
     
     func isTranslucent(for traits: ControllerSkin.Traits) -> Bool?

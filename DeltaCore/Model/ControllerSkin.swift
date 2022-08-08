@@ -284,67 +284,6 @@ public extension ControllerSkin
         return returnedImage
     }
     
-    func inputs(for traits: Traits, at point: CGPoint) -> [Input]?
-    {
-        guard let representation = self.representation(for: traits) else { return nil }
-        
-        var inputs: [Input] = []
-        
-        for item in representation.items
-        {
-            guard item.extendedFrame.contains(point) else { continue }
-            
-            switch item.inputs
-            {
-            // Don't return inputs for thumbsticks or touch screens since they're handled separately.
-            case .directional where item.kind == .thumbstick: break
-            case .touch: break
-                
-            case .standard(let itemInputs):
-                inputs.append(contentsOf: itemInputs)
-            
-            case let .directional(up, down, left, right):
-
-                let divisor: CGFloat
-                if case .thumbstick = item.kind
-                {
-                    divisor = 2.0
-                }
-                else
-                {
-                    divisor = 3.0
-                }
-                
-                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
-                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
-                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
-                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
-                
-                if topRect.contains(point)
-                {
-                    inputs.append(up)
-                }
-                
-                if bottomRect.contains(point)
-                {
-                    inputs.append(down)
-                }
-                
-                if leftRect.contains(point)
-                {
-                    inputs.append(left)
-                }
-                
-                if rightRect.contains(point)
-                {
-                    inputs.append(right)
-                }
-            }
-        }
-        
-        return inputs
-    }
-    
     func items(for traits: Traits) -> [Item]?
     {
         guard let representation = self.representation(for: traits) else { return nil }

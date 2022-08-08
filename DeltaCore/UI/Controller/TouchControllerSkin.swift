@@ -53,12 +53,6 @@ extension TouchControllerSkin: ControllerSkinProtocol
         return nil
     }
     
-    public func inputs(for traits: ControllerSkin.Traits, at point: CGPoint) -> [Input]?
-    {
-        // Return empty array since touch inputs are normally filtered out.
-        return []
-    }
-    
     public func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
     {
         guard

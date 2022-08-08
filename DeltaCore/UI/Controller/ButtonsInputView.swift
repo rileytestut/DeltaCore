@@ -12,8 +12,7 @@ class ButtonsInputView: UIView
 {
     var isHapticFeedbackEnabled = true
     
-    var controllerSkin: ControllerSkinProtocol?
-    var controllerSkinTraits: ControllerSkin.Traits?
+    var items: [ControllerSkin.Item]?
     
     var activateInputsHandler: ((Set<AnyInput>) -> Void)?
     var deactivateInputsHandler: ((Set<AnyInput>) -> Void)?
@@ -93,35 +92,95 @@ class ButtonsInputView: UIView
     }
 }
 
+extension ButtonsInputView
+{
+    func inputs(at point: CGPoint) -> [Input]?
+    {
+        guard let items = self.items else { return nil }
+        
+        var point = point
+        point.x /= self.bounds.width
+        point.y /= self.bounds.height
+        
+        var inputs: [Input] = []
+        
+        for item in items
+        {
+            guard item.extendedFrame.contains(point) else { continue }
+            
+            switch item.inputs
+            {
+            // Don't return inputs for thumbsticks or touch screens since they're handled separately.
+            case .directional where item.kind == .thumbstick: break
+            case .touch: break
+                
+            case .standard(let itemInputs):
+                inputs.append(contentsOf: itemInputs)
+            
+            case let .directional(up, down, left, right):
+
+                let divisor: CGFloat
+                if case .thumbstick = item.kind
+                {
+                    divisor = 2.0
+                }
+                else
+                {
+                    divisor = 3.0
+                }
+                
+                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
+                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
+                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
+                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
+                
+                if topRect.contains(point)
+                {
+                    inputs.append(up)
+                }
+                
+                if bottomRect.contains(point)
+                {
+                    inputs.append(down)
+                }
+                
+                if leftRect.contains(point)
+                {
+                    inputs.append(left)
+                }
+                
+                if rightRect.contains(point)
+                {
+                    inputs.append(right)
+                }
+            }
+        }
+        
+        return inputs
+    }
+}
+
 private extension ButtonsInputView
 {
     func updateInputs(for touches: Set<UITouch>)
     {
-        guard let controllerSkin = self.controllerSkin else { return }
-        
         // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
         for touch in touches where self.touchInputsMappingDictionary[touch] != nil
         {
             guard touch.view == self else { continue }
             
-            var point = touch.location(in: self)
-            point.x /= self.bounds.width
-            point.y /= self.bounds.height
+            let point = touch.location(in: self)
+            let inputs = Set((self.inputs(at: point) ?? []).map { AnyInput($0) })
             
-            if let traits = self.controllerSkinTraits
+            let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
+            if inputs.contains(menuInput)
             {
-                let inputs = Set((controllerSkin.inputs(for: traits, at: point) ?? []).map { AnyInput($0) })
-                
-                let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
-                if inputs.contains(menuInput)
-                {
-                    // If the menu button is located at this position, ignore all other inputs that might be overlapping.
-                    self.touchInputsMappingDictionary[touch] = [menuInput]
-                }
-                else
-                {
-                    self.touchInputsMappingDictionary[touch] = Set(inputs)
-                }
+                // If the menu button is located at this position, ignore all other inputs that might be overlapping.
+                self.touchInputsMappingDictionary[touch] = [menuInput]
+            }
+            else
+            {
+                self.touchInputsMappingDictionary[touch] = Set(inputs)
             }
         }
         

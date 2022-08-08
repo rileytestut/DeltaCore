@@ -217,7 +217,7 @@ public class ControllerView: UIView, GameController
         {
             guard item.frame.contains(adjustedPoint) else { continue }
             
-            if let traits = self.controllerSkinTraits, let inputs = self.controllerSkin?.inputs(for: traits, at: adjustedPoint)
+            if let inputs = self.buttonsView.inputs(at: point)
             {
                 // No other inputs at this position, so return touchView.
                 if inputs.isEmpty
@@ -319,9 +319,6 @@ public extension ControllerView
     {
         guard self._performedInitialLayout else { return }
         
-        self.buttonsView.controllerSkin = self.controllerSkin
-        self.buttonsView.controllerSkinTraits = self.controllerSkinTraits
-        
         if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
         {
             self.controllerDebugView.isHidden = !isDebugModeEnabled
@@ -331,15 +328,11 @@ public extension ControllerView
         
         if let traits = self.controllerSkinTraits
         {
-            let items = self.controllerSkin?.items(for: traits)
-            self.controllerDebugView.items = items
+            var items = self.controllerSkin?.items(for: traits)
             
             if traits.displayType == .splitView && !self.isControllerInputView
             {
                 self.buttonsView.image = nil
-                
-                self.isUserInteractionEnabled = false
-                self.controllerDebugView.alpha = 0.0
             }
             else
             {
@@ -365,7 +358,7 @@ public extension ControllerView
                         let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
                         cache.setObject(image, forKey: cacheKey as NSString)
                         self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
-                    }                    
+                    }
                 }
                 else
                 {
@@ -373,10 +366,25 @@ public extension ControllerView
                 }
                 
                 self.buttonsView.image = image
-                
-                self.isUserInteractionEnabled = true
-                self.controllerDebugView.alpha = 1.0
             }
+            
+            var buttonItems = items
+            if traits.displayType == .splitView
+            {                
+                if self.isControllerInputView
+                {
+                    // Filter out all items without `controller` placement.
+                    buttonItems = buttonItems?.filter { $0.placement == .controller }
+                }
+                else
+                {
+                    // Filter out all items without `app` placement.
+                    buttonItems = buttonItems?.filter { $0.placement == .app }
+                }
+            }
+            
+            self.buttonsView.items = buttonItems
+            self.controllerDebugView.items = buttonItems
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
             
@@ -464,6 +472,9 @@ public extension ControllerView
         }
         else
         {
+            self.buttonsView.items = nil
+            self.controllerDebugView.items = nil
+            
             self.thumbstickViews.values.forEach { $0.removeFromSuperview() }
             self.thumbstickViews = [:]
             

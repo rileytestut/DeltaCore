@@ -50,6 +50,7 @@ public class GameView: UIView
     
     @NSCopying public var filter: CIFilter? {
         didSet {
+            guard self.filter != oldValue else { return }
             self.update()
         }
     }

@@ -22,6 +22,41 @@ private extension CIImage
     }
 }
 
+private extension CIFilter
+{
+    struct Values: Hashable
+    {
+        var name: String
+        var inputValues: NSDictionary
+        
+        static func ==(lhs: Values, rhs: Values) -> Bool
+        {
+            return lhs.name == rhs.name && lhs.inputValues.isEqual(rhs.inputValues)
+        }
+        
+        func hash(into hasher: inout Hasher)
+        {
+            hasher.combine(self.name)
+            hasher.combine(self.inputValues)
+        }
+    }
+    
+    func values() -> Values
+    {
+        let inputValues = self.inputKeys.compactMap { (key) -> (String, Any)? in
+            // Ignore inputImage value, since that shouldn't affect CIFilter equality.
+            // Filters with same inputKeys + values should always be equal, even with different inputImages.
+            guard let value = self.value(forKey: key), key != kCIInputImageKey else { return nil }
+            return (key, value)
+        }
+        
+        let dictionary = inputValues.reduce(into: [:]) { $0[$1.0] = $1.1 }
+        
+        let values = Values(name: self.name, inputValues: dictionary as NSDictionary)
+        return values
+    }
+}
+
 @objcMembers
 public class FilterChain: CIFilter
 {
@@ -31,7 +66,7 @@ public class FilterChain: CIFilter
     
     public override var outputImage: CIImage? {
         return self.inputFilters.reduce(self.inputImage, { (image, filter) -> CIImage? in
-            guard var image = image else { return nil }
+            guard let image = image else { return nil }
             
             let flippedImage = image.flippingYAxis()
                         
@@ -70,6 +105,15 @@ public class FilterChain: CIFilter
         })
     }
     
+    public override var hash: Int {
+        return self.inputFiltersValues.hashValue
+    }
+    
+    private var inputFiltersValues: [CIFilter.Values] {
+        let values = self.inputFilters.map { $0.values() }
+        return values
+    }
+    
     public override init()
     {
         // Must be declared or else we'll get "Use of unimplemented initializer FilterChain.init()" runtime exception.
@@ -85,5 +129,13 @@ public class FilterChain: CIFilter
     public required init?(coder aDecoder: NSCoder)
     {
         super.init(coder: aDecoder)
+    }
+    
+    public override func isEqual(_ object: Any?) -> Bool
+    {
+        guard let filterChain = object as? FilterChain else { return false }
+                
+        let isEqual = self.inputFiltersValues == filterChain.inputFiltersValues
+        return isEqual
     }
 }

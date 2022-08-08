@@ -34,12 +34,20 @@ private extension Archive
 
 extension ControllerSkin
 {
+    public enum Placement: String
+    {
+        case controller
+        case app
+    }
+    
     public struct Screen
     {
         public var inputFrame: CGRect?
         public var outputFrame: CGRect
         
         public var filters: [CIFilter]?
+        
+        public var placement: Placement = .controller
     }
 }
 
@@ -456,6 +464,8 @@ extension ControllerSkin
         public var frame: CGRect
         public var extendedFrame: CGRect
         
+        public var placement: Placement
+        
         fileprivate var thumbstickImageName: String?
         fileprivate var thumbstickSize: CGSize?
         
@@ -529,10 +539,29 @@ extension ControllerSkin
             extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
             extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
             
-            // Convert frames to relative values.
-            let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
-            self.frame = frame.applying(scaleTransform)
-            self.extendedFrame = extendedFrame.applying(scaleTransform)
+            if let rawPlacement = dictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
+            {
+                self.placement = placement
+            }
+            else
+            {
+                // Fall back to `controller` placement if it wasn't specified for backwards compatibility.
+                self.placement = .controller
+            }
+            
+            switch self.placement
+            {
+            case .controller:
+                // Convert frames to relative values.
+                let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+                self.frame = frame.applying(scaleTransform)
+                self.extendedFrame = extendedFrame.applying(scaleTransform)
+                
+            case .app:
+                // `app` placement already uses relative values.
+                self.frame = frame
+                self.extendedFrame = extendedFrame
+            }
         }
     }
 }
@@ -795,15 +824,35 @@ private extension ControllerSkin
                 let screens = screensArray.compactMap { (screenDictionary) -> Screen? in
                     guard
                         let outputFrameDictionary = screenDictionary["outputFrame"] as? [String: CGFloat],
-                        let outputFrame = CGRect(dictionary: outputFrameDictionary)
+                        var outputFrame = CGRect(dictionary: outputFrameDictionary)
                     else { return nil }
                     
-                    let normalizedOutputFrame = outputFrame.applying(scaleTransform)
+                    let screenPlacement: Placement
+                    if let rawPlacement = screenDictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
+                    {
+                        screenPlacement = placement
+                    }
+                    else
+                    {
+                        // Fall back to `controller` placement if it wasn't specified for backwards compatibility.
+                        screenPlacement = .controller
+                    }
                     
                     var inputFrame: CGRect?
                     if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
                     {
                         inputFrame = frame
+                    }
+                    
+                    switch screenPlacement
+                    {
+                    case .controller:
+                        // Convert outputFrame to relative values.
+                        outputFrame = outputFrame.applying(scaleTransform)
+                        
+                    case .app:
+                        // `app` placement already uses relative values.
+                        break
                     }
                     
                     var filters: [CIFilter]?
@@ -814,8 +863,6 @@ private extension ControllerSkin
                             let parameters = dictionary["parameters"] as? [String: Any]
                             
                             guard let filter = CIFilter(name: name) else { return nil }
-                            
-                            var filterParameters = [String: Any]()
                             
                             for (parameter, value) in parameters ?? [:]
                             {
@@ -881,7 +928,7 @@ private extension ControllerSkin
                         }
                     }
                     
-                    let screen = Screen(inputFrame: inputFrame, outputFrame: normalizedOutputFrame, filters: filters)
+                    let screen = Screen(inputFrame: inputFrame, outputFrame: outputFrame, filters: filters, placement: screenPlacement)
                     return screen
                 }
                 

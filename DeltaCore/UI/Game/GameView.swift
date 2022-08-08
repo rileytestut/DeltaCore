@@ -95,6 +95,11 @@ public class GameView: UIView
             
             self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
             self.context = self.makeContext()
+            
+            DispatchQueue.main.async {
+                // layoutSubviews() must be called after setting self.eaglContext before we can display anything.
+                self.setNeedsLayout()
+            }
         }
     }
     private lazy var context: CIContext = self.makeContext()

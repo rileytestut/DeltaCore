@@ -116,8 +116,8 @@ public class ControllerView: UIView, GameController
     private let controllerDebugView = ControllerDebugView()
     
     private let buttonsView = ButtonsInputView(frame: CGRect.zero)
-    private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
-    private var touchViews = [ControllerSkin.Item: TouchInputView]()
+    private var thumbstickViews = [ControllerSkin.Item.ID: ThumbstickInputView]()
+    private var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
     
     private var _performedInitialLayout = false
     
@@ -198,25 +198,49 @@ public class ControllerView: UIView, GameController
         
         self._performedInitialLayout = true
         
-        self.updateControllerSkin()
+        // updateControllerSkin() calls layoutSubviews(), so don't call again to avoid infinite loop.
+        // self.updateControllerSkin()
+        
+        guard let traits = self.controllerSkinTraits, let controllerSkin = self.controllerSkin, let items = controllerSkin.items(for: traits) else { return }
+        
+        for item in items
+        {
+            var frame = item.frame
+            frame.origin.x *= self.bounds.width
+            frame.origin.y *= self.bounds.height
+            frame.size.width *= self.bounds.width
+            frame.size.height *= self.bounds.height
+            frame.origin.x += self.bounds.minX
+            frame.origin.y += self.bounds.minY
+            
+            switch item.kind
+            {
+            case .button, .dPad: break
+            case .thumbstick:
+                guard let thumbstickView = self.thumbstickViews[item.id] else { continue }
+                thumbstickView.frame = frame
+                
+            case .touchScreen:
+                guard let touchView = self.touchViews[item.id] else { continue }
+                touchView.frame = frame
+            }
+        }
     }
     
     public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?
     {
         guard self.bounds.contains(point) else { return super.hitTest(point, with: event) }
         
-        let adjustedPoint = CGPoint(x: point.x / self.bounds.width, y: point.y / self.bounds.height)
-        
-        for (item, thumbstickView) in self.thumbstickViews
+        for (_, thumbstickView) in self.thumbstickViews
         {
-            guard item.extendedFrame.contains(adjustedPoint) else { continue }
+            guard thumbstickView.frame.contains(point) else { continue }
             return thumbstickView
         }
-        
-        for (item, touchView) in self.touchViews
+
+        for (_, touchView) in self.touchViews
         {
-            guard item.frame.contains(adjustedPoint) else { continue }
-            
+            guard touchView.frame.contains(point) else { continue }
+
             if let inputs = self.buttonsView.inputs(at: point)
             {
                 // No other inputs at this position, so return touchView.
@@ -388,36 +412,24 @@ public extension ControllerView
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
             
-            var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
+            var thumbstickViews = [ControllerSkin.Item.ID: ThumbstickInputView]()
             var previousThumbstickViews = self.thumbstickViews
             
-            var touchViews = [ControllerSkin.Item: TouchInputView]()
+            var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
             var previousTouchViews = self.touchViews
             
             for item in items ?? []
             {
-                var frame = item.frame
-                frame.origin.x *= self.bounds.width
-                frame.origin.y *= self.bounds.height
-                frame.size.width *= self.bounds.width
-                frame.size.height *= self.bounds.height
-                
-                var extendedFrame = item.extendedFrame
-                extendedFrame.origin.x *= self.bounds.width
-                extendedFrame.origin.y *= self.bounds.height
-                extendedFrame.size.width *= self.bounds.width
-                extendedFrame.size.height *= self.bounds.height
-                
                 switch item.kind
                 {
                 case .button, .dPad: break
                 case .thumbstick:
                     let thumbstickView: ThumbstickInputView
                     
-                    if let previousThumbstickView = previousThumbstickViews[item]
+                    if let previousThumbstickView = previousThumbstickViews[item.id]
                     {
                         thumbstickView = previousThumbstickView
-                        previousThumbstickViews[item] = nil
+                        previousThumbstickViews[item.id] = nil
                     }
                     else
                     {
@@ -425,7 +437,6 @@ public extension ControllerView
                         self.contentView.addSubview(thumbstickView)
                     }
                     
-                    thumbstickView.frame = frame
                     thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
                         self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
                     }
@@ -439,15 +450,15 @@ public extension ControllerView
                     
                     thumbstickView.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled
                     
-                    thumbstickViews[item] = thumbstickView
+                    thumbstickViews[item.id] = thumbstickView
                     
                 case .touchScreen:
                     let touchView: TouchInputView
                     
-                    if let previousTouchView = previousTouchViews[item]
+                    if let previousTouchView = previousTouchViews[item.id]
                     {
                         touchView = previousTouchView
-                        previousTouchViews[item] = nil
+                        previousTouchViews[item.id] = nil
                     }
                     else
                     {
@@ -455,12 +466,11 @@ public extension ControllerView
                         self.contentView.addSubview(touchView)
                     }
                     
-                    touchView.frame = frame
                     touchView.valueChangedHandler = { [weak self] (point) in
                         self?.updateTouchValues(item: item, point: point)
                     }
                     
-                    touchViews[item] = touchView
+                    touchViews[item.id] = touchView
                 }
             }
             
@@ -511,6 +521,7 @@ public extension ControllerView
         
         self.invalidateIntrinsicContentSize()
         self.setNeedsUpdateConstraints()
+        self.setNeedsLayout()
         
         self.reloadInputViews()
     }

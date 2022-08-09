@@ -96,6 +96,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private var _previousControllerSkin: ControllerSkinProtocol?
     private var _previousControllerSkinTraits: ControllerSkin.Traits?
     
+    private var appPlacementLayoutGuide: UILayoutGuide!
+    private var appPlacementXConstraint: NSLayoutConstraint!
+    private var appPlacementYConstraint: NSLayoutConstraint!
+    private var appPlacementWidthConstraint: NSLayoutConstraint!
+    private var appPlacementHeightConstraint: NSLayoutConstraint!
+    
     /// UIViewController
     open override var prefersStatusBarHidden: Bool {
         return true
@@ -159,20 +165,31 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.view.backgroundColor = UIColor.black
         
+        self.appPlacementLayoutGuide = UILayoutGuide()
+        self.view.addLayoutGuide(self.appPlacementLayoutGuide)
+        
         let gameView = GameView(frame: CGRect.zero)
         self.view.addSubview(gameView)
         self.gameViews.append(gameView)
         
         self.controllerView = ControllerView(frame: CGRect.zero)
+        self.controllerView.appPlacementLayoutGuide = self.appPlacementLayoutGuide
         self.view.addSubview(self.controllerView)
         
         self.controllerView.addObserver(self, forKeyPath: #keyPath(ControllerView.isHidden), options: [.old, .new], context: &kvoContext)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.updateGameViews), name: ControllerView.controllerViewDidChangeControllerSkinNotification, object: self.controllerView)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.controllerViewDidUpdateGameViews(_:)), name: ControllerView.controllerViewDidUpdateGameViewsNotification, object: self.controllerView)
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resumeEmulationIfNeeded))
         self.view.addGestureRecognizer(tapGestureRecognizer)
         
         self.prepareForGame()
+        
+        self.appPlacementXConstraint = self.appPlacementLayoutGuide.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 0)
+        self.appPlacementYConstraint = self.appPlacementLayoutGuide.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 0)
+        self.appPlacementWidthConstraint = self.appPlacementLayoutGuide.widthAnchor.constraint(equalToConstant: 0)
+        self.appPlacementHeightConstraint = self.appPlacementLayoutGuide.heightAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([self.appPlacementXConstraint, self.appPlacementYConstraint, self.appPlacementWidthConstraint, self.appPlacementHeightConstraint])
     }
     
     open dynamic override func viewWillAppear(_ animated: Bool)
@@ -261,7 +278,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             // - Controller View is pinned to bottom and spans width of device as keyboard input view.
             // - Game View should be vertically centered between top of screen and input view.
             
-            controllerViewFrame = CGRect(x: 0, y: self.view.bounds.maxY, width: self.view.bounds.width, height: 0)
+            controllerViewFrame = CGRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.bounds.height)
             (_, availableGameFrame) = self.view.bounds.divided(atDistance: self.splitViewInputViewHeight, from: .maxYEdge)
             
         case .none: fallthrough
@@ -309,22 +326,41 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.controllerView.frame = controllerViewFrame
         
+        let gameScreenFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame).rounded()
+        if self.appPlacementLayoutGuide.layoutFrame.rounded() != gameScreenFrame
+        {
+            self.appPlacementXConstraint.constant = gameScreenFrame.minX
+            self.appPlacementYConstraint.constant = gameScreenFrame.minY
+            self.appPlacementWidthConstraint.constant = gameScreenFrame.width
+            self.appPlacementHeightConstraint.constant = gameScreenFrame.height
+            
+            // controllerView needs to reposition any items with `app` placement.
+            self.controllerView.setNeedsLayout()
+        }
+        
         /* Game View */
         if
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
-            let screens = controllerSkin.screens(for: traits),
-            let aspectRatio = controllerSkin.aspectRatio(for: traits),
+            var screens = controllerSkin.screens(for: traits),
             !self.controllerView.isHidden
         {
+            if traits.displayType == .splitView
+            {
+                // When in split view, only manage game views with `app` placement.
+                screens = screens.filter { $0.placement == .app }
+            }
+            else
+            {
+                // When not in split view, manage all game views regardless of placement.
+            }
+            
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                let containerFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: controllerViewFrame)
+                let placementFrame = (screen.placement == .controller) ? controllerViewFrame : gameScreenFrame
                 
-                var outputFrame = screen.outputFrame.applying(.init(scaleX: containerFrame.width, y: containerFrame.height))
-                outputFrame.origin.x += containerFrame.minX
-                outputFrame.origin.y += containerFrame.minY
-                gameView.frame = outputFrame
+                let frame = screen.outputFrame.scaled(to: placementFrame)
+                gameView.frame = frame
             }
         }
         else
@@ -386,40 +422,23 @@ extension GameViewController
         if
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
-            let screens = controllerSkin.screens(for: traits),
+            var screens = controllerSkin.screens(for: traits),
             !self.controllerView.isHidden
         {
+            if traits.displayType == .splitView
+            {
+                // When in split view, only manage game views with `app` placement.
+                screens = screens.filter { $0.placement == .app }
+            }
+            else
+            {
+                // When not in split view, manage all game views regardless of placement.
+            }
+            
             for screen in screens
             {
                 let gameView = previousGameViews.popLast() ?? GameView(frame: .zero)
-                
-                var filters = [CIFilter]()
-                
-                if let inputFrame = screen.inputFrame
-                {
-                    let cropFilter = CIFilter(name: "CICrop", parameters: ["inputRectangle": CIVector(cgRect: inputFrame)])!
-                    filters.append(cropFilter)
-                }
-                
-                if let screenFilters = screen.filters
-                {
-                    filters.append(contentsOf: screenFilters)
-                }
-                
-                if filters.isEmpty
-                {
-                    gameView.filter = nil
-                }
-                else
-                {
-                    // Always use FilterChain since it has additional logic for chained filters.
-                    let filterChain = FilterChain(filters: filters)
-                    gameView.filter = filterChain
-                }
-                
-                let outputFrame = screen.outputFrame.applying(.init(scaleX: self.view.bounds.width, y: self.view.bounds.height))
-                gameView.frame = outputFrame
-                
+                gameView.update(for: screen)
                 gameViews.append(gameView)
             }
         }
@@ -429,7 +448,11 @@ extension GameViewController
             {
                 gameView.filter = nil
             }
-            
+        }
+        
+        if gameViews.isEmpty
+        {
+            // gameViews needs to _always_ contain at least one game view.
             gameViews.append(self.gameView)
         }
         
@@ -537,7 +560,7 @@ private extension GameViewController
             let game = self.game
         else { return }
         
-        for gameView in self.gameViews
+        for gameView in self.gameViews + controllerView.gameViews
         {
             emulatorCore.add(gameView)
         }
@@ -596,6 +619,23 @@ private extension GameViewController
         self.emulatorCoreQueue.async {
             guard self.emulatorCore?.state == .paused else { return }
             _ = self._resumeEmulation()
+        }
+    }
+    
+    @objc func controllerViewDidUpdateGameViews(_ notification: Notification)
+    {
+        guard let addedGameViews = notification.userInfo?[ControllerView.NotificationKey.addedGameViews] as? Set<GameView>,
+              let removedGameViews = notification.userInfo?[ControllerView.NotificationKey.removedGameViews] as? Set<GameView>
+        else { return }        
+        
+        for gameView in addedGameViews
+        {
+            self.emulatorCore?.add(gameView)
+        }
+        
+        for gameView in removedGameViews
+        {
+            self.emulatorCore?.remove(gameView)
         }
     }
     

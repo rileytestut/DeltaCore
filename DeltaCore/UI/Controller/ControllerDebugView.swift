@@ -17,6 +17,8 @@ internal class ControllerDebugView: UIView
         }
     }
     
+    weak var appPlacementLayoutGuide: UILayoutGuide?
+    
     private var itemViews = [ItemView]()
     
     override init(frame: CGRect)
@@ -45,12 +47,13 @@ internal class ControllerDebugView: UIView
         
         for view in self.itemViews
         {
-            var frame = view.item.extendedFrame
-            frame.origin.x *= self.bounds.width
-            frame.origin.y *= self.bounds.height
-            frame.size.width *= self.bounds.width
-            frame.size.height *= self.bounds.height
+            var containingFrame = self.bounds
+            if let layoutGuide = self.appPlacementLayoutGuide, view.item.placement == .app
+            {
+                containingFrame = layoutGuide.layoutFrame
+            }
             
+            let frame = view.item.extendedFrame.scaled(to: containingFrame)
             view.frame = frame
         }
     }

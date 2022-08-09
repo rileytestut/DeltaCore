@@ -184,6 +184,26 @@ public extension GameView
         
         return snapshot
     }
+    
+    func update(for screen: ControllerSkin.Screen)
+    {
+        var filters = [CIFilter]()
+        
+        if let inputFrame = screen.inputFrame
+        {
+            let cropFilter = CIFilter(name: "CICrop", parameters: ["inputRectangle": CIVector(cgRect: inputFrame)])!
+            filters.append(cropFilter)
+        }
+        
+        if let screenFilters = screen.filters
+        {
+            filters.append(contentsOf: screenFilters)
+        }
+        
+        // Always use FilterChain since it has additional logic for chained filters.
+        let filterChain = filters.isEmpty ? nil : FilterChain(filters: filters)
+        self.filter = filterChain
+    }
 }
 
 private extension GameView

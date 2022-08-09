@@ -265,7 +265,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
-        let screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
+        var screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
         
         let controllerViewFrame: CGRect
         let availableGameFrame: CGRect
@@ -325,6 +325,14 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
         
         self.controllerView.frame = controllerViewFrame
+        
+        if let traits = self.controllerView.controllerSkinTraits,
+           let controllerSkin = self.controllerView.controllerSkin as? TouchControllerSkin, controllerSkin.screenLayoutAxis == .horizontal,
+           let screens = controllerSkin.screens(for: traits), screens.count > 1
+        {
+            // Switch aspect ratio to be horizontal for side-by-side screens with TouchControllerSkin.
+            screenAspectRatio = CGSize(width: screenAspectRatio.width * Double(screens.count), height: screenAspectRatio.height / Double(screens.count))
+        }
         
         let gameScreenFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame).rounded()
         if self.appPlacementLayoutGuide.layoutFrame.rounded() != gameScreenFrame

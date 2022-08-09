@@ -310,7 +310,7 @@ extension ControllerView
         // "canBecomeFirstResponder" = "should display keyboard controller view" OR "should receive hardware keyboard events"
         // In latter case, we return a nil inputView to prevent software keyboard from appearing.
         
-        let canBecomeFirstResponder = (self.controllerSkinTraits?.displayType == .splitView || ExternalGameControllerManager.shared.isKeyboardConnected)
+        let canBecomeFirstResponder = ExternalGameControllerManager.shared.isKeyboardConnected || (self.controllerSkinTraits?.displayType == .splitView && !(self.controllerSkin is TouchControllerSkin))
         return canBecomeFirstResponder
     }
     

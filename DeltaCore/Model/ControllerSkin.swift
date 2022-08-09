@@ -42,6 +42,8 @@ extension ControllerSkin
     
     public struct Screen
     {
+        public typealias ID = String
+        
         public var id: String
         
         public var inputFrame: CGRect?

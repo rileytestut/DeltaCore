@@ -767,7 +767,7 @@ extension ControllerView: GameControllerReceiver
     {
         guard gameController == self.controllerInputView?.controllerView else { return }
         
-        self.activate(input)
+        self.activate(input, value: value)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)

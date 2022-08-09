@@ -41,6 +41,13 @@ private struct ControllerViewInputMapping: GameControllerInputMappingProtocol
 extension ControllerView
 {
     public static let controllerViewDidChangeControllerSkinNotification = Notification.Name("controllerViewDidChangeControllerSkinNotification")
+    public static let controllerViewDidUpdateGameViewsNotification = Notification.Name("controllerViewDidUpdateGameViewsNotification")
+    
+    public enum NotificationKey: String
+    {
+        case addedGameViews
+        case removedGameViews
+    }
 }
 
 public class ControllerView: UIView, GameController
@@ -105,10 +112,28 @@ public class ControllerView: UIView, GameController
     }
     
     public let inputType: GameControllerInputType = .controllerSkin
-    
     public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
+    internal weak var appPlacementLayoutGuide: UILayoutGuide? {
+        didSet {
+            self.controllerDebugView.appPlacementLayoutGuide = self.appPlacementLayoutGuide
+        }
+    }
+    
     internal var isControllerInputView = false
+    internal var gameViews: [GameView] {
+        var sortedGameViews = self.gameViewsByScreenID.lazy.sorted { $0.key < $1.key }.map { $0.value }
+        
+        if let controllerView = self.controllerInputView?.controllerView
+        {
+            // Include controllerInputView's gameViews, if there are any.
+            let gameViews = controllerView.gameViews
+            sortedGameViews.append(contentsOf: gameViews)
+        }
+        
+        return sortedGameViews
+    }
+    private var gameViewsByScreenID = [ControllerSkin.Screen.ID: GameView]()
     
     //MARK: - Private Properties
     private let contentView = UIView(frame: .zero)
@@ -194,6 +219,8 @@ public class ControllerView: UIView, GameController
     /// UIView
     public override func layoutSubviews()
     {
+        self.controllerDebugView.setNeedsLayout()
+        
         super.layoutSubviews()
         
         self._performedInitialLayout = true
@@ -205,13 +232,13 @@ public class ControllerView: UIView, GameController
         
         for item in items
         {
-            var frame = item.frame
-            frame.origin.x *= self.bounds.width
-            frame.origin.y *= self.bounds.height
-            frame.size.width *= self.bounds.width
-            frame.size.height *= self.bounds.height
-            frame.origin.x += self.bounds.minX
-            frame.origin.y += self.bounds.minY
+            var containingFrame = self.bounds
+            if let layoutGuide = self.appPlacementLayoutGuide, item.placement == .app
+            {
+                containingFrame = layoutGuide.layoutFrame
+            }
+            
+            let frame = item.frame.scaled(to: containingFrame)
             
             switch item.kind
             {
@@ -223,6 +250,17 @@ public class ControllerView: UIView, GameController
             case .touchScreen:
                 guard let touchView = self.touchViews[item.id] else { continue }
                 touchView.frame = frame
+            }
+        }
+        
+        if let screens = controllerSkin.screens(for: traits)
+        {
+            for screen in screens where screen.placement == .controller
+            {
+                guard let normalizedFrame = screen.outputFrame, let gameView = self.gameViewsByScreenID[screen.id] else { continue }
+                
+                let frame = normalizedFrame.scaled(to: self.bounds)
+                gameView.frame = frame
             }
         }
     }
@@ -353,6 +391,20 @@ public extension ControllerView
         if let traits = self.controllerSkinTraits
         {
             var items = self.controllerSkin?.items(for: traits)
+       
+            if traits.displayType == .splitView
+            {
+                if self.isControllerInputView
+                {
+                    // Filter out all items without `controller` placement.
+                    items = items?.filter { $0.placement == .controller }
+                }
+                else
+                {
+                    // Filter out all items without `app` placement.
+                    items = items?.filter { $0.placement == .app }
+                }
+            }
             
             if traits.displayType == .splitView && !self.isControllerInputView
             {
@@ -392,23 +444,8 @@ public extension ControllerView
                 self.buttonsView.image = image
             }
             
-            var buttonItems = items
-            if traits.displayType == .splitView
-            {                
-                if self.isControllerInputView
-                {
-                    // Filter out all items without `controller` placement.
-                    buttonItems = buttonItems?.filter { $0.placement == .controller }
-                }
-                else
-                {
-                    // Filter out all items without `app` placement.
-                    buttonItems = buttonItems?.filter { $0.placement == .app }
-                }
-            }
-            
-            self.buttonsView.items = buttonItems
-            self.controllerDebugView.items = buttonItems
+            self.buttonsView.items = items
+            self.controllerDebugView.items = items
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
             
@@ -492,6 +529,8 @@ public extension ControllerView
             self.touchViews = [:]
         }
         
+        self.updateGameViews()
+        
         if self.transitionSnapshotView != nil
         {
             // Wrap in an animation closure to ensure it actually animates correctly
@@ -524,6 +563,69 @@ public extension ControllerView
         self.setNeedsLayout()
         
         self.reloadInputViews()
+    }
+    
+    func updateGameViews()
+    {
+        guard self.isControllerInputView else { return }
+        
+        var previousGameViews = self.gameViewsByScreenID
+        var gameViews = [ControllerSkin.Screen.ID: GameView]()
+        
+        if let controllerSkin = self.controllerSkin,
+           let traits = self.controllerSkinTraits,
+           let screens = controllerSkin.screens(for: traits)
+        {
+            for screen in screens where screen.placement == .controller
+            {
+                // Only manage screens with explicit outputFrames.
+                guard screen.outputFrame != nil else { continue }
+                
+                let gameView = previousGameViews[screen.id] ?? GameView(frame: .zero)
+                gameView.update(for: screen)
+
+                previousGameViews[screen.id] = nil
+                gameViews[screen.id] = gameView
+            }
+        }
+        else
+        {
+            for (_, gameView) in previousGameViews
+            {
+                gameView.filter = nil
+            }
+            
+            gameViews = [:]
+        }
+        
+        var addedGameViews = Set<GameView>()
+        var removedGameViews = Set<GameView>()
+        
+        // Sort them in controller skin order, so that early screens can be covered by later ones.
+        let sortedGameViews = gameViews.lazy.sorted { $0.key < $1.key }.map { $0.value }
+        for gameView in sortedGameViews
+        {
+            guard !self.gameViewsByScreenID.values.contains(gameView) else { continue }
+            
+            self.contentView.insertSubview(gameView, belowSubview: self.buttonsView)
+            addedGameViews.insert(gameView)
+        }
+        
+        for gameView in previousGameViews.values
+        {
+            gameView.removeFromSuperview()
+            removedGameViews.insert(gameView)
+        }
+        
+        self.gameViewsByScreenID = gameViews
+        
+        // Use destination controllerView as Notification object, since that is what client expects.
+        let controllerView = self.receivers.lazy.compactMap { $0 as? ControllerView }.first ?? self
+        
+        NotificationCenter.default.post(name: ControllerView.controllerViewDidUpdateGameViewsNotification, object: controllerView, userInfo: [
+            ControllerView.NotificationKey.addedGameViews: addedGameViews,
+            ControllerView.NotificationKey.removedGameViews: removedGameViews
+        ])
     }
     
     func finishAnimatingUpdateControllerSkin()

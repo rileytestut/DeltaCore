@@ -702,12 +702,31 @@ private extension GameViewController
         
         let systemKeyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
         guard systemKeyboardFrame.height > 0 else { return }
-        
-        let sceneKeyboardFrame = self.view.convert(systemKeyboardFrame, from: window.screen.coordinateSpace)
-        
-        let relativeHeight = self.view.bounds.height - sceneKeyboardFrame.minY
-        self.splitViewInputViewHeight = relativeHeight
 
+        let relativeHeight: Double
+
+        if #available(iOS 16, *), let windowScene = window.windowScene, !windowScene.isStageManagerEnabled
+        {
+            // As of iOS 16 beta 4, keyboard frame is given in window coordinates when using Stage Manager.
+            relativeHeight = window.bounds.height - systemKeyboardFrame.minY
+        }
+        else
+        {
+            // Pre-iOS 16 (or when not using Stage Manager), keyboard frames are given in screen coordinates.
+            let appFrame = window.screen.coordinateSpace.convert(window.bounds, from: window.coordinateSpace)
+            relativeHeight = appFrame.maxY - systemKeyboardFrame.minY
+        }
+        
+        let isLocalKeyboard = notification.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? false
+        if #available(iOS 16, *), let scene = self.view.window?.windowScene, scene.isStageManagerEnabled, !isLocalKeyboard
+        {
+            self.splitViewInputViewHeight = 0
+        }
+        else
+        {
+            self.splitViewInputViewHeight = relativeHeight
+        }
+        
         self.updateGameViews()
         
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
@@ -729,9 +748,6 @@ private extension GameViewController
     
     @objc func keyboardWillHide(with notification: Notification)
     {
-        let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
-        guard keyboardFrame.height > 0 else { return }
-        
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
         let rawAnimationCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! Int

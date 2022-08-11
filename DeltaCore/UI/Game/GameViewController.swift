@@ -214,7 +214,10 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         UIApplication.delta_shared?.isIdleTimerDisabled = true
         
-        self.controllerView.becomeFirstResponder()
+        if self.game != nil
+        {
+            self.controllerView.becomeFirstResponder()
+        }
         
         if #available(iOS 13, *)
         {

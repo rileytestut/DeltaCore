@@ -56,16 +56,15 @@ extension TouchControllerSkin: ControllerSkinProtocol
     {
         guard
             var touchScreenItem = self.controllerSkin.items(for: traits)?.first(where: { $0.kind == .touchScreen }),
-            let screens = self.screens(for: traits), screens.count > 1
+            let screens = self.screens(for: traits), screens.count > 1,
+            let outputFrame = screens[1].outputFrame
         else { return nil }
-        
-        let screen = screens[1]
         
         // For now, we assume the touch screen is always the second screen, and that touchScreenItem should completely cover it.
         
         touchScreenItem.placement = .app
-        touchScreenItem.frame = screen.outputFrame
-        touchScreenItem.extendedFrame = screen.outputFrame
+        touchScreenItem.frame = outputFrame
+        touchScreenItem.extendedFrame = outputFrame
         return [touchScreenItem]
     }
     

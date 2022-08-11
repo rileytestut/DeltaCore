@@ -578,6 +578,9 @@ public extension ControllerView
         {
             for screen in screens where screen.placement == .controller
             {
+                // Only manage screens with explicit outputFrames.
+                guard screen.outputFrame != nil else { continue }
+                
                 let gameView = previousGameViews[screen.id] ?? GameView(frame: .zero)
                 gameView.update(for: screen)
 

@@ -67,7 +67,7 @@ private extension UIScene
         
         // Ignore false positives when switching foreground applications.
         self.keyboardFocusTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
-            guard timer.isValid else { return }
+            guard timer.isValid, self.hasKeyboardFocus else { return }
             NotificationCenter.default.post(name: UIScene.keyboardFocusDidChangeNotification, object: self)
         }
     }

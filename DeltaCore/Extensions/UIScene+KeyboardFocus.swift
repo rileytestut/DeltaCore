@@ -39,13 +39,13 @@ extension UIScene
         }
         set {
             let numberValue = newValue ? NSNumber(value: newValue) : nil
-            objc_setAssociatedObject(self, &isTrackingKeyboardFocusKey, numberValue, .OBJC_ASSOCIATION_COPY)
+            objc_setAssociatedObject(self, &isTrackingKeyboardFocusKey, numberValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
         }
     }
     
     private var keyboardFocusTimer: Timer? {
         get { objc_getAssociatedObject(self, &keyboardFocusTimerKey) as? Timer }
-        set { objc_setAssociatedObject(self, &keyboardFocusTimerKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
+        set { objc_setAssociatedObject(self, &keyboardFocusTimerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
     func startTrackingKeyboardFocus()
@@ -66,8 +66,8 @@ private extension UIScene
         guard self.activationState == .foregroundActive else { return }
         
         // Ignore false positives when switching foreground applications.
-        self.keyboardFocusTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
-            guard timer.isValid, self.hasKeyboardFocus else { return }
+        self.keyboardFocusTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] timer in
+            guard let self, timer.isValid, self.hasKeyboardFocus else { return }
             NotificationCenter.default.post(name: UIScene.keyboardFocusDidChangeNotification, object: self)
         }
     }

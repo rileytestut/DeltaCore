@@ -296,8 +296,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
              
             (controllerViewFrame, availableGameFrame) = self.view.bounds.divided(atDistance: 0, from: .maxYEdge)
             
-        case let traits? where traits.orientation == .portrait && self.controllerView.controllerSkin?.screens(for: traits) == nil:
-            // Portrait (no custom screens):
+        case let traits? where traits.orientation == .portrait && !(self.controllerView.controllerSkin?.screens(for: traits) ?? []).contains(where: { $0.placement == .controller }):
+            // Portrait (and no custom screens with `controller` placement):
             // - Controller View should be pinned to bottom of self.view and centered horizontally.
             // - Game View should be vertically centered between top of screen and controller view.
             
@@ -314,7 +314,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             }
             
         case _?:
-            // Landscape (or Portrait with custom screens):
+            // Landscape (or Portrait with custom screens using `controller` placement):
             // - Controller View should be centered vertically in view (though most of the time its height will == self.view height).
             // - Game View should be centered in self.view.
                         
@@ -353,35 +353,32 @@ open class GameViewController: UIViewController, GameControllerReceiver
             self.controllerView.setNeedsLayout()
         }
         
-        /* Game View */
-        if
-            let controllerSkin = self.controllerView.controllerSkin,
-            let traits = self.controllerView.controllerSkinTraits,
-            var screens = controllerSkin.screens(for: traits),
-            !self.controllerView.isHidden
+        /* Game Views */
+        if let traits = self.controllerView.controllerSkinTraits, let screens = self.screens(for: traits), !self.controllerView.isHidden
         {
-            if traits.displayType == .splitView
-            {
-                // When in split view, only manage game views with `app` placement.
-                screens = screens.filter { $0.placement == .app }
-            }
-            else
-            {
-                // When not in split view, manage all game views regardless of placement.
-            }
-            
             for (screen, gameView) in zip(screens, self.gameViews)
             {
                 let placementFrame = (screen.placement == .controller) ? controllerViewFrame : gameScreenFrame
                 
-                let frame = screen.outputFrame.scaled(to: placementFrame)
-                gameView.frame = frame
+                if let outputFrame = screen.outputFrame
+                {
+                    let frame = outputFrame.scaled(to: placementFrame)
+                    gameView.frame = frame
+                }
+                else
+                {
+                    // Nil outputFrame, so use gameView.outputImage's aspect ratio to determine default positioning.
+                    let aspectRatio = gameView.outputImage?.extent.size ?? screen.inputFrame?.size ?? screenAspectRatio
+                    let containerFrame = (screen.placement == .controller) ? controllerViewFrame : availableGameFrame
+
+                    let screenFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: containerFrame)
+                    gameView.frame = screenFrame
+                }
             }
         }
         else
         {
-            let gameViewFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame)
-            self.gameView.frame = gameViewFrame
+            self.gameView.frame = gameScreenFrame
         }
         
         if self.emulatorCore?.state != .running
@@ -434,22 +431,8 @@ extension GameViewController
         var previousGameViews = Array(self.gameViews.reversed())
         var gameViews = [GameView]()
         
-        if
-            let controllerSkin = self.controllerView.controllerSkin,
-            let traits = self.controllerView.controllerSkinTraits,
-            var screens = controllerSkin.screens(for: traits),
-            !self.controllerView.isHidden
+        if let traits = self.controllerView.controllerSkinTraits, let screens = self.screens(for: traits), !self.controllerView.isHidden
         {
-            if traits.displayType == .splitView
-            {
-                // When in split view, only manage game views with `app` placement.
-                screens = screens.filter { $0.placement == .app }
-            }
-            else
-            {
-                // When not in split view, manage all game views regardless of placement.
-            }
-            
             for screen in screens
             {
                 let gameView = previousGameViews.popLast() ?? GameView(frame: .zero)
@@ -597,6 +580,24 @@ private extension GameViewController
             guard self.emulatorCore?.state == .paused else { return }
             _ = self._resumeEmulation()
         }
+    }
+    
+    func screens(for traits: ControllerSkin.Traits) -> [ControllerSkin.Screen]?
+    {
+        guard let controllerSkin = self.controllerView.controllerSkin,
+              let traits = self.controllerView.controllerSkinTraits,
+              var screens = controllerSkin.screens(for: traits)
+        else { return nil }
+        
+        guard traits.displayType == .splitView else {
+            // When not in split view, manage all game views regardless of placement.
+            return screens
+        }
+        
+        // When in split view, only manage game views with `app` placement.
+        screens = screens.filter { $0.placement == .app }
+        
+        return screens
     }
 }
 

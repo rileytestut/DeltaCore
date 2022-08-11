@@ -47,7 +47,7 @@ extension ControllerSkin
         public var id: String
         
         public var inputFrame: CGRect?
-        public var outputFrame: CGRect
+        public var outputFrame: CGRect?
         
         public var filters: [CIFilter]?
         
@@ -784,11 +784,6 @@ private extension ControllerSkin
             {
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 
-                    guard
-                        let outputFrameDictionary = screenDictionary["outputFrame"] as? [String: CGFloat],
-                        var outputFrame = CGRect(dictionary: outputFrameDictionary)
-                    else { return nil }
-                    
                 let screens = zip(0..., screensArray).compactMap { (index, screenDictionary) -> Screen? in
                     let screenPlacement: Placement
                     if let rawPlacement = screenDictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
@@ -801,6 +796,12 @@ private extension ControllerSkin
                         screenPlacement = .controller
                     }
                     
+                    var outputFrame: CGRect?
+                    if let dictionary = screenDictionary["outputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
+                    {
+                        outputFrame = frame
+                    }
+                    
                     var inputFrame: CGRect?
                     if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
                     {
@@ -811,7 +812,7 @@ private extension ControllerSkin
                     {
                     case .controller:
                         // Convert outputFrame to relative values.
-                        outputFrame = outputFrame.applying(scaleTransform)
+                        outputFrame = outputFrame?.applying(scaleTransform)
                         
                     case .app:
                         // `app` placement already uses relative values.

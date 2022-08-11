@@ -368,6 +368,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
                 else
                 {
                     // Nil outputFrame, so use gameView.outputImage's aspect ratio to determine default positioning.
+                    // We check outputImage before inputFrame because we prefer to keep aspect ratio of whatever is currently being displayed.
+                    // Otherwise, screen may resize to screenAspectRatio while still displaying partial content, appearing distorted.
                     let aspectRatio = gameView.outputImage?.extent.size ?? screen.inputFrame?.size ?? screenAspectRatio
                     let containerFrame = (screen.placement == .controller) ? controllerViewFrame : availableGameFrame
 
@@ -596,6 +598,14 @@ private extension GameViewController
         
         // When in split view, only manage game views with `app` placement.
         screens = screens.filter { $0.placement == .app }
+
+        if var screen = screens.first, screen.outputFrame == nil, !self.controllerView.isFirstResponder
+        {
+            // Keyboard is not visible, so set inputFrame to nil to display entire screen.
+            // This essentially collapses all screens into a single main screen that we can manage easier.
+            screen.inputFrame = nil
+            screens = [screen]
+        }
         
         return screens
     }
@@ -697,6 +707,8 @@ private extension GameViewController
         
         let relativeHeight = self.view.bounds.height - sceneKeyboardFrame.minY
         self.splitViewInputViewHeight = relativeHeight
+
+        self.updateGameViews()
         
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
@@ -739,6 +751,8 @@ private extension GameViewController
             // Explicitly resign first responder to prevent keyboard controller automatically appearing when not frontmost app.
             self.controllerView.resignFirstResponder()
         }
+        
+        self.updateGameViews()
     }
     
     @available(iOS 13.0, *)
@@ -756,6 +770,13 @@ private extension GameViewController
         {
             // Explicitly resign first responder to prevent emulation resuming automatically when not frontmost app.
             self.controllerView.resignFirstResponder()
+        }
+        
+        if let traits = self.controllerView.controllerSkinTraits,
+           let screens = self.screens(for: traits), screens.first?.outputFrame == nil
+        {
+            // First screen is dynamic, so explicitly update game views.
+            self.updateGameViews()
         }
         
         // Must run on emulatorCoreQueue to ensure emulatorCore state is accurate.

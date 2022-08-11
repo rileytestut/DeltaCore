@@ -310,7 +310,28 @@ extension ControllerView
         // "canBecomeFirstResponder" = "should display keyboard controller view" OR "should receive hardware keyboard events"
         // In latter case, we return a nil inputView to prevent software keyboard from appearing.
         
-        let canBecomeFirstResponder = ExternalGameControllerManager.shared.isKeyboardConnected || (self.controllerSkinTraits?.displayType == .splitView && !(self.controllerSkin is TouchControllerSkin))
+        guard let controllerSkin = self.controllerSkin, let traits = self.controllerSkinTraits else { return false }
+        
+        if ExternalGameControllerManager.shared.isKeyboardConnected
+        {
+            // We should always be first responder when keyboard is connected,
+            // since we don't need to worry about the software keyboard appearing.
+            return true
+        }
+        
+        guard !(controllerSkin is TouchControllerSkin) else {
+            // Unless keyboard is connected, we never want to become first responder with
+            // TouchControllerSkin because that will make the software keyboard appear.
+            return false
+        }
+        
+        guard self.playerIndex != nil else {
+            // Only show keyboard controller if we've been assigned a playerIndex.
+            return false
+        }
+        
+        // Finally, only show keyboard controller if we're in Split View and the controller skin supports it.
+        let canBecomeFirstResponder = traits.displayType == .splitView && controllerSkin.supports(traits)
         return canBecomeFirstResponder
     }
     
@@ -329,9 +350,6 @@ extension ControllerView
         // Don't display any inputView if a hardware keyboard is attached.
         // inputView is cropped to app coodinate space (not screen) when hardware keyboard is connected.
         guard !ExternalGameControllerManager.shared.isKeyboardConnected else { return nil }
-        
-        // Don't display inputView if controllerView does not have active playerIndex.
-        guard self.playerIndex != nil else { return nil }
         
         return self.controllerInputView
     }

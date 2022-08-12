@@ -785,15 +785,10 @@ private extension ControllerSkin
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 
                 let screens = zip(0..., screensArray).compactMap { (index, screenDictionary) -> Screen? in
-                    let screenPlacement: Placement
-                    if let rawPlacement = screenDictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
+                    var inputFrame: CGRect?
+                    if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
                     {
-                        screenPlacement = placement
-                    }
-                    else
-                    {
-                        // Fall back to `controller` placement if it wasn't specified for backwards compatibility.
-                        screenPlacement = .controller
+                        inputFrame = frame
                     }
                     
                     var outputFrame: CGRect?
@@ -802,10 +797,17 @@ private extension ControllerSkin
                         outputFrame = frame
                     }
                     
-                    var inputFrame: CGRect?
-                    if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
+                    let screenPlacement: Placement
+                    if let rawPlacement = screenDictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
                     {
-                        inputFrame = frame
+                        screenPlacement = placement
+                    }
+                    else
+                    {
+                        // Fall back to `app` placement if outputFrame is nil, otherwise fall back to `controller`.
+                        // This preserves backwards compatibility for existing skins (which required non-nil outputFrame and assumed `controller` placement),
+                        // but allows newer skins to assume `app` screen placement by default (which is the preferred method going forward).
+                        screenPlacement = (outputFrame == nil) ? .app : .controller
                     }
                     
                     switch screenPlacement

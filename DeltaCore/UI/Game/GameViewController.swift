@@ -708,7 +708,14 @@ private extension GameViewController
 
         let relativeHeight: Double
 
-        if #available(iOS 16, *), let windowScene = window.windowScene, !windowScene.isStageManagerEnabled
+        if #available(iOS 16, *), systemKeyboardFrame.width == window.bounds.width && window.bounds.width != window.screen.bounds.width
+        {
+            // As of iOS 16 beta 5, keyboard frame is now *cropped* to window frame, so just use the frame height directly.
+            // We can detect this by checking whether keyboard width == window width when window width != screen width,
+            // because keyboards should (in theory) always have the same width as the screen.
+            relativeHeight = systemKeyboardFrame.height
+        }
+        else if #available(iOS 16, *), let windowScene = window.windowScene, windowScene.isStageManagerEnabled
         {
             // As of iOS 16 beta 4, keyboard frame is given in window coordinates when using Stage Manager.
             relativeHeight = window.bounds.height - systemKeyboardFrame.minY

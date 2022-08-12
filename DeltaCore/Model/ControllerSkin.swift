@@ -42,6 +42,8 @@ extension ControllerSkin
     
     public struct Screen
     {
+        public var id: String
+        
         public var inputFrame: CGRect?
         public var outputFrame: CGRect
         
@@ -50,6 +52,9 @@ extension ControllerSkin
         public var placement: Placement = .controller
     }
 }
+
+@available(iOS 13, *)
+extension ControllerSkin.Screen: Identifiable {}
 
 public struct ControllerSkin: ControllerSkinProtocol
 {
@@ -99,7 +104,7 @@ public struct ControllerSkin: ControllerSkinProtocol
             self.gameType = gameType
             self.isDebugModeEnabled = isDebugModeEnabled
             
-            let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
+            let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary, skinID: identifier)
             
             var representations = [Traits: Representation]()
             for representation in representationsSet
@@ -119,7 +124,7 @@ public struct ControllerSkin: ControllerSkinProtocol
     }
     
     // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
-    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, device: Device? = nil, displayType: DisplayType? = nil, orientation: Orientation? = nil) -> Set<Representation>
+    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, skinID: String, device: Device? = nil, displayType: DisplayType? = nil, orientation: Orientation? = nil) -> Set<Representation>
     {
         var representations = Set<Representation>()
         
@@ -129,18 +134,18 @@ public struct ControllerSkin: ControllerSkinProtocol
             {
                 guard let device = Device(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
                 
-                representations.formUnion(self.parsedRepresentations(from: dictionary, device: device))
+                representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device))
             }
             else if displayType == nil
             {
                 if let displayType = DisplayType(rawValue: key), let dictionary = dictionary as? RepresentationDictionary
                 {
-                    representations.formUnion(self.parsedRepresentations(from: dictionary, device: device, displayType: displayType))
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device, displayType: displayType))
                 }
                 else
                 {
                     // Key doesn't exist, so we continue with the same dictionary we're currently iterating, but pass in .standard for displayMode
-                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, device: device, displayType: .standard))
+                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, skinID: skinID, device: device, displayType: .standard))
                     
                     // Return early to prevent us from repeating the above step multiple times
                     return representations
@@ -155,7 +160,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                 else { continue }
                 
                 let traits = Traits(device: device, displayType: displayType, orientation: orientation)
-                if let representation = Representation(traits: traits, dictionary: dictionary)
+                if let representation = Representation(skinID: skinID, traits: traits, dictionary: dictionary)
                 {
                     representations.insert(representation)
                 }
@@ -397,6 +402,8 @@ extension ControllerSkin
             }
         }
         
+        public var id: String
+        
         public var kind: Kind
         public var inputs: Inputs
         
@@ -408,11 +415,13 @@ extension ControllerSkin
         fileprivate var thumbstickImageName: String?
         fileprivate var thumbstickSize: CGSize?
         
-        fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
+        fileprivate init?(id: String, dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
             guard
                 let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
-                else { return nil }
+            else { return nil }
+            
+            self.id = id
             
             if let inputs = dictionary["inputs"] as? [String]
             {
@@ -507,6 +516,8 @@ extension ControllerSkin
 
 extension ControllerSkin.Item: Hashable
 {
+    public typealias ID = String
+    
     public static func ==(lhs: ControllerSkin.Item, rhs: ControllerSkin.Item) -> Bool
     {
         guard
@@ -548,8 +559,17 @@ extension ControllerSkin.Item: Hashable
     }
 }
 
+@available(iOS 13, *)
+extension ControllerSkin.Item: Identifiable {}
+
 private extension ControllerSkin
 {
+    static func itemID(forSkinID skinID: String, traits: ControllerSkin.Traits, index: Int) -> String
+    {
+        let id = [skinID, traits.description, "\(index)"].joined(separator: "_")
+        return id
+    }
+    
     struct ExtendedEdges
     {
         var top: CGFloat?
@@ -709,7 +729,7 @@ private extension ControllerSkin
             return self.traits.description
         }
         
-        init?(traits: Traits, dictionary: [String: AnyObject])
+        init?(skinID: String, traits: Traits, dictionary: [String: AnyObject])
         {
             guard
                 let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
@@ -724,9 +744,10 @@ private extension ControllerSkin
             let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
             var items = [Item]()
-            for dictionary in itemsArray
+            for (index, dictionary) in zip(0..., itemsArray)
             {
-                if let item = Item(dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
+                let itemID = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: index)
+                if let item = Item(id: itemID, dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
                 {
                     items.append(item)
                 }
@@ -754,13 +775,14 @@ private extension ControllerSkin
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 let frame = gameScreenFrame.applying(scaleTransform)
                 
-                self.screens = [Screen(inputFrame: nil, outputFrame: frame)]
+                let id = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: 0)
+                self.screens = [Screen(id: id, inputFrame: nil, outputFrame: frame)]
             }
             else if let screensArray = dictionary["screens"] as? [[String: Any]]
             {
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 
-                let screens = screensArray.compactMap { (screenDictionary) -> Screen? in
+                let screens = zip(0..., screensArray).compactMap { (index, screenDictionary) -> Screen? in
                     guard
                         let outputFrameDictionary = screenDictionary["outputFrame"] as? [String: CGFloat],
                         var outputFrame = CGRect(dictionary: outputFrameDictionary)
@@ -867,7 +889,8 @@ private extension ControllerSkin
                         }
                     }
                     
-                    let screen = Screen(inputFrame: inputFrame, outputFrame: outputFrame, filters: filters, placement: screenPlacement)
+                    let id = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: index)
+                    let screen = Screen(id: id, inputFrame: inputFrame, outputFrame: outputFrame, filters: filters, placement: screenPlacement)
                     return screen
                 }
                 

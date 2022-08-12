@@ -257,7 +257,7 @@ public class ControllerView: UIView, GameController
         {
             for screen in screens where screen.placement == .controller
             {
-                guard case let normalizedFrame = screen.outputFrame, let gameView = self.gameViewsByScreenID[screen.id] else { continue }
+                guard let normalizedFrame = screen.outputFrame, let gameView = self.gameViewsByScreenID[screen.id] else { continue }
                 
                 let frame = normalizedFrame.scaled(to: self.bounds)
                 gameView.frame = frame
@@ -578,6 +578,9 @@ public extension ControllerView
         {
             for screen in screens where screen.placement == .controller
             {
+                // Only manage screens with explicit outputFrames.
+                guard screen.outputFrame != nil else { continue }
+                
                 let gameView = previousGameViews[screen.id] ?? GameView(frame: .zero)
                 gameView.update(for: screen)
 

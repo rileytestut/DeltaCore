@@ -145,6 +145,7 @@ public class ControllerView: UIView, GameController
     private var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
     
     private var _performedInitialLayout = false
+    private var _delayedUpdatingControllerSkin = false
     
     private var controllerInputView: ControllerInputView?
     
@@ -223,7 +224,13 @@ public class ControllerView: UIView, GameController
         
         super.layoutSubviews()
         
-        self._performedInitialLayout = true
+        _performedInitialLayout = true
+        
+        guard !_delayedUpdatingControllerSkin else {
+            _delayedUpdatingControllerSkin = false
+            self.updateControllerSkin()
+            return
+        }
         
         // updateControllerSkin() calls layoutSubviews(), so don't call again to avoid infinite loop.
         // self.updateControllerSkin()
@@ -397,8 +404,11 @@ public extension ControllerView
     
     func updateControllerSkin()
     {
-        guard self._performedInitialLayout else { return }
-        
+        guard _performedInitialLayout else {
+            _delayedUpdatingControllerSkin = true
+            return
+        }
+
         if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
         {
             self.controllerDebugView.isHidden = !isDebugModeEnabled
@@ -488,7 +498,7 @@ public extension ControllerView
                     }
                     else
                     {
-                        thumbstickView = ThumbstickInputView(frame: frame)
+                        thumbstickView = ThumbstickInputView(frame: .zero)
                         self.contentView.addSubview(thumbstickView)
                     }
                     
@@ -517,7 +527,7 @@ public extension ControllerView
                     }
                     else
                     {
-                        touchView = TouchInputView(frame: frame)
+                        touchView = TouchInputView(frame: .zero)
                         self.contentView.addSubview(touchView)
                     }
                     

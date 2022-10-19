@@ -41,6 +41,11 @@ public class ExternalGameControllerManager: UIResponder
     
     public var automaticallyAssignsPlayerIndexes: Bool
     
+    internal var keyboardController: KeyboardGameController? {
+        let keyboardController = self.connectedControllers.lazy.compactMap { $0 as? KeyboardGameController }.first
+        return keyboardController
+    }
+    
     private var nextAvailablePlayerIndex: Int {
         var nextPlayerIndex = -1
         
@@ -247,7 +252,7 @@ private extension ExternalGameControllerManager
 {
     @objc func keyboardDidConnect(_ notification: Notification)
     {
-        guard !self.connectedControllers.contains(where: { $0 is KeyboardGameController }) else { return }
+        guard self.keyboardController == nil else { return }
         
         let keyboardController = KeyboardGameController()
         self.add(keyboardController)
@@ -255,7 +260,7 @@ private extension ExternalGameControllerManager
     
     @objc func keyboardDidDisconnect(_ notification: Notification)
     {
-        guard let keyboardController = self.connectedControllers.first(where: { $0 is KeyboardGameController }) else { return }
+        guard let keyboardController = self.keyboardController else { return }
         
         self.remove(keyboardController)
     }

@@ -319,10 +319,9 @@ extension ControllerView
         
         guard let controllerSkin = self.controllerSkin, let traits = self.controllerSkinTraits else { return false }
         
-        if ExternalGameControllerManager.shared.isKeyboardConnected
+        if let keyboardController = ExternalGameControllerManager.shared.keyboardController, keyboardController.playerIndex != nil
         {
-            // We should always be first responder when keyboard is connected,
-            // since we don't need to worry about the software keyboard appearing.
+            // Keyboard is connected and has non-nil player index, so return true to receive keyboard presses.
             return true
         }
         
@@ -354,9 +353,11 @@ extension ControllerView
     }
     
     public override var inputView: UIView? {
-        // Don't display any inputView if a hardware keyboard is attached.
-        // inputView is cropped to app coodinate space (not screen) when hardware keyboard is connected.
-        guard !ExternalGameControllerManager.shared.isKeyboardConnected else { return nil }
+        if let keyboardController = ExternalGameControllerManager.shared.keyboardController, keyboardController.playerIndex != nil
+        {
+            // Don't display any inputView if keyboard is connected and has non-nil player index.
+            return nil
+        }
         
         return self.controllerInputView
     }

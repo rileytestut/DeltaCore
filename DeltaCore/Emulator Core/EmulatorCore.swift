@@ -354,6 +354,21 @@ extension EmulatorCore: GameControllerReceiver
             return self.mappedInput(for: mappedInput) == input
         })
         
+        if !input.isContinuous
+        {
+            // input is discrete, so ignore values less than 0.33 to avoid eagerly activating.
+            // This significantly improves using analog sticks as dpad inputs.
+            guard value > 0.33 else {
+                if !isSustainedInput
+                {
+                    // Deactivate input now that it is below threshold (unless it is sustained).
+                    self.gameController(gameController, didDeactivate: input)
+                }
+                
+                return
+            }
+        }
+        
         if isSustainedInput && !input.isContinuous
         {
             self.reactivateInputsQueue.async {

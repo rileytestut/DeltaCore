@@ -342,54 +342,72 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiver
 {
-    public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
+    public func gameController(_ gameController: GameController, didActivate controllerInput: Input, value: Double)
     {
         self.gameControllers.add(gameController)
         
-        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
+        guard let input = self.mappedInput(for: controllerInput), input.type == .game(self.gameType) else { return }
         
         // If any of game controller's sustained inputs map to input, treat input as sustained.
-        let isSustainedInput = gameController.sustainedInputs.keys.contains(where: {
-            guard let mappedInput = gameController.mappedInput(for: $0, receiver: self) else { return false }
+        let sustainedControllerInput = gameController.sustainedInputs.first { (input, value) in
+            guard let mappedInput = gameController.mappedInput(for: input, receiver: self) else { return false }
             return self.mappedInput(for: mappedInput) == input
-        })
+        }
         
-        if !input.isContinuous
+        let discreteThreshold = 0.33
+        var adjustedValue: Double? = value
+        
+        if !input.isContinuous, value < discreteThreshold
         {
             // input is discrete, so ignore values less than 0.33 to avoid eagerly activating.
             // This significantly improves using analog sticks as dpad inputs.
-            guard value > 0.33 else {
-                if !isSustainedInput
-                {
-                    // Deactivate input now that it is below threshold (unless it is sustained).
-                    self.gameController(gameController, didDeactivate: input)
-                }
-                
-                return
+            
+            if let sustainedControllerInput, sustainedControllerInput.value >= discreteThreshold
+            {
+                // Set adjustedValue to sustained value to reset.
+                adjustedValue = sustainedControllerInput.value
+            }
+            else
+            {
+                // input is not sustained, or sustained value is less than threshold,
+                // so we'll deactivate the input instead.
+                adjustedValue = nil
             }
         }
         
-        if isSustainedInput && !input.isContinuous
+        if let adjustedValue
         {
-            self.reactivateInputsQueue.async {
-                
-                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
-                
-                self.reactivateInputsDispatchGroup = DispatchGroup()
-                
-                // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
-                self.reactivateInputsDispatchGroup?.enter()
-                self.reactivateInputsDispatchGroup?.enter()
-                self.reactivateInputsDispatchGroup?.wait()
+            if let sustainedControllerInput, !sustainedControllerInput.key.isContinuous, !input.isContinuous
+            {
+                // input is sustained, but neither it nor the controller input are continuous.
+                // This means we need to temporarily deactivate the input before activating it again.
+                self.reactivateInputsQueue.async {
+                    
+                    self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
+                    
+                    self.reactivateInputsDispatchGroup = DispatchGroup()
+                    
+                    // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
+                    self.reactivateInputsDispatchGroup?.enter()
+                    self.reactivateInputsDispatchGroup?.enter()
+                    self.reactivateInputsDispatchGroup?.wait()
 
-                self.reactivateInputsDispatchGroup = nil
-                
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+                    self.reactivateInputsDispatchGroup = nil
+                    
+                    self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue)
+                }
+            }
+            else
+            {
+                // Because continuous sustainedControllerInput values are deactivated when below discreteThreshold,
+                // we don't need to manually deactivate them first since that will implicitly happen during user gesture.
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value)
+            // Treat input as deactivated if adjustedValue is nil (a.k.a. below discreteThreshold).
+            self.gameController(gameController, didDeactivate: controllerInput)
         }
     }
     

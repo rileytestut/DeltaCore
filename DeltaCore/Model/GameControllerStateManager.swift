@@ -81,8 +81,11 @@ extension GameControllerStateManager
         
         if let sustainedValue = self.sustainedInputs[AnyInput(input)]
         {
-            // Currently sustained, so reset value to sustained value.
-            self.activate(input, value: sustainedValue)
+            if input.isContinuous
+            {
+                // Input is continuous and currently sustained, so reset value to sustained value.
+                self.activate(input, value: sustainedValue)
+            }
         }
         else
         {

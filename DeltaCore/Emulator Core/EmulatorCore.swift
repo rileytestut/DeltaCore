@@ -349,8 +349,8 @@ extension EmulatorCore: GameControllerReceiver
         guard let input = self.mappedInput(for: controllerInput), input.type == .game(self.gameType) else { return }
         
         // If any of game controller's sustained inputs map to input, treat input as sustained.
-        let sustainedControllerInput = gameController.sustainedInputs.first { (input, value) in
-            guard let mappedInput = gameController.mappedInput(for: input, receiver: self) else { return false }
+        let sustainedControllerInput = gameController.sustainedInputs.first { (sustainedInput, value) in
+            guard let mappedInput = gameController.mappedInput(for: sustainedInput, receiver: self) else { return false }
             return self.mappedInput(for: mappedInput) == input
         }
         

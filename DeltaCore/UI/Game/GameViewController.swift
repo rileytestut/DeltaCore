@@ -188,6 +188,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.controllerViewDidUpdateGameViews(_:)), name: ControllerView.controllerViewDidUpdateGameViewsNotification, object: self.controllerView)
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resumeEmulationIfNeeded))
+        tapGestureRecognizer.delegate = self
         self.view.addGestureRecognizer(tapGestureRecognizer)
         
         self.prepareForGame()
@@ -581,6 +582,10 @@ private extension GameViewController
     {
         self.controllerView.becomeFirstResponder()
         
+        // Pre-check whether we should actually resume while we're still on main queue.
+        // This helps avoid potential deadlock due to calling dispatch_sync on main queue in _resumeEmulation.
+        guard self.emulatorCore?.state == .paused, self.delegate?.gameViewControllerShouldResumeEmulation(self) ?? true else { return }
+        
         self.emulatorCoreQueue.async {
             guard self.emulatorCore?.state == .paused else { return }
             _ = self._resumeEmulation()
@@ -611,6 +616,18 @@ private extension GameViewController
         }
         
         return screens
+    }
+}
+
+extension GameViewController: UIGestureRecognizerDelegate
+{
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
+    {
+        // We only need tap-to-resume when using Split View/Stage Manager to handle edge cases where emulation doesn't resume automatically.
+        // However, we'll also respond to direct taps on primary game screen just in case.
+        let location = touch.location(in: self.gameView)
+        let shouldReceiveTouch = self.controllerView.controllerSkinTraits?.displayType == .splitView || self.gameView.bounds.contains(location)
+        return shouldReceiveTouch
     }
 }
 

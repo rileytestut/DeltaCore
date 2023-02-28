@@ -15,6 +15,22 @@ public extension GameControllerInputType
 
 extension MFiGameController
 {
+    private enum ProductCategory: String
+    {
+        case mfi = "MFi"
+        
+        case joyConL = "Nintendo Switch Joy-Con (L)"
+        case joyConR = "Nintendo Switch Joy-Con (R)"
+        case joyConsCombined = "Nintendo Switch Joy-Con (L/R)"
+        
+        case switchPro = "Switch Pro Controller"
+        case switchOnlineNES = "Switch NES Controller"
+        case switchOnlineSNES = "Switch SNES Controller"
+    }
+}
+
+extension MFiGameController
+{
     public enum Input: String, Codable
     {
         case menu
@@ -44,6 +60,9 @@ extension MFiGameController
         
         case rightShoulder
         case rightTrigger
+        
+        case start
+        case select
     }
 }
 
@@ -124,11 +143,6 @@ public class MFiGameController: NSObject, GameController
         
         super.init()
         
-        self.controller.controllerPausedHandler = { [unowned self] controller in
-            self.activate(Input.menu)
-            self.deactivate(Input.menu)
-        }
-        
         let inputChangedHandler: (_ input: MFiGameController.Input, _ pressed: Bool) -> Void = { [unowned self] (input, pressed) in
             if pressed
             {
@@ -158,38 +172,122 @@ public class MFiGameController: NSObject, GameController
             }
         }
         
-        if let gamepad = self.controller.gamepad
+        let profile = self.controller.physicalInputProfile
+        profile.buttons[GCInputButtonA]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.a, pressed) }
+        profile.buttons[GCInputButtonB]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.b, pressed) }
+        profile.buttons[GCInputButtonX]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.x, pressed) }
+        profile.buttons[GCInputButtonY]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.y, pressed) }
+        
+        profile.buttons[GCInputLeftShoulder]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftShoulder, pressed) }
+        profile.buttons[GCInputLeftTrigger]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.leftTrigger, pressed) }
+        profile.buttons[GCInputRightShoulder]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightShoulder, pressed) }
+        profile.buttons[GCInputRightTrigger]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.rightTrigger, pressed) }
+        
+        // Menu = Primary menu button (Start/+/Menu)
+        let menuButton = profile.buttons[GCInputButtonMenu]
+        menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
+        
+        // Options = Secondary menu button (Select/-)
+        if let optionsButton = profile.buttons[GCInputButtonOptions]
         {
-            gamepad.buttonA.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.a, pressed) }
-            gamepad.buttonB.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.b, pressed) }
-            gamepad.buttonX.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.x, pressed) }
-            gamepad.buttonY.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.y, pressed) }
-            gamepad.leftShoulder.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.leftShoulder, pressed) }
-            gamepad.rightShoulder.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.rightShoulder, pressed) }
+            optionsButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.select, pressed) }
             
-            gamepad.dpad.up.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.up, pressed) }
-            gamepad.dpad.down.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.down, pressed) }
-            gamepad.dpad.left.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.left, pressed) }
-            gamepad.dpad.right.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.right, pressed) }
+            // .alwaysReceive == asking permission to record screen every time button is pressed as of iOS 16.3 (annoying).
+            // optionsButton.preferredSystemGestureState = .alwaysReceive
         }
         
-        if let extendedGamepad = self.controller.extendedGamepad
+        if let dPad = profile.dpads[GCInputDirectionPad]
         {
-            extendedGamepad.leftTrigger.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.leftTrigger, pressed) }
-            extendedGamepad.rightTrigger.pressedChangedHandler =  { (button, value, pressed) in inputChangedHandler(.rightTrigger, pressed) }
-            
-            extendedGamepad.leftThumbstick.xAxis.valueChangedHandler = { (axis, value) in
+            dPad.up.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.up, pressed) }
+            dPad.down.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.down, pressed) }
+            dPad.left.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.left, pressed) }
+            dPad.right.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.right, pressed) }
+        }
+
+        if let leftThumbstick = profile.dpads[GCInputLeftThumbstick]
+        {
+            leftThumbstick.xAxis.valueChangedHandler = { (axis, value) in
                 thumbstickChangedHandler(.leftThumbstickLeft, .leftThumbstickRight, value)
             }
-            extendedGamepad.leftThumbstick.yAxis.valueChangedHandler = { (axis, value) in
+            leftThumbstick.yAxis.valueChangedHandler = { (axis, value) in
                 thumbstickChangedHandler(.leftThumbstickDown, .leftThumbstickUp, value)
             }
-            extendedGamepad.rightThumbstick.xAxis.valueChangedHandler = { (axis, value) in
+        }
+        
+        if let rightThumbstick = profile.dpads[GCInputRightThumbstick]
+        {
+            rightThumbstick.xAxis.valueChangedHandler = { (axis, value) in
                 thumbstickChangedHandler(.rightThumbstickLeft, .rightThumbstickRight, value)
             }
-            extendedGamepad.rightThumbstick.yAxis.valueChangedHandler = { (axis, value) in
+            rightThumbstick.yAxis.valueChangedHandler = { (axis, value) in
                 thumbstickChangedHandler(.rightThumbstickDown, .rightThumbstickUp, value)
             }
+        }
+        
+        let productCategory = ProductCategory(rawValue: self.controller.productCategory)
+        switch productCategory
+        {
+        case .mfi:
+            // MFi controllers typically only have one Menu button, so no need to re-map it.
+            // menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
+            break
+            
+        case .joyConL, .joyConR:
+            // Rotate single Joy-Con inputs 90º
+            profile.buttons[GCInputButtonA]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.b, pressed) }
+            profile.buttons[GCInputButtonB]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.y, pressed) }
+            profile.buttons[GCInputButtonX]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.a, pressed) }
+            profile.buttons[GCInputButtonY]?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.x, pressed) }
+            
+            // For some reason, iOS treats the analog stick as a digital dPad input (as of iOS 16.3).
+            // Re-map to .leftThumbstick instead to work as expected with N64 games.
+            guard let dPad = profile.dpads[GCInputDirectionPad] else { break }
+            dPad.xAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.leftThumbstickLeft, .leftThumbstickRight, value)
+            }
+            dPad.yAxis.valueChangedHandler = { (axis, value) in
+                thumbstickChangedHandler(.leftThumbstickDown, .leftThumbstickUp, value)
+            }
+            
+            // Remove existing dPad change handlers to avoid duplicate inputs.
+            dPad.up.pressedChangedHandler = nil
+            dPad.down.pressedChangedHandler = nil
+            dPad.left.pressedChangedHandler = nil
+            dPad.right.pressedChangedHandler = nil
+            
+        case .switchOnlineNES, .switchOnlineSNES:
+            guard var defaultMapping = self.defaultInputMapping as? GameControllerInputMapping else { break }
+            
+            // Re-map ZL and ZR buttons to Menu so we can treat Start as regular input.
+            if productCategory == .switchOnlineNES
+            {
+                defaultMapping.set(StandardGameControllerInput.menu, forControllerInput: Input.leftShoulder)
+                defaultMapping.set(StandardGameControllerInput.menu, forControllerInput: Input.rightShoulder)
+            }
+            else
+            {
+                defaultMapping.set(StandardGameControllerInput.menu, forControllerInput: Input.leftTrigger)
+                defaultMapping.set(StandardGameControllerInput.menu, forControllerInput: Input.rightTrigger)
+            }
+            
+            self.defaultInputMapping = defaultMapping
+            
+            // Re-map Start button to...Start
+            menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.start, pressed) }
+                        
+        default:
+            // Home = Home/"Logo" button
+            guard let homeButton = profile.buttons[GCInputButtonHome] else { break }
+            
+            // If controller has Home button, and isn't MFi controller, treat it as Menu button instead.
+            // e.g. Switch Pro, PlayStation, and Xbox controllers
+            homeButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
+            
+            // Disable "Show Game Center" gesture
+            homeButton.preferredSystemGestureState = .disabled
+            
+            // Re-map Menu button to Start
+            menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.start, pressed) }
         }
     }
 }

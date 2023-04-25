@@ -395,12 +395,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
             self.gameView.frame = gameScreenFrame
         }
         
-        if self.emulatorCore?.state != .running
+        if let emulatorCore = self.emulatorCore, emulatorCore.state != .running
         {
             // WORKAROUND
             // Sometimes, iOS will cache the rendered image (such as when covered by a UIVisualEffectView), and as a result the game view might appear skewed
             // To compensate, we manually "refresh" the game screen
-            self.gameView.inputImage = self.gameView.outputImage
+            emulatorCore.videoManager.render()
         }
         
         self.setNeedsUpdateOfHomeIndicatorAutoHidden()
@@ -409,7 +409,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // MARK: - KVO -
     /// KVO
     open dynamic override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)
-    {        
+    {
         guard context == &kvoContext else { return super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context) }
 
         // Ensures the value is actually different, or else we might potentially run into an infinite loop if subclasses hide/show controllerView in viewDidLayoutSubviews()

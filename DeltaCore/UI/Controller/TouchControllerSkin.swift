@@ -26,6 +26,7 @@ public struct TouchControllerSkin
     public var isDebugModeEnabled: Bool { false }
     
     public var screenLayoutAxis: LayoutAxis = .vertical
+    public var screenPredicate: ((ControllerSkin.Screen) -> Bool)?
     
     private let controllerSkin: ControllerSkin
     
@@ -56,12 +57,11 @@ extension TouchControllerSkin: ControllerSkinProtocol
     {
         guard
             var touchScreenItem = self.controllerSkin.items(for: traits)?.first(where: { $0.kind == .touchScreen }),
-            let screens = self.screens(for: traits), screens.count > 1,
-            let outputFrame = screens[1].outputFrame
+            let screens = self.screens(for: traits), let touchScreen = screens.first(where: { $0.isTouchScreen }),
+            let outputFrame = touchScreen.outputFrame
         else { return nil }
         
-        // For now, we assume the touch screen is always the second screen, and that touchScreenItem should completely cover it.
-        
+        // For now, we assume touchScreenItem completely covers the touch screen.
         touchScreenItem.placement = .app
         touchScreenItem.frame = outputFrame
         touchScreenItem.extendedFrame = outputFrame
@@ -75,24 +75,27 @@ extension TouchControllerSkin: ControllerSkinProtocol
 
     public func screens(for traits: ControllerSkin.Traits) -> [ControllerSkin.Screen]?
     {
-        let screensCount = CGFloat(self.controllerSkin.screens(for: traits)?.count ?? 0)
+        guard let screens = self.controllerSkin.screens(for: traits) else { return nil }
         
-        let screens = self.controllerSkin.screens(for: traits)?.enumerated().map { (index, screen) -> ControllerSkin.Screen in
-            let length = 1.0 / screensCount
+        // Filter screens first so we can use filteredScreens.count in calculations.
+        let filteredScreens = screens.filter(self.screenPredicate ?? { _ in true })
+                
+        let updatedScreens = filteredScreens.enumerated().map { (index, screen) -> ControllerSkin.Screen in
+            let length = 1.0 / CGFloat(filteredScreens.count)
             
             var screen = screen
             screen.placement = .app
             
             switch self.screenLayoutAxis
             {
-            case .horizontal: screen.outputFrame = CGRect(x: length * CGFloat(index), y: 0, width: 0.5, height: 1.0)
-            case .vertical: screen.outputFrame = CGRect(x: 0, y: length * CGFloat(index), width: 1.0, height: 0.5)
+            case .horizontal: screen.outputFrame = CGRect(x: length * CGFloat(index), y: 0, width: length, height: 1.0)
+            case .vertical: screen.outputFrame = CGRect(x: 0, y: length * CGFloat(index), width: 1.0, height: length)
             }
             
             return screen
         }
         
-        return screens
+        return updatedScreens
     }
     
     public func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?

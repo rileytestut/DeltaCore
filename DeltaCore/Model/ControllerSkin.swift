@@ -136,9 +136,22 @@ public struct ControllerSkin: ControllerSkinProtocol
         {
             if device == nil
             {
-                guard let device = Device(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
+                guard let device = Device(rawValue: key) else { continue }
                 
-                representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device))
+                switch device
+                {
+                case .iphone, .ipad:
+                    guard let dictionary = dictionary as? RepresentationDictionary else { continue }
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device))
+                    
+                case .tv:
+                    //TODO: Support .portrait orientation for TV skins.
+                    let traits = Traits(device: device, displayType: .standard, orientation: .landscape)
+                    if let representation = Representation(skinID: skinID, traits: traits, dictionary: dictionary)
+                    {
+                        representations.insert(representation)
+                    }
+                }
             }
             else if displayType == nil
             {
@@ -689,6 +702,8 @@ private extension ControllerSkin
             case (.ipad, _, .medium): targetSize = CGSize(width: 834, height: 1112)
             case (.ipad, _, .large): targetSize = CGSize(width: 1024, height: 1366)
                 
+            case (.tv, _, _): targetSize = CGSize(width: 1080, height: 1920)
+                
             case (_, _, .resizable): return nil
             }
             
@@ -718,6 +733,10 @@ private extension ControllerSkin
             case (.ipad, .edgeToEdge, _): return nil
             case (.ipad, .splitView, _): return 2.0
                 
+            case (.tv, _, .small): return 1.0
+            case (.tv, _, .medium): return 2.0
+            case (.tv, _, .large): return 2.0
+                
             case (_, _, .resizable): return nil
             }
         }
@@ -741,15 +760,28 @@ private extension ControllerSkin
         
         init?(skinID: String, traits: Traits, dictionary: [String: AnyObject])
         {
-            guard
-                let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
-                let itemsArray = dictionary["items"] as? [[String: AnyObject]],
-                let assetsDictionary = dictionary["assets"] as? [String: String]
-            else { return nil }
-            
-            self.aspectRatio = mappingSize
+            let mappingSize: CGSize
+            if let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let size = CGSize(dictionary: mappingSizeDictionary)
+            {
+                mappingSize = size
+            }
+            else if traits.device == .tv
+            {
+                // mappingSize is optional for TV skins, so assume 1920x1080 if not provided.
+                mappingSize = CGSize(width: 1920, height: 1080)
+            }
+            else
+            {
+                // Non-TV skins must include mappingSize.
+                return nil
+            }
             
             self.traits = traits
+            self.aspectRatio = mappingSize
+            
+            // Controller skins with no items or assets are now supported.
+            let itemsArray = dictionary["items"] as? [[String: AnyObject]] ?? []
+            let assetsDictionary = dictionary["assets"] as? [String: String] ?? [:]
             
             let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
@@ -774,7 +806,8 @@ private extension ControllerSkin
             }
             self.assets = assets
             
-            guard self.assets.count > 0 else { return nil }
+            // Controller skins with no assets are now supported.
+            // guard self.assets.count > 0 else { return nil }
             
             self.isTranslucent = dictionary["translucent"] as? Bool ?? false
             

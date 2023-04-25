@@ -15,6 +15,7 @@ extension ControllerSkin
         // Naming conventions? I treat the "P" as the capital letter, so since it's a value (not a type) I've opted to lowercase it
         case iphone
         case ipad
+        case tv
     }
 
     public enum DisplayType: String
@@ -61,31 +62,41 @@ extension ControllerSkin
             let displayType: DisplayType
             let orientation: Orientation
             
-            // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
-            // 99% of the time, won't make a difference ¯\_(ツ)_/¯
-            if window.traitCollection.userInterfaceIdiom == .pad
+            if let scene = window.windowScene, scene.session.role == .windowExternalDisplay
             {
-                device = .ipad
-                
-                if !window.bounds.equalTo(window.screen.bounds)
-                {
-                    displayType = .splitView
-                    
-                    // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
-                    orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
-                }
-                else
-                {
-                    displayType = .standard
-                    orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
-                }
+                //TODO: Support .portrait TV skins
+                device = .tv
+                displayType = .standard
+                orientation = .landscape
             }
             else
             {
-                device = .iphone
-                displayType = (window.safeAreaInsets.bottom != 0) ? .edgeToEdge : .standard
-                orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
-            }
+                // Use trait collection to determine device because our container app may be containing us in an "iPhone" trait collection despite being on iPad
+                // 99% of the time, won't make a difference ¯\_(ツ)_/¯
+                if window.traitCollection.userInterfaceIdiom == .pad
+                {
+                    device = .ipad
+                    
+                    if !window.bounds.equalTo(window.screen.bounds)
+                    {
+                        displayType = .splitView
+                        
+                        // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
+                        orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
+                    }
+                    else
+                    {
+                        displayType = .standard
+                        orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                    }
+                }
+                else
+                {
+                    device = .iphone
+                    displayType = (window.safeAreaInsets.bottom != 0) ? .edgeToEdge : .standard
+                    orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                }
+            }            
             
             let traits = ControllerSkin.Traits(device: device, displayType: displayType, orientation: orientation)
             return traits

@@ -10,7 +10,7 @@ import UIKit
 
 extension ControllerSkin
 {
-    public enum Device: String
+    public enum Device: String, CaseIterable
     {
         // Naming conventions? I treat the "P" as the capital letter, so since it's a value (not a type) I've opted to lowercase it
         case iphone
@@ -18,14 +18,14 @@ extension ControllerSkin
         case tv
     }
 
-    public enum DisplayType: String
+    public enum DisplayType: String, CaseIterable
     {
         case standard
         case edgeToEdge
         case splitView
     }
 
-    public enum Orientation: String
+    public enum Orientation: String, CaseIterable
     {
         case portrait
         case landscape

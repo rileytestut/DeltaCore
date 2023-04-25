@@ -322,6 +322,12 @@ public extension ControllerSkin
         guard let representation = self.representation(for: traits) else { return nil }
         return representation.aspectRatio
     }
+    
+    func contentSize(for traits: ControllerSkin.Traits) -> CGSize?
+    {
+        //TODO: Support `contentSize` for JSON controller skins.
+        return nil
+    }
 }
 
 private extension ControllerSkin

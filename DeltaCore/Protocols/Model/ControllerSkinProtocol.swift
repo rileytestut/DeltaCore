@@ -28,6 +28,7 @@ public protocol ControllerSkinProtocol
     func screens(for traits: ControllerSkin.Traits) -> [ControllerSkin.Screen]?
     
     func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
+    func contentSize(for traits: ControllerSkin.Traits) -> CGSize?
     
     func supportedTraits(for traits: ControllerSkin.Traits) -> ControllerSkin.Traits?
 }

@@ -278,8 +278,6 @@ open class GameViewController: UIViewController, GameControllerReceiver
     {
         super.viewDidLayoutSubviews()
         
-        var screenAspectRatio = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
-        
         let controllerViewFrame: CGRect
         let availableGameFrame: CGRect
         
@@ -339,21 +337,28 @@ open class GameViewController: UIViewController, GameControllerReceiver
         
         self.controllerView.frame = controllerViewFrame
         
+        let gameScreenDimensions = self.emulatorCore?.preferredRenderingSize ?? CGSize(width: 1, height: 1)
+        let contentAspectRatio: CGSize
+        
         if let traits = self.controllerView.controllerSkinTraits,
-           let controllerSkin = self.controllerView.controllerSkin as? TouchControllerSkin, controllerSkin.screenLayoutAxis == .horizontal,
-           let screens = controllerSkin.screens(for: traits), screens.count > 1
+           let controllerSkin = self.controllerView.controllerSkin,
+           let aspectRatio = controllerSkin.contentSize(for: traits)
         {
-            // Switch aspect ratio to be horizontal for side-by-side screens with TouchControllerSkin.
-            screenAspectRatio = CGSize(width: screenAspectRatio.width * Double(screens.count), height: screenAspectRatio.height / Double(screens.count))
+            contentAspectRatio = aspectRatio
+        }
+        else
+        {
+            // Fall back to `gameScreenDimensions` if controller skin does not define `contentSize`.
+            contentAspectRatio = gameScreenDimensions
         }
         
-        let gameScreenFrame = AVMakeRect(aspectRatio: screenAspectRatio, insideRect: availableGameFrame).rounded()
-        if self.appPlacementLayoutGuide.layoutFrame.rounded() != gameScreenFrame
+        let appPlacementFrame = AVMakeRect(aspectRatio: contentAspectRatio, insideRect: self.view.bounds).rounded()
+        if self.appPlacementLayoutGuide.layoutFrame.rounded() != appPlacementFrame
         {
-            self.appPlacementXConstraint.constant = gameScreenFrame.minX
-            self.appPlacementYConstraint.constant = gameScreenFrame.minY
-            self.appPlacementWidthConstraint.constant = gameScreenFrame.width
-            self.appPlacementHeightConstraint.constant = gameScreenFrame.height
+            self.appPlacementXConstraint.constant = appPlacementFrame.minX
+            self.appPlacementYConstraint.constant = appPlacementFrame.minY
+            self.appPlacementWidthConstraint.constant = appPlacementFrame.width
+            self.appPlacementHeightConstraint.constant = appPlacementFrame.height
             
             // controllerView needs to reposition any items with `app` placement.
             self.controllerView.setNeedsLayout()
@@ -364,7 +369,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         {
             for (screen, gameView) in zip(screens, self.gameViews)
             {
-                let placementFrame = (screen.placement == .controller) ? controllerViewFrame : gameScreenFrame
+                let placementFrame = (screen.placement == .controller) ? controllerViewFrame : appPlacementFrame
                 
                 if let outputFrame = screen.outputFrame
                 {
@@ -376,7 +381,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
                     // Nil outputFrame, so use gameView.outputImage's aspect ratio to determine default positioning.
                     // We check outputImage before inputFrame because we prefer to keep aspect ratio of whatever is currently being displayed.
                     // Otherwise, screen may resize to screenAspectRatio while still displaying partial content, appearing distorted.
-                    let aspectRatio = gameView.outputImage?.extent.size ?? screen.inputFrame?.size ?? screenAspectRatio
+                    let aspectRatio = gameView.outputImage?.extent.size ?? screen.inputFrame?.size ?? gameScreenDimensions
                     let containerFrame = (screen.placement == .controller) ? controllerViewFrame : availableGameFrame
 
                     let screenFrame = AVMakeRect(aspectRatio: aspectRatio, insideRect: containerFrame)
@@ -386,6 +391,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         }
         else
         {
+            let gameScreenFrame = AVMakeRect(aspectRatio: gameScreenDimensions, insideRect: availableGameFrame)
             self.gameView.frame = gameScreenFrame
         }
         

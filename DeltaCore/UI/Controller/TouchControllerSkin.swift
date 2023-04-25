@@ -28,9 +28,9 @@ public struct TouchControllerSkin
     public var screenLayoutAxis: LayoutAxis = .vertical
     public var screenPredicate: ((ControllerSkin.Screen) -> Bool)?
     
-    private let controllerSkin: ControllerSkin
+    private let controllerSkin: ControllerSkinProtocol
     
-    public init(controllerSkin: ControllerSkin)
+    public init(controllerSkin: ControllerSkinProtocol)
     {
         self.controllerSkin = controllerSkin
     }

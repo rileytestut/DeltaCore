@@ -41,7 +41,11 @@ public final class EmulatorCore: NSObject
     //MARK: - Properties -
     /** Properties **/
     public let game: GameProtocol
-    public private(set) var gameViews: [GameView] = []
+    
+    public var gameViews: Set<GameView> {
+        return _gameViews.setRepresentation as! Set<GameView>
+    }
+    private let _gameViews: NSHashTable = NSHashTable<GameView>.weakObjects()
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     public var saveHandler: ((EmulatorCore) -> Void)?
@@ -238,18 +242,15 @@ public extension EmulatorCore
 {
     func add(_ gameView: GameView)
     {
-        self.gameViews.append(gameView)
+        guard !self.gameViews.contains(gameView) else { return }
         
+        self._gameViews.add(gameView)
         self.videoManager.add(gameView)
     }
     
     func remove(_ gameView: GameView)
     {
-        if let index = self.gameViews.firstIndex(of: gameView)
-        {
-            self.gameViews.remove(at: index)
-        }
-        
+        self._gameViews.remove(gameView)
         self.videoManager.remove(gameView)
     }
 }

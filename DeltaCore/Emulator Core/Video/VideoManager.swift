@@ -47,7 +47,10 @@ public class VideoManager: NSObject, VideoRendering
         }
     }
     
-    public private(set) var gameViews = [GameView]()
+    public var gameViews: Set<GameView> {
+        return _gameViews.setRepresentation as! Set<GameView>
+    }
+    private let _gameViews: NSHashTable = NSHashTable<GameView>.weakObjects()
     
     public var isEnabled = true
     
@@ -104,16 +107,15 @@ public extension VideoManager
 {
     func add(_ gameView: GameView)
     {
+        guard !self.gameViews.contains(gameView) else { return }
+        
         gameView.eaglContext = self.context
-        self.gameViews.append(gameView)
+        self._gameViews.add(gameView)
     }
     
     func remove(_ gameView: GameView)
     {
-        if let index = self.gameViews.firstIndex(of: gameView)
-        {
-            self.gameViews.remove(at: index)
-        }
+        self._gameViews.remove(gameView)
     }
 }
 

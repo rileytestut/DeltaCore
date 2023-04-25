@@ -11,7 +11,7 @@ import AVFoundation
 
 extension TouchControllerSkin
 {
-    public enum LayoutAxis
+    public enum LayoutAxis: String, CaseIterable
     {
         case vertical
         case horizontal

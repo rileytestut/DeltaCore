@@ -729,9 +729,7 @@ private extension ControllerSkin
             case (.iphone, .edgeToEdge, _): return 3.0
             case (.iphone, .splitView, _): return nil
                 
-            case (.ipad, .standard, _): return 2.0
-            case (.ipad, .edgeToEdge, _): return nil
-            case (.ipad, .splitView, _): return 2.0
+            case (.ipad, _, _): return 2.0
                 
             case (.tv, _, .small): return 1.0
             case (.tv, _, .medium): return 2.0

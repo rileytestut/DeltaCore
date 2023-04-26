@@ -35,6 +35,8 @@ public enum SamplerMode
 
 public class GameView: UIView
 {
+    public var isEnabled: Bool = true
+    
     @NSCopying public var inputImage: CIImage? {
         didSet {
             if self.inputImage?.extent != oldValue?.extent
@@ -217,7 +219,7 @@ private extension GameView
     func update()
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
-        guard self.outputImage != nil else { return }
+        guard self.isEnabled && self.outputImage != nil else { return }
         
         os_unfair_lock_lock(&self.lock)
         defer { os_unfair_lock_unlock(&self.lock) }

@@ -665,7 +665,14 @@ public extension ControllerView
             self.transitionSnapshotView = nil
         }
         
-        self.contentView.alpha = 1.0
+        if let traits = self.controllerSkinTraits, let isTranslucent = self.controllerSkin?.isTranslucent(for: traits), isTranslucent
+        {
+            self.contentView.alpha = self.translucentControllerSkinOpacity
+        }
+        else
+        {
+            self.contentView.alpha = 1.0
+        }
     }
 }
 

@@ -254,6 +254,15 @@ public class ControllerView: UIView, GameController
                 guard let thumbstickView = self.thumbstickViews[item.id] else { continue }
                 thumbstickView.frame = frame
                 
+                if thumbstickView.thumbstickSize == nil, let (image, size) = controllerSkin.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                {
+                    // Update thumbstick in first layoutSubviews() post-updateControllerSkin() to ensure correct size.
+                    
+                    let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
+                    thumbstickView.thumbstickImage = image
+                    thumbstickView.thumbstickSize = size
+                }
+                
             case .touchScreen:
                 guard let touchView = self.touchViews[item.id] else { continue }
                 touchView.frame = frame
@@ -507,12 +516,8 @@ public extension ControllerView
                         self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
                     }
                     
-                    if let (image, size) = self.controllerSkin?.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
-                    {
-                        let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
-                        thumbstickView.thumbstickImage = image
-                        thumbstickView.thumbstickSize = size
-                    }
+                    // Calculate correct `thumbstickSize` in layoutSubviews().
+                    thumbstickView.thumbstickSize = nil
                     
                     thumbstickView.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled
                     

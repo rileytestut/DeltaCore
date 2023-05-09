@@ -12,7 +12,8 @@ let package = Package(
         .library(name: "DeltaCore", targets: ["DeltaCore", "CDeltaCore"]),
     ],
     dependencies: [
-        .package(name: "ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation.git", .upToNextMinor(from: "0.9.11"))
+        .package(name: "ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation.git", .upToNextMinor(from: "0.9.11")),
+        .package(name:"SteamController", url:"https://github.com/zydeco/SteamController", .branch("master"))
     ],
     targets: [
         .target(

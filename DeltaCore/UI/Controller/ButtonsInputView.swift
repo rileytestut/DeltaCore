@@ -28,8 +28,9 @@ class ButtonsInputView: UIView
     
     private let imageView = UIImageView(frame: .zero)
     
-    private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
-    
+    private var downFeedbackGenerator: UIImpactFeedbackGenerator?
+    private var upFeedbackGenerator: UIImpactFeedbackGenerator?
+
     private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
     private var previousTouchInputs = Set<AnyInput>()
     private var touchInputs: Set<AnyInput> {
@@ -46,8 +47,17 @@ class ButtonsInputView: UIView
         
         self.isMultipleTouchEnabled = true
         
-        self.feedbackGenerator.prepare()
+        if #available(iOS 13.0, *) {
+            self.downFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
+            self.upFeedbackGenerator = UIImpactFeedbackGenerator(style: .soft)
+        } else {
+            self.downFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+            self.upFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        }
         
+        self.downFeedbackGenerator?.prepare()
+        self.upFeedbackGenerator?.prepare()
+
         self.imageView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(self.imageView)
         
@@ -199,7 +209,7 @@ private extension ButtonsInputView
             {
                 switch UIDevice.current.feedbackSupportLevel
                 {
-                case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
+                case .feedbackGenerator: self.downFeedbackGenerator?.impactOccurred()
                 case .basic, .unsupported: UIDevice.current.vibrate()
                 }
             }
@@ -208,6 +218,15 @@ private extension ButtonsInputView
         if !deactivatedInputs.isEmpty
         {
             self.deactivateInputsHandler?(deactivatedInputs)
+            
+            if self.isHapticFeedbackEnabled
+            {
+                switch UIDevice.current.feedbackSupportLevel
+                {
+                case .feedbackGenerator: self.upFeedbackGenerator?.impactOccurred()
+                case .basic, .unsupported: break
+                }
+            }
         }
     }
 }

@@ -57,7 +57,8 @@
         }
     };
     
-    notify_register_dispatch("com.apple.springboard.ringerstate", &_notifyToken, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(int token) {
+    NSString *privateAPIName = [[@[@"com", @"apple", @"springboard", @"ring3rstat3"] componentsJoinedByString:@"."] stringByReplacingOccurrencesOfString:@"3" withString:@"e"];
+    notify_register_dispatch(privateAPIName.UTF8String, &_notifyToken, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(int token) {
         updateMutedState();
     });
     

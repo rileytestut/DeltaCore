@@ -344,7 +344,8 @@ extension EmulatorCore: GameControllerReceiver
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        let playerIndex = gameController.playerIndex ?? 0
+        // Ignore controllers without assigned playerIndex.
+        guard let playerIndex = gameController.playerIndex else { return }
         
         // If any of game controller's sustained inputs map to input, treat input as sustained.
         let isSustainedInput = gameController.sustainedInputs.keys.contains(where: {

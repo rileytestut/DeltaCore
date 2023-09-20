@@ -17,6 +17,12 @@ class OpenGLESProcessor: VideoProcessor
         }
     }
     
+    var viewport: CGRect = .zero {
+        didSet {
+            self.resizeVideoBuffers()
+        }
+    }
+    
     private let context: EAGLContext
     
     private var framebuffer: GLuint = 0
@@ -124,7 +130,13 @@ extension OpenGLESProcessor
     {
         glFlush()
         
-        let image = CIImage(texture: self.texture, size: self.videoFormat.dimensions, flipped: false, colorSpace: nil)
+        var image = CIImage(texture: self.texture, size: self.videoFormat.dimensions, flipped: false, colorSpace: nil)
+        
+        if let viewport = self.correctedViewport
+        {
+            image = image.cropped(to: viewport)
+        }
+        
         return image
     }
 }
@@ -144,6 +156,12 @@ private extension OpenGLESProcessor
         glBindRenderbuffer(GLenum(GL_RENDERBUFFER), self.renderbuffer)
         glRenderbufferStorage(GLenum(GL_RENDERBUFFER), GLenum(GL_DEPTH_COMPONENT16), GLsizei(self.videoFormat.dimensions.width), GLsizei(self.videoFormat.dimensions.height))
         
-        glViewport(0, 0, GLsizei(self.videoFormat.dimensions.width), GLsizei(self.videoFormat.dimensions.height))
+        var viewport = CGRect(origin: .zero, size: self.videoFormat.dimensions)
+        if let correctedViewport = self.correctedViewport
+        {
+            viewport = correctedViewport
+        }
+        
+        glViewport(GLsizei(viewport.minX), GLsizei(viewport.minY), GLsizei(viewport.width), GLsizei(viewport.height))
     }
 }

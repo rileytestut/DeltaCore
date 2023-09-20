@@ -12,6 +12,8 @@ class ControllerInputView: UIInputView
 {
     let controllerView: ControllerView
     
+    private var previousBounds: CGRect?
+    
     private var aspectRatioConstraint: NSLayoutConstraint? {
         didSet {
             oldValue?.isActive = false
@@ -46,7 +48,14 @@ class ControllerInputView: UIInputView
             let controllerSkin = self.controllerView.controllerSkin,
             let traits = self.controllerView.controllerSkinTraits,
             let aspectRatio = controllerSkin.aspectRatio(for: traits)
-            else { return }
+        else { return }
+        
+        if self.bounds != self.previousBounds
+        {
+            self.controllerView.updateControllerSkin()
+        }
+        
+        self.previousBounds = self.bounds
         
         let multiplier = aspectRatio.height / aspectRatio.width
         guard self.aspectRatioConstraint?.multiplier != multiplier else { return }

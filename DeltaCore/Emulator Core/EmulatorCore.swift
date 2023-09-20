@@ -41,13 +41,17 @@ public final class EmulatorCore: NSObject
     //MARK: - Properties -
     /** Properties **/
     public let game: GameProtocol
-    public private(set) var gameViews: [GameView] = []
+    
+    public var gameViews: Set<GameView> {
+        return _gameViews.setRepresentation as! Set<GameView>
+    }
+    private let _gameViews: NSHashTable = NSHashTable<GameView>.weakObjects()
     
     public var updateHandler: ((EmulatorCore) -> Void)?
     public var saveHandler: ((EmulatorCore) -> Void)?
     
-    public private(set) lazy var audioManager: AudioManager = AudioManager(audioFormat: self.deltaCore.audioFormat)
-    public private(set) lazy var videoManager: VideoManager = VideoManager(videoFormat: self.deltaCore.videoFormat)
+    public let audioManager: AudioManager
+    public let videoManager: VideoManager
     
     // KVO-Compliant
     @objc public private(set) dynamic var state = State.stopped
@@ -102,6 +106,11 @@ public final class EmulatorCore: NSObject
         self.gameType = self.game.type
         self.gameSaveURL = self.game.gameSaveURL
         
+        // These were previously lazy variables, but turns out Swift lazy variables are not thread-safe.
+        // Since they don't actually need to be lazy, we now explicitly initialize them in the initializer.
+        self.audioManager = AudioManager(audioFormat: deltaCore.audioFormat)
+        self.videoManager = VideoManager(videoFormat: deltaCore.videoFormat)
+        
         super.init()
         
         NotificationCenter.default.addObserver(self, selector: #selector(EmulatorCore.emulationDidQuit), name: EmulatorCore.emulationDidQuitNotification, object: nil)
@@ -127,6 +136,7 @@ public extension EmulatorCore
             self.save()
         }
         
+        self.audioManager.start()
         self.deltaCore.emulatorBridge.start(withGameURL: self.game.fileURL)
         
         let videoFormat = self.deltaCore.videoFormat
@@ -136,8 +146,6 @@ public extension EmulatorCore
         }
         
         self.deltaCore.emulatorBridge.loadGameSave(from: self.gameSaveURL)
-        
-        self.audioManager.start()
         
         self.runGameLoop()
         self.waitForFrameUpdate()
@@ -234,18 +242,15 @@ public extension EmulatorCore
 {
     func add(_ gameView: GameView)
     {
-        self.gameViews.append(gameView)
+        guard !self.gameViews.contains(gameView) else { return }
         
+        self._gameViews.add(gameView)
         self.videoManager.add(gameView)
     }
     
     func remove(_ gameView: GameView)
     {
-        if let index = self.gameViews.firstIndex(of: gameView)
-        {
-            self.gameViews.remove(at: index)
-        }
-        
+        self._gameViews.remove(gameView)
         self.videoManager.remove(gameView)
     }
 }
@@ -338,51 +343,84 @@ public extension EmulatorCore
 
 extension EmulatorCore: GameControllerReceiver
 {
-    public func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
+    public func gameController(_ gameController: GameController, didActivate controllerInput: Input, value: Double)
     {
-        self.gameControllers.add(gameController)
-        
-        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
-        
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
         
-        // If any of game controller's sustained inputs map to input, treat input as sustained.
-        let isSustainedInput = gameController.sustainedInputs.keys.contains(where: {
-            guard let mappedInput = gameController.mappedInput(for: $0, receiver: self) else { return false }
-            return self.mappedInput(for: mappedInput) == input
-        })
+        self.gameControllers.add(gameController)
         
-        if isSustainedInput && !input.isContinuous
+        guard let input = self.mappedInput(for: controllerInput), input.type == .game(self.gameType) else { return }
+        
+        // If any of game controller's sustained inputs map to input, treat input as sustained.
+        let sustainedControllerInput = gameController.sustainedInputs.first { (sustainedInput, value) in
+            guard let mappedInput = gameController.mappedInput(for: sustainedInput, receiver: self) else { return false }
+            return self.mappedInput(for: mappedInput) == input
+        }
+        
+        let discreteThreshold = 0.33
+        var adjustedValue: Double? = value
+        
+        if !input.isContinuous, value < discreteThreshold
         {
-            self.reactivateInputsQueue.async {
-                
-                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
-                
-                self.reactivateInputsDispatchGroup = DispatchGroup()
-                
-                // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
-                self.reactivateInputsDispatchGroup?.enter()
-                self.reactivateInputsDispatchGroup?.enter()
-                self.reactivateInputsDispatchGroup?.wait()
+            // input is discrete, so ignore values less than 0.33 to avoid eagerly activating.
+            // This significantly improves using analog sticks as dpad inputs.
+            
+            if let sustainedControllerInput, sustainedControllerInput.value >= discreteThreshold
+            {
+                // Set adjustedValue to sustained value to reset.
+                adjustedValue = sustainedControllerInput.value
+            }
+            else
+            {
+                // input is not sustained, or sustained value is less than threshold,
+                // so we'll deactivate the input instead.
+                adjustedValue = nil
+            }
+        }
+        
+        if let adjustedValue
+        {
+            if let sustainedControllerInput, !sustainedControllerInput.key.isContinuous, !input.isContinuous
+            {
+                // input is sustained, but neither it nor the controller input are continuous.
+                // This means we need to temporarily deactivate the input before activating it again.
+                self.reactivateInputsQueue.async {
+                    
+                    self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
+                    
+                    self.reactivateInputsDispatchGroup = DispatchGroup()
+                    
+                    // To ensure the emulator core recognizes us activating an input that is currently active, we need to first deactivate it, wait at least two frames, then activate it again.
+                    self.reactivateInputsDispatchGroup?.enter()
+                    self.reactivateInputsDispatchGroup?.enter()
+                    self.reactivateInputsDispatchGroup?.wait()
 
-                self.reactivateInputsDispatchGroup = nil
-                
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, playerIndex: playerIndex)
+                    self.reactivateInputsDispatchGroup = nil
+                    
+                    self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
+                }
+            }
+            else
+            {
+                // Because continuous sustainedControllerInput values are deactivated when below discreteThreshold,
+                // we don't need to manually deactivate them first since that will implicitly happen during user gesture.
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, playerIndex: playerIndex)
+            // Treat input as deactivated if adjustedValue is nil (a.k.a. below discreteThreshold).
+            self.gameController(gameController, didDeactivate: controllerInput)
         }
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
-        
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
+        
+        guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
     }

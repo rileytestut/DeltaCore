@@ -35,6 +35,8 @@ public enum SamplerMode
 
 public class GameView: UIView
 {
+    public var isEnabled: Bool = true
+    
     @NSCopying public var inputImage: CIImage? {
         didSet {
             if self.inputImage?.extent != oldValue?.extent
@@ -50,6 +52,7 @@ public class GameView: UIView
     
     @NSCopying public var filter: CIFilter? {
         didSet {
+            guard self.filter != oldValue else { return }
             self.update()
         }
     }
@@ -83,18 +86,31 @@ public class GameView: UIView
     internal var eaglContext: EAGLContext {
         get { return self.glkView.context }
         set {
+            os_unfair_lock_lock(&self.lock)
+            defer { os_unfair_lock_unlock(&self.lock) }
+            
+            self.didLayoutSubviews = false
+            
             // For some reason, if we don't explicitly set current EAGLContext to nil, assigning
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
             
             self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
             self.context = self.makeContext()
+            
+            DispatchQueue.main.async {
+                // layoutSubviews() must be called after setting self.eaglContext before we can display anything.
+                self.setNeedsLayout()
+            }
         }
     }
     private lazy var context: CIContext = self.makeContext()
         
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
+    
+    private var lock = os_unfair_lock()
+    private var didLayoutSubviews = false
     
     public override init(frame: CGRect)
     {
@@ -139,6 +155,8 @@ public class GameView: UIView
         super.layoutSubviews()
         
         self.glkView.isHidden = (self.outputImage == nil)
+        
+        self.didLayoutSubviews = true
     }
 }
 
@@ -168,6 +186,26 @@ public extension GameView
         
         return snapshot
     }
+    
+    func update(for screen: ControllerSkin.Screen)
+    {
+        var filters = [CIFilter]()
+        
+        if let inputFrame = screen.inputFrame
+        {
+            let cropFilter = CIFilter(name: "CICrop", parameters: ["inputRectangle": CIVector(cgRect: inputFrame)])!
+            filters.append(cropFilter)
+        }
+        
+        if let screenFilters = screen.filters
+        {
+            filters.append(contentsOf: screenFilters)
+        }
+        
+        // Always use FilterChain since it has additional logic for chained filters.
+        let filterChain = filters.isEmpty ? nil : FilterChain(filters: filters)
+        self.filter = filterChain
+    }
 }
 
 private extension GameView
@@ -181,8 +219,15 @@ private extension GameView
     func update()
     {
         // Calling display when outputImage is nil may crash for OpenGLES-based rendering.
-        guard self.outputImage != nil else { return }
-                
+        guard self.isEnabled && self.outputImage != nil else { return }
+        
+        os_unfair_lock_lock(&self.lock)
+        defer { os_unfair_lock_unlock(&self.lock) }
+        
+        // layoutSubviews() must be called after setting self.eaglContext before we can display anything.
+        // Otherwise, the app may crash due to race conditions when creating framebuffer from background thread.
+        guard self.didLayoutSubviews else { return }
+
         self.glkView.display()
     }
 }
@@ -190,7 +235,7 @@ private extension GameView
 private extension GameView
 {
     func glkView(_ view: GLKView, drawIn rect: CGRect)
-    {        
+    {
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(UInt32(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         

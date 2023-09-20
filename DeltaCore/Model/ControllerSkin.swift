@@ -8,7 +8,7 @@
 
 import UIKit
 
-#if FRAMEWORK || STATIC_LIBRARY
+#if FRAMEWORK || STATIC_LIBRARY || SWIFT_PACKAGE
 import ZIPFoundation
 #endif
 
@@ -34,14 +34,31 @@ private extension Archive
 
 extension ControllerSkin
 {
+    public enum Placement: String
+    {
+        case controller
+        case app
+    }
+    
     public struct Screen
     {
+        public typealias ID = String
+        
+        public var id: String
+        
         public var inputFrame: CGRect?
-        public var outputFrame: CGRect
+        public var outputFrame: CGRect?
         
         public var filters: [CIFilter]?
+        
+        public var placement: Placement = .controller
+        
+        public var isTouchScreen: Bool = false
     }
 }
+
+@available(iOS 13, *)
+extension ControllerSkin.Screen: Identifiable {}
 
 public struct ControllerSkin: ControllerSkinProtocol
 {
@@ -79,7 +96,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                 let representationsDictionary = info["representations"] as? RepresentationDictionary
             else { return nil }
             
-            #if FRAMEWORK
+            #if FRAMEWORK || SWIFT_PACKAGE
             guard let gameType = info["gameTypeIdentifier"] as? GameType else { return nil }
             #else
             guard let gameTypeString = info["gameTypeIdentifier"] as? String else { return nil }
@@ -91,7 +108,7 @@ public struct ControllerSkin: ControllerSkinProtocol
             self.gameType = gameType
             self.isDebugModeEnabled = isDebugModeEnabled
             
-            let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary)
+            let representationsSet = ControllerSkin.parsedRepresentations(from: representationsDictionary, skinID: identifier)
             
             var representations = [Traits: Representation]()
             for representation in representationsSet
@@ -111,7 +128,7 @@ public struct ControllerSkin: ControllerSkinProtocol
     }
     
     // Sometimes, recursion really is the best solution ¯\_(ツ)_/¯
-    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, device: Device? = nil, displayType: DisplayType? = nil, orientation: Orientation? = nil) -> Set<Representation>
+    private static func parsedRepresentations(from representationsDictionary: RepresentationDictionary, skinID: String, device: Device? = nil, displayType: DisplayType? = nil, orientation: Orientation? = nil) -> Set<Representation>
     {
         var representations = Set<Representation>()
         
@@ -119,20 +136,33 @@ public struct ControllerSkin: ControllerSkinProtocol
         {
             if device == nil
             {
-                guard let device = Device(rawValue: key), let dictionary = dictionary as? RepresentationDictionary else { continue }
+                guard let device = Device(rawValue: key) else { continue }
                 
-                representations.formUnion(self.parsedRepresentations(from: dictionary, device: device))
+                switch device
+                {
+                case .iphone, .ipad:
+                    guard let dictionary = dictionary as? RepresentationDictionary else { continue }
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device))
+                    
+                case .tv:
+                    //TODO: Support .portrait orientation for TV skins.
+                    let traits = Traits(device: device, displayType: .standard, orientation: .landscape)
+                    if let representation = Representation(skinID: skinID, traits: traits, dictionary: dictionary)
+                    {
+                        representations.insert(representation)
+                    }
+                }
             }
             else if displayType == nil
             {
                 if let displayType = DisplayType(rawValue: key), let dictionary = dictionary as? RepresentationDictionary
                 {
-                    representations.formUnion(self.parsedRepresentations(from: dictionary, device: device, displayType: displayType))
+                    representations.formUnion(self.parsedRepresentations(from: dictionary, skinID: skinID, device: device, displayType: displayType))
                 }
                 else
                 {
                     // Key doesn't exist, so we continue with the same dictionary we're currently iterating, but pass in .standard for displayMode
-                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, device: device, displayType: .standard))
+                    representations.formUnion(self.parsedRepresentations(from: representationsDictionary, skinID: skinID, device: device, displayType: .standard))
                     
                     // Return early to prevent us from repeating the above step multiple times
                     return representations
@@ -147,7 +177,7 @@ public struct ControllerSkin: ControllerSkinProtocol
                 else { continue }
                 
                 let traits = Traits(device: device, displayType: displayType, orientation: orientation)
-                if let representation = Representation(traits: traits, dictionary: dictionary)
+                if let representation = Representation(skinID: skinID, traits: traits, dictionary: dictionary)
                 {
                     representations.insert(representation)
                 }
@@ -276,67 +306,6 @@ public extension ControllerSkin
         return returnedImage
     }
     
-    func inputs(for traits: Traits, at point: CGPoint) -> [Input]?
-    {
-        guard let representation = self.representation(for: traits) else { return nil }
-        
-        var inputs: [Input] = []
-        
-        for item in representation.items
-        {
-            guard item.extendedFrame.contains(point) else { continue }
-            
-            switch item.inputs
-            {
-            // Don't return inputs for thumbsticks or touch screens since they're handled separately.
-            case .directional where item.kind == .thumbstick: break
-            case .touch: break
-                
-            case .standard(let itemInputs):
-                inputs.append(contentsOf: itemInputs)
-            
-            case let .directional(up, down, left, right):
-
-                let divisor: CGFloat
-                if case .thumbstick = item.kind
-                {
-                    divisor = 2.0
-                }
-                else
-                {
-                    divisor = 3.0
-                }
-                
-                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
-                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
-                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
-                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
-                
-                if topRect.contains(point)
-                {
-                    inputs.append(up)
-                }
-                
-                if bottomRect.contains(point)
-                {
-                    inputs.append(down)
-                }
-                
-                if leftRect.contains(point)
-                {
-                    inputs.append(left)
-                }
-                
-                if rightRect.contains(point)
-                {
-                    inputs.append(right)
-                }
-            }
-        }
-        
-        return inputs
-    }
-    
     func items(for traits: Traits) -> [Item]?
     {
         guard let representation = self.representation(for: traits) else { return nil }
@@ -365,6 +334,12 @@ public extension ControllerSkin
     {
         guard let representation = self.representation(for: traits) else { return nil }
         return representation.aspectRatio
+    }
+    
+    func contentSize(for traits: ControllerSkin.Traits) -> CGSize?
+    {
+        //TODO: Support `contentSize` for JSON controller skins.
+        return nil
     }
 }
 
@@ -450,20 +425,26 @@ extension ControllerSkin
             }
         }
         
+        public var id: String
+        
         public var kind: Kind
         public var inputs: Inputs
         
         public var frame: CGRect
         public var extendedFrame: CGRect
         
+        public var placement: Placement
+        
         fileprivate var thumbstickImageName: String?
         fileprivate var thumbstickSize: CGSize?
         
-        fileprivate init?(dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
+        fileprivate init?(id: String, dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
             guard
                 let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
-                else { return nil }
+            else { return nil }
+            
+            self.id = id
             
             if let inputs = dictionary["inputs"] as? [String]
             {
@@ -529,16 +510,37 @@ extension ControllerSkin
             extendedFrame.size.width += (extendedEdges.left ?? 0) + (extendedEdges.right ?? 0)
             extendedFrame.size.height += (extendedEdges.top ?? 0) + (extendedEdges.bottom ?? 0)
             
-            // Convert frames to relative values.
-            let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
-            self.frame = frame.applying(scaleTransform)
-            self.extendedFrame = extendedFrame.applying(scaleTransform)
+            if let rawPlacement = dictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
+            {
+                self.placement = placement
+            }
+            else
+            {
+                // Fall back to `controller` placement if it wasn't specified for backwards compatibility.
+                self.placement = .controller
+            }
+            
+            switch self.placement
+            {
+            case .controller:
+                // Convert frames to relative values.
+                let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
+                self.frame = frame.applying(scaleTransform)
+                self.extendedFrame = extendedFrame.applying(scaleTransform)
+                
+            case .app:
+                // `app` placement already uses relative values.
+                self.frame = frame
+                self.extendedFrame = extendedFrame
+            }
         }
     }
 }
 
 extension ControllerSkin.Item: Hashable
 {
+    public typealias ID = String
+    
     public static func ==(lhs: ControllerSkin.Item, rhs: ControllerSkin.Item) -> Bool
     {
         guard
@@ -580,8 +582,17 @@ extension ControllerSkin.Item: Hashable
     }
 }
 
+@available(iOS 13, *)
+extension ControllerSkin.Item: Identifiable {}
+
 private extension ControllerSkin
 {
+    static func itemID(forSkinID skinID: String, traits: ControllerSkin.Traits, index: Int) -> String
+    {
+        let id = [skinID, traits.description, "\(index)"].joined(separator: "_")
+        return id
+    }
+    
     struct ExtendedEdges
     {
         var top: CGFloat?
@@ -691,6 +702,8 @@ private extension ControllerSkin
             case (.ipad, _, .medium): targetSize = CGSize(width: 834, height: 1112)
             case (.ipad, _, .large): targetSize = CGSize(width: 1024, height: 1366)
                 
+            case (.tv, _, _): targetSize = CGSize(width: 1080, height: 1920)
+                
             case (_, _, .resizable): return nil
             }
             
@@ -716,9 +729,11 @@ private extension ControllerSkin
             case (.iphone, .edgeToEdge, _): return 3.0
             case (.iphone, .splitView, _): return nil
                 
-            case (.ipad, .standard, _): return 2.0
-            case (.ipad, .edgeToEdge, _): return nil
-            case (.ipad, .splitView, _): return 2.0
+            case (.ipad, _, _): return 2.0
+                
+            case (.tv, _, .small): return 1.0
+            case (.tv, _, .medium): return 2.0
+            case (.tv, _, .large): return 2.0
                 
             case (_, _, .resizable): return nil
             }
@@ -741,24 +756,38 @@ private extension ControllerSkin
             return self.traits.description
         }
         
-        init?(traits: Traits, dictionary: [String: AnyObject])
+        init?(skinID: String, traits: Traits, dictionary: [String: AnyObject])
         {
-            guard
-                let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let mappingSize = CGSize(dictionary: mappingSizeDictionary),
-                let itemsArray = dictionary["items"] as? [[String: AnyObject]],
-                let assetsDictionary = dictionary["assets"] as? [String: String]
-            else { return nil }
-            
-            self.aspectRatio = mappingSize
+            let mappingSize: CGSize
+            if let mappingSizeDictionary = dictionary["mappingSize"] as? [String: CGFloat], let size = CGSize(dictionary: mappingSizeDictionary)
+            {
+                mappingSize = size
+            }
+            else if traits.device == .tv
+            {
+                // mappingSize is optional for TV skins, so assume 1920x1080 if not provided.
+                mappingSize = CGSize(width: 1920, height: 1080)
+            }
+            else
+            {
+                // Non-TV skins must include mappingSize.
+                return nil
+            }
             
             self.traits = traits
+            self.aspectRatio = mappingSize
+            
+            // Controller skins with no items or assets are now supported.
+            let itemsArray = dictionary["items"] as? [[String: AnyObject]] ?? []
+            let assetsDictionary = dictionary["assets"] as? [String: String] ?? [:]
             
             let extendedEdges = ExtendedEdges(dictionary: dictionary["extendedEdges"] as? [String: CGFloat])
             
             var items = [Item]()
-            for dictionary in itemsArray
+            for (index, dictionary) in zip(0..., itemsArray)
             {
-                if let item = Item(dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
+                let itemID = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: index)
+                if let item = Item(id: itemID, dictionary: dictionary, extendedEdges: extendedEdges, mappingSize: mappingSize)
                 {
                     items.append(item)
                 }
@@ -775,7 +804,8 @@ private extension ControllerSkin
             }
             self.assets = assets
             
-            guard self.assets.count > 0 else { return nil }
+            // Controller skins with no assets are now supported.
+            // guard self.assets.count > 0 else { return nil }
             
             self.isTranslucent = dictionary["translucent"] as? Bool ?? false
             
@@ -786,24 +816,48 @@ private extension ControllerSkin
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 let frame = gameScreenFrame.applying(scaleTransform)
                 
-                self.screens = [Screen(inputFrame: nil, outputFrame: frame)]
+                let id = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: 0)
+                self.screens = [Screen(id: id, inputFrame: nil, outputFrame: frame)]
             }
             else if let screensArray = dictionary["screens"] as? [[String: Any]]
             {
                 let scaleTransform = CGAffineTransform(scaleX: 1.0 / mappingSize.width, y: 1.0 / mappingSize.height)
                 
-                let screens = screensArray.compactMap { (screenDictionary) -> Screen? in
-                    guard
-                        let outputFrameDictionary = screenDictionary["outputFrame"] as? [String: CGFloat],
-                        let outputFrame = CGRect(dictionary: outputFrameDictionary)
-                    else { return nil }
-                    
-                    let normalizedOutputFrame = outputFrame.applying(scaleTransform)
-                    
+                let screens = zip(0..., screensArray).compactMap { (index, screenDictionary) -> Screen? in
                     var inputFrame: CGRect?
                     if let dictionary = screenDictionary["inputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
                     {
                         inputFrame = frame
+                    }
+                    
+                    var outputFrame: CGRect?
+                    if let dictionary = screenDictionary["outputFrame"] as? [String: CGFloat], let frame = CGRect(dictionary: dictionary)
+                    {
+                        outputFrame = frame
+                    }
+                    
+                    let screenPlacement: Placement
+                    if let rawPlacement = screenDictionary["placement"] as? String, let placement = Placement(rawValue: rawPlacement)
+                    {
+                        screenPlacement = placement
+                    }
+                    else
+                    {
+                        // Fall back to `app` placement if outputFrame is nil, otherwise fall back to `controller`.
+                        // This preserves backwards compatibility for existing skins (which required non-nil outputFrame and assumed `controller` placement),
+                        // but allows newer skins to assume `app` screen placement by default (which is the preferred method going forward).
+                        screenPlacement = (outputFrame == nil) ? .app : .controller
+                    }
+                    
+                    switch screenPlacement
+                    {
+                    case .controller:
+                        // Convert outputFrame to relative values.
+                        outputFrame = outputFrame?.applying(scaleTransform)
+                        
+                    case .app:
+                        // `app` placement already uses relative values.
+                        break
                     }
                     
                     var filters: [CIFilter]?
@@ -814,8 +868,6 @@ private extension ControllerSkin
                             let parameters = dictionary["parameters"] as? [String: Any]
                             
                             guard let filter = CIFilter(name: name) else { return nil }
-                            
-                            var filterParameters = [String: Any]()
                             
                             for (parameter, value) in parameters ?? [:]
                             {
@@ -881,7 +933,17 @@ private extension ControllerSkin
                         }
                     }
                     
-                    let screen = Screen(inputFrame: inputFrame, outputFrame: normalizedOutputFrame, filters: filters)
+                    var isTouchScreen = false
+                    if let outputFrame
+                    {
+                        isTouchScreen = items.contains { item in
+                            guard item.kind == .touchScreen else { return false }
+                            return item.extendedFrame.contains(outputFrame)
+                        }
+                    }
+                    
+                    let id = ControllerSkin.itemID(forSkinID: skinID, traits: traits, index: index)
+                    let screen = Screen(id: id, inputFrame: inputFrame, outputFrame: outputFrame, filters: filters, placement: screenPlacement, isTouchScreen: isTouchScreen)
                     return screen
                 }
                 

@@ -41,6 +41,13 @@ private struct ControllerViewInputMapping: GameControllerInputMappingProtocol
 extension ControllerView
 {
     public static let controllerViewDidChangeControllerSkinNotification = Notification.Name("controllerViewDidChangeControllerSkinNotification")
+    public static let controllerViewDidUpdateGameViewsNotification = Notification.Name("controllerViewDidUpdateGameViewsNotification")
+    
+    public enum NotificationKey: String
+    {
+        case addedGameViews
+        case removedGameViews
+    }
 }
 
 public class ControllerView: UIView, GameController
@@ -105,10 +112,28 @@ public class ControllerView: UIView, GameController
     }
     
     public let inputType: GameControllerInputType = .controllerSkin
-    
     public lazy var defaultInputMapping: GameControllerInputMappingProtocol? = ControllerViewInputMapping(controllerView: self)
     
+    internal weak var appPlacementLayoutGuide: UILayoutGuide? {
+        didSet {
+            self.controllerDebugView.appPlacementLayoutGuide = self.appPlacementLayoutGuide
+        }
+    }
+    
     internal var isControllerInputView = false
+    internal var gameViews: [GameView] {
+        var sortedGameViews = self.gameViewsByScreenID.lazy.sorted { $0.key < $1.key }.map { $0.value }
+        
+        if let controllerView = self.controllerInputView?.controllerView
+        {
+            // Include controllerInputView's gameViews, if there are any.
+            let gameViews = controllerView.gameViews
+            sortedGameViews.append(contentsOf: gameViews)
+        }
+        
+        return sortedGameViews
+    }
+    private var gameViewsByScreenID = [ControllerSkin.Screen.ID: GameView]()
     
     //MARK: - Private Properties
     private let contentView = UIView(frame: .zero)
@@ -116,10 +141,11 @@ public class ControllerView: UIView, GameController
     private let controllerDebugView = ControllerDebugView()
     
     private let buttonsView = ButtonsInputView(frame: CGRect.zero)
-    private var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
-    private var touchViews = [ControllerSkin.Item: TouchInputView]()
+    private var thumbstickViews = [ControllerSkin.Item.ID: ThumbstickInputView]()
+    private var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
     
     private var _performedInitialLayout = false
+    private var _delayedUpdatingControllerSkin = false
     
     private var controllerInputView: ControllerInputView?
     
@@ -128,6 +154,8 @@ public class ControllerView: UIView, GameController
     public override var intrinsicContentSize: CGSize {
         return self.buttonsView.intrinsicContentSize
     }
+    
+    private let keyboardResponder = KeyboardResponder(nextResponder: nil)
     
     //MARK: - Initializers -
     /** Initializers **/
@@ -192,30 +220,82 @@ public class ControllerView: UIView, GameController
     /// UIView
     public override func layoutSubviews()
     {
+        self.controllerDebugView.setNeedsLayout()
+        
         super.layoutSubviews()
         
-        self._performedInitialLayout = true
+        _performedInitialLayout = true
         
-        self.updateControllerSkin()
+        guard !_delayedUpdatingControllerSkin else {
+            _delayedUpdatingControllerSkin = false
+            self.updateControllerSkin()
+            return
+        }
+        
+        // updateControllerSkin() calls layoutSubviews(), so don't call again to avoid infinite loop.
+        // self.updateControllerSkin()
+        
+        guard let traits = self.controllerSkinTraits, let controllerSkin = self.controllerSkin, let items = controllerSkin.items(for: traits) else { return }
+        
+        for item in items
+        {
+            var containingFrame = self.bounds
+            if let layoutGuide = self.appPlacementLayoutGuide, item.placement == .app
+            {
+                containingFrame = layoutGuide.layoutFrame
+            }
+            
+            let frame = item.frame.scaled(to: containingFrame)
+            
+            switch item.kind
+            {
+            case .button, .dPad: break
+            case .thumbstick:
+                guard let thumbstickView = self.thumbstickViews[item.id] else { continue }
+                thumbstickView.frame = frame
+                
+                if thumbstickView.thumbstickSize == nil, let (image, size) = controllerSkin.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                {
+                    // Update thumbstick in first layoutSubviews() post-updateControllerSkin() to ensure correct size.
+                    
+                    let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
+                    thumbstickView.thumbstickImage = image
+                    thumbstickView.thumbstickSize = size
+                }
+                
+            case .touchScreen:
+                guard let touchView = self.touchViews[item.id] else { continue }
+                touchView.frame = frame
+            }
+        }
+        
+        if let screens = controllerSkin.screens(for: traits)
+        {
+            for screen in screens where screen.placement == .controller
+            {
+                guard let normalizedFrame = screen.outputFrame, let gameView = self.gameViewsByScreenID[screen.id] else { continue }
+                
+                let frame = normalizedFrame.scaled(to: self.bounds)
+                gameView.frame = frame
+            }
+        }
     }
     
     public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?
     {
         guard self.bounds.contains(point) else { return super.hitTest(point, with: event) }
         
-        let adjustedPoint = CGPoint(x: point.x / self.bounds.width, y: point.y / self.bounds.height)
-        
-        for (item, thumbstickView) in self.thumbstickViews
+        for (_, thumbstickView) in self.thumbstickViews
         {
-            guard item.extendedFrame.contains(adjustedPoint) else { continue }
+            guard thumbstickView.frame.contains(point) else { continue }
             return thumbstickView
         }
-        
-        for (item, touchView) in self.touchViews
+
+        for (_, touchView) in self.touchViews
         {
-            guard item.frame.contains(adjustedPoint) else { continue }
-            
-            if let traits = self.controllerSkinTraits, let inputs = self.controllerSkin?.inputs(for: traits, at: adjustedPoint)
+            guard touchView.frame.contains(point) else { continue }
+
+            if let inputs = self.buttonsView.inputs(at: point)
             {
                 // No other inputs at this position, so return touchView.
                 if inputs.isEmpty
@@ -243,16 +323,51 @@ public class ControllerView: UIView, GameController
 extension ControllerView
 {
     public override var canBecomeFirstResponder: Bool {
-        let canBecomeFirstResponder = (self.controllerSkinTraits?.displayType == .splitView || ExternalGameControllerManager.shared.isKeyboardConnected)
+        // "canBecomeFirstResponder" = "should display keyboard controller view" OR "should receive hardware keyboard events"
+        // In latter case, we return a nil inputView to prevent software keyboard from appearing.
+        
+        guard let controllerSkin = self.controllerSkin, let traits = self.controllerSkinTraits else { return false }
+        
+        if let keyboardController = ExternalGameControllerManager.shared.keyboardController, keyboardController.playerIndex != nil
+        {
+            // Keyboard is connected and has non-nil player index, so return true to receive keyboard presses.
+            return true
+        }
+        
+        guard !(controllerSkin is TouchControllerSkin) else {
+            // Unless keyboard is connected, we never want to become first responder with
+            // TouchControllerSkin because that will make the software keyboard appear.
+            return false
+        }
+        
+        guard self.playerIndex != nil else {
+            // Only show keyboard controller if we've been assigned a playerIndex.
+            return false
+        }
+        
+        // Finally, only show keyboard controller if we're in Split View and the controller skin supports it.
+        let canBecomeFirstResponder = traits.displayType == .splitView && controllerSkin.supports(traits)
         return canBecomeFirstResponder
     }
     
     public override var next: UIResponder? {
-        return KeyboardResponder(nextResponder: super.next)
+        if #available(iOS 15, *)
+        {
+            return super.next
+        }
+        else
+        {
+            return KeyboardResponder(nextResponder: super.next)
+        }
     }
     
     public override var inputView: UIView? {
-        guard self.playerIndex != nil else { return nil }
+        if let keyboardController = ExternalGameControllerManager.shared.keyboardController, keyboardController.playerIndex != nil
+        {
+            // Don't display any inputView if keyboard is connected and has non-nil player index.
+            return nil
+        }
+        
         return self.controllerInputView
     }
     
@@ -263,6 +378,18 @@ extension ControllerView
         self.reloadInputViews()
         
         return self.isFirstResponder
+    }
+    
+    internal override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
+    {
+        let keyCommand = super._keyCommand(for: event, target: target)
+        
+        if #available(iOS 15, *)
+        {
+            _ = self.keyboardResponder._keyCommand(for: event, target: target)
+        }
+        
+        return keyCommand
     }
 }
 
@@ -287,11 +414,11 @@ public extension ControllerView
     
     func updateControllerSkin()
     {
-        guard self._performedInitialLayout else { return }
-        
-        self.buttonsView.controllerSkin = self.controllerSkin
-        self.buttonsView.controllerSkinTraits = self.controllerSkinTraits
-        
+        guard _performedInitialLayout else {
+            _delayedUpdatingControllerSkin = true
+            return
+        }
+
         if let isDebugModeEnabled = self.controllerSkin?.isDebugModeEnabled
         {
             self.controllerDebugView.isHidden = !isDebugModeEnabled
@@ -301,15 +428,25 @@ public extension ControllerView
         
         if let traits = self.controllerSkinTraits
         {
-            let items = self.controllerSkin?.items(for: traits)
-            self.controllerDebugView.items = items
+            var items = self.controllerSkin?.items(for: traits)
+       
+            if traits.displayType == .splitView
+            {
+                if self.isControllerInputView
+                {
+                    // Filter out all items without `controller` placement.
+                    items = items?.filter { $0.placement == .controller }
+                }
+                else
+                {
+                    // Filter out all items without `app` placement.
+                    items = items?.filter { $0.placement == .app }
+                }
+            }
             
             if traits.displayType == .splitView && !self.isControllerInputView
             {
                 self.buttonsView.image = nil
-                
-                self.isUserInteractionEnabled = false
-                self.controllerDebugView.alpha = 0.0
             }
             else
             {
@@ -335,7 +472,7 @@ public extension ControllerView
                         let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
                         cache.setObject(image, forKey: cacheKey as NSString)
                         self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
-                    }                    
+                    }
                 }
                 else
                 {
@@ -343,86 +480,68 @@ public extension ControllerView
                 }
                 
                 self.buttonsView.image = image
-                
-                self.isUserInteractionEnabled = true
-                self.controllerDebugView.alpha = 1.0
             }
+            
+            self.buttonsView.items = items
+            self.controllerDebugView.items = items
             
             isTranslucent = self.controllerSkin?.isTranslucent(for: traits) ?? false
             
-            var thumbstickViews = [ControllerSkin.Item: ThumbstickInputView]()
+            var thumbstickViews = [ControllerSkin.Item.ID: ThumbstickInputView]()
             var previousThumbstickViews = self.thumbstickViews
             
-            var touchViews = [ControllerSkin.Item: TouchInputView]()
+            var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
             var previousTouchViews = self.touchViews
             
             for item in items ?? []
             {
-                var frame = item.frame
-                frame.origin.x *= self.bounds.width
-                frame.origin.y *= self.bounds.height
-                frame.size.width *= self.bounds.width
-                frame.size.height *= self.bounds.height
-                
-                var extendedFrame = item.extendedFrame
-                extendedFrame.origin.x *= self.bounds.width
-                extendedFrame.origin.y *= self.bounds.height
-                extendedFrame.size.width *= self.bounds.width
-                extendedFrame.size.height *= self.bounds.height
-                
                 switch item.kind
                 {
                 case .button, .dPad: break
                 case .thumbstick:
                     let thumbstickView: ThumbstickInputView
                     
-                    if let previousThumbstickView = previousThumbstickViews[item]
+                    if let previousThumbstickView = previousThumbstickViews[item.id]
                     {
                         thumbstickView = previousThumbstickView
-                        previousThumbstickViews[item] = nil
+                        previousThumbstickViews[item.id] = nil
                     }
                     else
                     {
-                        thumbstickView = ThumbstickInputView(frame: frame)
+                        thumbstickView = ThumbstickInputView(frame: .zero)
                         self.contentView.addSubview(thumbstickView)
                     }
                     
-                    thumbstickView.frame = frame
                     thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
                         self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
                     }
                     
-                    if let (image, size) = self.controllerSkin?.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
-                    {
-                        let size = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
-                        thumbstickView.thumbstickImage = image
-                        thumbstickView.thumbstickSize = size
-                    }
+                    // Calculate correct `thumbstickSize` in layoutSubviews().
+                    thumbstickView.thumbstickSize = nil
                     
                     thumbstickView.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled
                     
-                    thumbstickViews[item] = thumbstickView
+                    thumbstickViews[item.id] = thumbstickView
                     
                 case .touchScreen:
                     let touchView: TouchInputView
                     
-                    if let previousTouchView = previousTouchViews[item]
+                    if let previousTouchView = previousTouchViews[item.id]
                     {
                         touchView = previousTouchView
-                        previousTouchViews[item] = nil
+                        previousTouchViews[item.id] = nil
                     }
                     else
                     {
-                        touchView = TouchInputView(frame: frame)
+                        touchView = TouchInputView(frame: .zero)
                         self.contentView.addSubview(touchView)
                     }
                     
-                    touchView.frame = frame
                     touchView.valueChangedHandler = { [weak self] (point) in
                         self?.updateTouchValues(item: item, point: point)
                     }
                     
-                    touchViews[item] = touchView
+                    touchViews[item.id] = touchView
                 }
             }
             
@@ -434,12 +553,17 @@ public extension ControllerView
         }
         else
         {
+            self.buttonsView.items = nil
+            self.controllerDebugView.items = nil
+            
             self.thumbstickViews.values.forEach { $0.removeFromSuperview() }
             self.thumbstickViews = [:]
             
             self.touchViews.values.forEach { $0.removeFromSuperview() }
             self.touchViews = [:]
         }
+        
+        self.updateGameViews()
         
         if self.transitionSnapshotView != nil
         {
@@ -470,8 +594,72 @@ public extension ControllerView
         
         self.invalidateIntrinsicContentSize()
         self.setNeedsUpdateConstraints()
+        self.setNeedsLayout()
         
         self.reloadInputViews()
+    }
+    
+    func updateGameViews()
+    {
+        guard self.isControllerInputView else { return }
+        
+        var previousGameViews = self.gameViewsByScreenID
+        var gameViews = [ControllerSkin.Screen.ID: GameView]()
+        
+        if let controllerSkin = self.controllerSkin,
+           let traits = self.controllerSkinTraits,
+           let screens = controllerSkin.screens(for: traits)
+        {
+            for screen in screens where screen.placement == .controller
+            {
+                // Only manage screens with explicit outputFrames.
+                guard screen.outputFrame != nil else { continue }
+                
+                let gameView = previousGameViews[screen.id] ?? GameView(frame: .zero)
+                gameView.update(for: screen)
+
+                previousGameViews[screen.id] = nil
+                gameViews[screen.id] = gameView
+            }
+        }
+        else
+        {
+            for (_, gameView) in previousGameViews
+            {
+                gameView.filter = nil
+            }
+            
+            gameViews = [:]
+        }
+        
+        var addedGameViews = Set<GameView>()
+        var removedGameViews = Set<GameView>()
+        
+        // Sort them in controller skin order, so that early screens can be covered by later ones.
+        let sortedGameViews = gameViews.lazy.sorted { $0.key < $1.key }.map { $0.value }
+        for gameView in sortedGameViews
+        {
+            guard !self.gameViewsByScreenID.values.contains(gameView) else { continue }
+            
+            self.contentView.insertSubview(gameView, belowSubview: self.buttonsView)
+            addedGameViews.insert(gameView)
+        }
+        
+        for gameView in previousGameViews.values
+        {
+            gameView.removeFromSuperview()
+            removedGameViews.insert(gameView)
+        }
+        
+        self.gameViewsByScreenID = gameViews
+        
+        // Use destination controllerView as Notification object, since that is what client expects.
+        let controllerView = self.receivers.lazy.compactMap { $0 as? ControllerView }.first ?? self
+        
+        NotificationCenter.default.post(name: ControllerView.controllerViewDidUpdateGameViewsNotification, object: controllerView, userInfo: [
+            ControllerView.NotificationKey.addedGameViews: addedGameViews,
+            ControllerView.NotificationKey.removedGameViews: removedGameViews
+        ])
     }
     
     func finishAnimatingUpdateControllerSkin()
@@ -482,7 +670,14 @@ public extension ControllerView
             self.transitionSnapshotView = nil
         }
         
-        self.contentView.alpha = 1.0
+        if let traits = self.controllerSkinTraits, let isTranslucent = self.controllerSkin?.isTranslucent(for: traits), isTranslucent
+        {
+            self.contentView.alpha = self.translucentControllerSkinOpacity
+        }
+        else
+        {
+            self.contentView.alpha = 1.0
+        }
     }
 }
 
@@ -616,7 +811,7 @@ extension ControllerView: GameControllerReceiver
     {
         guard gameController == self.controllerInputView?.controllerView else { return }
         
-        self.activate(input)
+        self.activate(input, value: value)
     }
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)

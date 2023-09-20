@@ -13,10 +13,24 @@ import GLKit
 
 protocol VideoProcessor
 {
+    var videoFormat: VideoFormat { get }
     var videoBuffer: UnsafeMutablePointer<UInt8>? { get }
+    
+    var viewport: CGRect { get set }
     
     func prepare()
     func processFrame() -> CIImage?
+}
+
+extension VideoProcessor
+{
+    var correctedViewport: CGRect? {
+        guard self.viewport != .zero else { return nil }
+        
+        let viewport = CGRect(x: self.viewport.minX, y: self.videoFormat.dimensions.height - self.viewport.height,
+                              width: self.viewport.width, height: self.viewport.height)
+        return viewport
+    }
 }
 
 public class VideoManager: NSObject, VideoRendering
@@ -27,7 +41,16 @@ public class VideoManager: NSObject, VideoRendering
         }
     }
     
-    public private(set) var gameViews = [GameView]()
+    public var viewport: CGRect = .zero {
+        didSet {
+            self.processor.viewport = self.viewport
+        }
+    }
+    
+    public var gameViews: Set<GameView> {
+        return _gameViews.setRepresentation as! Set<GameView>
+    }
+    private let _gameViews: NSHashTable = NSHashTable<GameView>.weakObjects()
     
     public var isEnabled = true
     
@@ -37,6 +60,10 @@ public class VideoManager: NSObject, VideoRendering
     private var processor: VideoProcessor
     @NSCopying private var processedImage: CIImage?
     @NSCopying private var displayedImage: CIImage? // Can only accurately snapshot rendered images.
+    
+    private lazy var renderThread = RenderThread(action: { [weak self] in
+        self?._render()
+    })
     
     public init(videoFormat: VideoFormat)
     {
@@ -51,6 +78,8 @@ public class VideoManager: NSObject, VideoRendering
         }
         
         super.init()
+        
+        self.renderThread.start()
     }
     
     private func updateProcessor()
@@ -64,6 +93,13 @@ public class VideoManager: NSObject, VideoRendering
             guard let processor = self.processor as? OpenGLESProcessor else { return }
             processor.videoFormat = self.videoFormat
         }
+        
+        processor.viewport = self.viewport
+    }
+    
+    deinit
+    {
+        self.renderThread.cancel()
     }
 }
 
@@ -71,16 +107,15 @@ public extension VideoManager
 {
     func add(_ gameView: GameView)
     {
+        guard !self.gameViews.contains(gameView) else { return }
+        
         gameView.eaglContext = self.context
-        self.gameViews.append(gameView)
+        self._gameViews.add(gameView)
     }
     
     func remove(_ gameView: GameView)
     {
-        if let index = self.gameViews.firstIndex(of: gameView)
-        {
-            self.gameViews.remove(at: index)
-        }
+        self._gameViews.remove(gameView)
     }
 }
 
@@ -110,23 +145,20 @@ public extension VideoManager
         
         guard let image = self.processedImage else { return }
         
-        // Autoreleasepool necessary to prevent leaking CIImages.
-        autoreleasepool {
-            for gameView in self.gameViews
-            {
-                gameView.inputImage = image
-            }
-
-            self.displayedImage = image
-        }
+        // Skip frame if previous frame is not finished rendering.
+        guard self.renderThread.wait(timeout: .now()) == .success else { return }
+        
+        self.displayedImage = image
+        
+        self.renderThread.run()
     }
- 
+    
     func snapshot() -> UIImage?
     {
         guard let displayedImage = self.displayedImage else { return nil }
         
-        let imageWidth = Int(self.videoFormat.dimensions.width)
-        let imageHeight = Int(self.videoFormat.dimensions.height)
+        let imageWidth = Int(displayedImage.extent.width)
+        let imageHeight = Int(displayedImage.extent.height)
         let capacity = imageWidth * imageHeight * 4
         
         let imageBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: capacity, alignment: 1)
@@ -148,5 +180,16 @@ public extension VideoManager
         
         let image = UIImage(cgImage: cgImage)
         return image
+    }
+}
+
+private extension VideoManager
+{
+    func _render()
+    {
+        for gameView in self.gameViews
+        {
+            gameView.inputImage = self.displayedImage
+        }
     }
 }

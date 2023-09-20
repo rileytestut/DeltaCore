@@ -35,19 +35,10 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 
 public extension DeltaCoreProtocol
 {
-    var bundle: Bundle {
-        #if FRAMEWORK
-        let bundle = Bundle(for: type(of: self.emulatorBridge))
-        #else
-        let bundle = Bundle.main
-        #endif
-        return bundle
-    }
-    
     var resourceBundle: Bundle {
         #if FRAMEWORK
         let bundle = Bundle(for: type(of: self.emulatorBridge))
-        #elseif STATIC_LIBRARY
+        #elseif STATIC_LIBRARY || SWIFT_PACKAGE
         let bundle: Bundle
         if let bundleURL = Bundle.main.url(forResource: self.name, withExtension: "bundle")
         {
@@ -55,7 +46,7 @@ public extension DeltaCoreProtocol
         }
         else
         {
-            bundle = .main
+            bundle = Bundle(for: type(of: self.emulatorBridge))
         }
         #else
         let bundle = Bundle.main

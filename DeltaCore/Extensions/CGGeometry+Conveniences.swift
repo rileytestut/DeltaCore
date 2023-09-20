@@ -1,5 +1,5 @@
 //
-//  CGGeometry+Dictionary.swift
+//  CGGeometry+Conveniences.swift
 //  DeltaCore
 //
 //  Created by Riley Testut on 12/19/15.
@@ -20,6 +20,26 @@ internal extension CGRect
         else { return nil }
         
         self = CGRect(x: x, y: y, width: width, height: height)
+    }
+    
+    func rounded() -> CGRect
+    {
+        var frame = self
+        frame.origin.x.round()
+        frame.origin.y.round()
+        frame.size.width.round()
+        frame.size.height.round()
+        
+        return frame
+    }
+    
+    func scaled(to containingFrame: CGRect) -> CGRect
+    {
+        var frame = self.applying(.init(scaleX: containingFrame.width, y: containingFrame.height))
+        frame.origin.x += containingFrame.minX
+        frame.origin.y += containingFrame.minY
+        
+        return frame
     }
 }
 

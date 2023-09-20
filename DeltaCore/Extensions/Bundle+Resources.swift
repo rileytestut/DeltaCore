@@ -13,6 +13,8 @@ extension Bundle
     class var resources: Bundle {
         #if FRAMEWORK
         let bundle = Bundle(for: RingBuffer.self)
+        #elseif SWIFT_PACKAGE
+        let bundle = Bundle.module
         #elseif STATIC_LIBRARY
         let bundle: Bundle
         if let bundleURL = Bundle.main.url(forResource: "DeltaCore", withExtension: "bundle")

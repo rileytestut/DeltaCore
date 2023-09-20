@@ -8,6 +8,10 @@
 
 import Foundation
 
+#if SWIFT_PACKAGE
+@_exported import CDeltaCore
+#endif
+
 extension GameType: CustomStringConvertible
 {
     public var description: String {

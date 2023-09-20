@@ -41,6 +41,11 @@ public class ExternalGameControllerManager: UIResponder
     
     public var automaticallyAssignsPlayerIndexes: Bool
     
+    internal var keyboardController: KeyboardGameController? {
+        let keyboardController = self.connectedControllers.lazy.compactMap { $0 as? KeyboardGameController }.first
+        return keyboardController
+    }
+    
     private var nextAvailablePlayerIndex: Int {
         var nextPlayerIndex = -1
         
@@ -100,8 +105,14 @@ public extension ExternalGameControllerManager
         NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.keyboardDidConnect(_:)), name: .externalKeyboardDidConnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
         
-        if let notificationCenter = CFNotificationCenterGetDarwinNotifyCenter()
+        if #available(iOS 14, *)
         {
+            NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.gcKeyboardDidConnect(_:)), name: .GCKeyboardDidConnect, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(ExternalGameControllerManager.gcKeyboardDidDisconnect(_:)), name: .GCKeyboardDidDisconnect, object: nil)
+        }
+        else
+        {
+            let notificationCenter = CFNotificationCenterGetDarwinNotifyCenter()
             CFNotificationCenterAddObserver(notificationCenter, nil, ExternalKeyboardStatusDidChange, "GSEventHardwareKeyboardAttached" as CFString, nil, .deliverImmediately)
         }
     }
@@ -133,18 +144,25 @@ public extension ExternalGameControllerManager
 {
     // Implementation based on Ian McDowell's tweet: https://twitter.com/ian_mcdowell/status/844572113759547392
     var isKeyboardConnected: Bool {
-        guard let uiKeyboardClass: AnyObject = NSClassFromString("UIKeyboard") else { return false }
-        
-        let selector = NSSelectorFromString("shouldMinimizeForHardwareKeyboard")
-        guard uiKeyboardClass.responds(to: selector) else { return false }
-        
-        if let _ = uiKeyboardClass.perform(selector)
+        if #available(iOS 14, *)
         {
-            // Returns non-nil value when true, so return true ourselves.
-            return true
+            return GCKeyboard.coalesced != nil
         }
-        
-        return false
+        else
+        {
+            guard let uiKeyboardClass: AnyObject = NSClassFromString("UIKeyboard") else { return false }
+            
+            let selector = NSSelectorFromString("shouldMinimizeForHardwareKeyboard")
+            guard uiKeyboardClass.responds(to: selector) else { return false }
+            
+            if let _ = uiKeyboardClass.perform(selector)
+            {
+                // Returns non-nil value when true, so return true ourselves.
+                return true
+            }
+            
+            return false
+        }
     }
     
     override func keyPressesBegan(_ presses: Set<KeyPress>, with event: UIEvent)
@@ -215,6 +233,18 @@ private extension ExternalGameControllerManager
             }
         }
     }
+    
+    @available(iOS 14.0, *)
+    @objc func gcKeyboardDidConnect(_ notification: Notification)
+    {
+        NotificationCenter.default.post(name: .externalKeyboardDidConnect, object: nil)
+    }
+    
+    @available(iOS 14.0, *)
+    @objc func gcKeyboardDidDisconnect(_ notification: Notification)
+    {
+        NotificationCenter.default.post(name: .externalKeyboardDidDisconnect, object: nil)
+    }
 }
 
 //MARK: - Keyboard Game Controllers -
@@ -222,7 +252,7 @@ private extension ExternalGameControllerManager
 {
     @objc func keyboardDidConnect(_ notification: Notification)
     {
-        guard !self.connectedControllers.contains(where: { $0 is KeyboardGameController }) else { return }
+        guard self.keyboardController == nil else { return }
         
         let keyboardController = KeyboardGameController()
         self.add(keyboardController)
@@ -230,7 +260,7 @@ private extension ExternalGameControllerManager
     
     @objc func keyboardDidDisconnect(_ notification: Notification)
     {
-        guard let keyboardController = self.connectedControllers.first(where: { $0 is KeyboardGameController }) else { return }
+        guard let keyboardController = self.keyboardController else { return }
         
         self.remove(keyboardController)
     }

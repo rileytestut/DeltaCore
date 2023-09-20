@@ -381,7 +381,8 @@ extension EmulatorCore: GameControllerReceiver
     {
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        let playerIndex = gameController.playerIndex ?? 0
+        // Ignore controllers without assigned playerIndex.
+        guard let playerIndex = gameController.playerIndex else { return }
         
         self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, at: playerIndex)
     }

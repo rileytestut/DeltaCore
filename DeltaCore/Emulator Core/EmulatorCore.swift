@@ -357,7 +357,7 @@ extension EmulatorCore: GameControllerReceiver
         {
             self.reactivateInputsQueue.async {
                 
-                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, at: playerIndex)
+                self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
                 
                 self.reactivateInputsDispatchGroup = DispatchGroup()
                 
@@ -368,12 +368,12 @@ extension EmulatorCore: GameControllerReceiver
 
                 self.reactivateInputsDispatchGroup = nil
                 
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, at: playerIndex)
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, playerIndex: playerIndex)
             }
         }
         else
         {
-            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, at: playerIndex)
+            self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: value, playerIndex: playerIndex)
         }
     }
     
@@ -384,7 +384,7 @@ extension EmulatorCore: GameControllerReceiver
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
         
-        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, at: playerIndex)
+        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
     }
     
     private func mappedInput(for input: Input) -> Input?

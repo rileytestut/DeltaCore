@@ -345,9 +345,6 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate controllerInput: Input, value: Double)
     {
-        // Ignore controllers without assigned playerIndex.
-        guard let playerIndex = gameController.playerIndex else { return }
-        
         self.gameControllers.add(gameController)
         
         guard let input = self.mappedInput(for: controllerInput), input.type == .game(self.gameType) else { return }
@@ -387,7 +384,7 @@ extension EmulatorCore: GameControllerReceiver
                 // This means we need to temporarily deactivate the input before activating it again.
                 self.reactivateInputsQueue.async {
                     
-                    self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
+                    self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
                     
                     self.reactivateInputsDispatchGroup = DispatchGroup()
                     
@@ -398,14 +395,14 @@ extension EmulatorCore: GameControllerReceiver
 
                     self.reactivateInputsDispatchGroup = nil
                     
-                    self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
+                    self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue)
                 }
             }
             else
             {
                 // Because continuous sustainedControllerInput values are deactivated when below discreteThreshold,
                 // we don't need to manually deactivate them first since that will implicitly happen during user gesture.
-                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
+                self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue)
             }
         }
         else
@@ -417,12 +414,9 @@ extension EmulatorCore: GameControllerReceiver
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
-        // Ignore controllers without assigned playerIndex.
-        guard let playerIndex = gameController.playerIndex else { return }
-        
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         
-        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!, playerIndex: playerIndex)
+        self.deltaCore.emulatorBridge.deactivateInput(input.intValue!)
     }
     
     private func mappedInput(for input: Input) -> Input?

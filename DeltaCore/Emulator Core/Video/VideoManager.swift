@@ -9,7 +9,7 @@
 import Foundation
 import Accelerate
 import CoreImage
-import GLKit
+import Metal
 
 protocol VideoProcessor
 {
@@ -54,7 +54,10 @@ public class VideoManager: NSObject, VideoRendering
     
     public var isEnabled = true
     
+    #if !os(visionOS)
     private let context: EAGLContext
+    #endif
+    
     private let ciContext: CIContext
     
     private var processor: VideoProcessor
@@ -68,13 +71,21 @@ public class VideoManager: NSObject, VideoRendering
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
+        
+        #if !os(visionOS)
         self.context = EAGLContext(api: .openGLES2)!
         self.ciContext = CIContext(eaglContext: self.context, options: [.workingColorSpace: NSNull()])
+        #else
+        self.ciContext = CIContext(options: [.workingColorSpace: NSNull()])
+        #endif
         
         switch videoFormat.format
         {
         case .bitmap: self.processor = BitmapProcessor(videoFormat: videoFormat)
+            
+        #if !os(visionOS)
         case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
+        #endif
         }
         
         super.init()
@@ -89,9 +100,11 @@ public class VideoManager: NSObject, VideoRendering
         case .bitmap:
             self.processor = BitmapProcessor(videoFormat: self.videoFormat)
             
+        #if !os(visionOS)
         case .openGLES:
             guard let processor = self.processor as? OpenGLESProcessor else { return }
             processor.videoFormat = self.videoFormat
+        #endif
         }
         
         processor.viewport = self.viewport
@@ -109,7 +122,6 @@ public extension VideoManager
     {
         guard !self.gameViews.contains(gameView) else { return }
         
-        gameView.eaglContext = self.context
         self._gameViews.add(gameView)
     }
     

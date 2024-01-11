@@ -6,6 +6,8 @@
 //  Copyright © 2019 Riley Testut. All rights reserved.
 //
 
+#if !os(visionOS)
+
 import CoreImage
 import GLKit
 
@@ -165,3 +167,5 @@ private extension OpenGLESProcessor
         glViewport(GLsizei(viewport.minX), GLsizei(viewport.minY), GLsizei(viewport.width), GLsizei(viewport.height))
     }
 }
+
+#endif

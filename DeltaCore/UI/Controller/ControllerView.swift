@@ -78,7 +78,15 @@ public class ControllerView: UIView, GameController
     }
 
     public var controllerSkinSize: ControllerSkin.Size! {
-        let size = self.overrideControllerSkinSize ?? UIScreen.main.defaultControllerSkinSize
+        let defaultSize: ControllerSkin.Size
+        
+        #if os(visionOS)
+        defaultSize = .large
+        #else
+        defaultSize = UIScreen.main.defaultControllerSkinSize
+        #endif
+        
+        let size = self.overrideControllerSkinSize ?? defaultSize
         return size
     }
     
@@ -194,9 +202,11 @@ public class ControllerView: UIView, GameController
         
         self.isMultipleTouchEnabled = true
         
+        #if !os(visionOS)
         // Remove shortcuts from shortcuts bar so it doesn't appear when using external keyboard as input.
         self.inputAssistantItem.leadingBarButtonGroups = []
         self.inputAssistantItem.trailingBarButtonGroups = []
+        #endif
         
         NotificationCenter.default.addObserver(self, selector: #selector(ControllerView.keyboardDidDisconnect(_:)), name: .externalKeyboardDidDisconnect, object: nil)
         

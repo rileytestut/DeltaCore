@@ -29,8 +29,7 @@ internal extension UIImage
         var destinationFrame = AVMakeRect(aspectRatio: pageFrame.size, insideRect: CGRect(origin: CGPoint.zero, size: targetSize))
         destinationFrame.origin = CGPoint.zero
         
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = UIScreen.main.scale
+        let format = UIGraphicsImageRendererFormat.preferred()
         let imageRenderer = UIGraphicsImageRenderer(bounds: destinationFrame, format: format)
         
         let image = imageRenderer.image { (imageRendererContext) in

@@ -102,7 +102,7 @@ public class GameView: UIView
     {
         if let window = self.window
         {
-            self.metalLayer.contentsScale = window.screen.scale
+            self.metalLayer.contentsScale = window.contentScaleFactor
             self.update()
         }
     }

@@ -77,7 +77,14 @@ extension ControllerSkin
                 {
                     device = .ipad
                     
-                    if !window.bounds.equalTo(window.screen.bounds)
+                    #if os(visionOS)
+                    
+                    displayType = .standard
+                    orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                    
+                    #else
+                    
+                    if #available(iOS 17, *), !window.bounds.equalTo(window.screen.bounds)
                     {
                         displayType = .splitView
                         
@@ -89,6 +96,8 @@ extension ControllerSkin
                         displayType = .standard
                         orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
                     }
+                    
+                    #endif
                 }
                 else
                 {

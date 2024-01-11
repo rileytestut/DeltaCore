@@ -131,9 +131,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     private func initialize()
     {
+        #if !os(visionOS)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        #endif
         
         if #available(iOS 13, *)
         {
@@ -726,6 +728,8 @@ private extension GameViewController
         }
     }
     
+#if !os(visionOS)
+    
     @objc func keyboardWillShow(with notification: Notification)
     {
         guard let window = self.view.window, let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
@@ -790,6 +794,8 @@ private extension GameViewController
         
         self.updateGameViews()
     }
+    
+#endif
     
     @available(iOS 13.0, *)
     @objc func sceneKeyboardFocusDidChange(_ notification: Notification)

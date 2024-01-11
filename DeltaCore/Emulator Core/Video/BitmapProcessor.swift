@@ -27,7 +27,10 @@ fileprivate extension VideoFormat
         switch self.format
         {
         case .bitmap(let format): return format
+            
+        #if !os(visionOS)
         case .openGLES: fatalError("Should not be using VideoFormat.Format.openGLES with BitmapProcessor.")
+        #endif
         }
     }
     

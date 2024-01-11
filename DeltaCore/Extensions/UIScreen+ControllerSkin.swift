@@ -8,6 +8,8 @@
 
 import UIKit
 
+#if !os(visionOS)
+
 public extension UIScreen
 {
     var defaultControllerSkinSize: ControllerSkin.Size
@@ -34,3 +36,5 @@ public extension UIScreen
         }
     }
 }
+
+#endif

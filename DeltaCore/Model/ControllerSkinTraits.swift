@@ -75,14 +75,15 @@ extension ControllerSkin
                 // 99% of the time, won't make a difference ¯\_(ツ)_/¯
                 if window.traitCollection.userInterfaceIdiom == .pad
                 {
-                    device = .ipad
-                    
                     #if os(visionOS)
                     
-                    displayType = .standard
+                    device = .iphone
+                    displayType = .edgeToEdge
                     orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
                     
                     #else
+                    
+                    device = .ipad
                     
                     if #available(iOS 17, *), !window.bounds.equalTo(window.screen.bounds)
                     {

@@ -371,6 +371,8 @@ extension ControllerView
         }
     }
     
+    #if !os(visionOS)
+    
     public override var inputView: UIView? {
         if let keyboardController = ExternalGameControllerManager.shared.keyboardController, keyboardController.playerIndex != nil
         {
@@ -389,6 +391,8 @@ extension ControllerView
         
         return self.isFirstResponder
     }
+    
+    #endif
     
     internal override func _keyCommand(for event: UIEvent, target: UnsafeMutablePointer<UIResponder>) -> UIKeyCommand?
     {
@@ -832,6 +836,8 @@ extension ControllerView: GameControllerReceiver
     }
 }
 
+#if !os(visionOS)
+
 //MARK: - UIKeyInput
 /// UIKeyInput
 // Becoming first responder doesn't steal keyboard focus from other apps in split view unless the first responder conforms to UIKeyInput.
@@ -850,3 +856,5 @@ extension ControllerView: UIKeyInput
     {
     }
 }
+
+#endif

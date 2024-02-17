@@ -135,6 +135,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.sceneKeyboardFocusDidChange(_:)), name: UIScene.keyboardFocusDidChangeNotification, object: nil)
         #endif
         
         if #available(iOS 13, *)
@@ -142,7 +144,6 @@ open class GameViewController: UIViewController, GameControllerReceiver
             NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willResignActive(with:)), name: UIScene.willDeactivateNotification, object: nil)
             NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.didBecomeActive(with:)), name: UIScene.didActivateNotification, object: nil)
             NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.willEnterForeground(_:)), name: UIScene.willEnterForegroundNotification, object: nil)
-            NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.sceneKeyboardFocusDidChange(_:)), name: UIScene.keyboardFocusDidChangeNotification, object: nil)
         }
         else
         {
@@ -795,8 +796,6 @@ private extension GameViewController
         self.updateGameViews()
     }
     
-#endif
-    
     @available(iOS 13.0, *)
     @objc func sceneKeyboardFocusDidChange(_ notification: Notification)
     {
@@ -835,4 +834,6 @@ private extension GameViewController
             }
         }
     }
+    
+#endif
 }

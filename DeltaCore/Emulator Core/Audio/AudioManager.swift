@@ -379,6 +379,11 @@ private extension AudioManager
         {
             self.audioEngine.mainMixerNode.outputVolume = 0.0
         }
+        else if #available(visionOS 1.0, *)
+        {
+            // Never mute volume on visionOS (unless disabled).
+            self.audioEngine.mainMixerNode.outputVolume = 1.0
+        }
         else
         {
             let route = AVAudioSession.sharedInstance().currentRoute

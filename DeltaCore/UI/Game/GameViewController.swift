@@ -167,8 +167,12 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     open override var prefersHomeIndicatorAutoHidden: Bool
     {
+        #if os(visionOS)
+        return false
+        #else
         let prefersHomeIndicatorAutoHidden = self.view.bounds.width > self.view.bounds.height
         return prefersHomeIndicatorAutoHidden
+        #endif
     }
     
     open dynamic override func viewDidLoad()

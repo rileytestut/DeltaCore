@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -58,7 +58,7 @@
 		BFBAB2E51EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAB2E41EB688FC004E0B0E /* CharacterSet+Hexadecimals.swift */; };
 		BFBAE94520CC6E1A00E78FBC /* ExtensibleEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE94420CC6E1A00E78FBC /* ExtensibleEnums.swift */; };
 		BFC853391DB03BD000E8C372 /* ControllerSkinProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC853381DB03BD000E8C372 /* ControllerSkinProtocol.swift */; };
-		BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */; };
+		BFCBD91C20CC6F790028E309 /* ZIPFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFCBD91120CC6F6F0028E309 /* ZIPFoundation.framework */; platformFilters = (ios, xros, ); };
 		BFD27EF71D261E9B00E081A3 /* DeltaTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD27EF61D261E9B00E081A3 /* DeltaTypes.m */; };
 		BFD78F621C994596000441FC /* VideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD78F611C994596000441FC /* VideoManager.swift */; };
 		BFE438101AF606980095A5F1 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE4380F1AF606980095A5F1 /* GameController.swift */; };
@@ -543,7 +543,7 @@
 		};
 		BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */ = {
 			isa = PBXReferenceProxy;
-			fileType = file;
+			fileType = wrapper.cfbundle;
 			path = ZIPFoundationTests.xctest;
 			remoteRef = BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -636,6 +636,10 @@
 		BFA07F07221F3A070012699D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = ZIPFoundation;
+			platformFilters = (
+				ios,
+				xros,
+			);
 			targetProxy = BFA07F06221F3A070012699D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -771,13 +775,20 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = FRAMEWORK;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Debug;
 		};
@@ -792,13 +803,21 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileytestut.$(PRODUCT_NAME:rfc1034identifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = FRAMEWORK;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Release;
 		};

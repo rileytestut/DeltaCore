@@ -398,7 +398,11 @@ extension EmulatorCore: GameControllerReceiver
 
                     self.reactivateInputsDispatchGroup = nil
                     
-                    self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
+                    if gameController.sustainedInputs.keys.contains(sustainedControllerInput.key)
+                    {
+                        // Make sure input is still sustained before reactivating it.
+                        self.deltaCore.emulatorBridge.activateInput(input.intValue!, value: adjustedValue, playerIndex: playerIndex)
+                    }
                 }
             }
             else

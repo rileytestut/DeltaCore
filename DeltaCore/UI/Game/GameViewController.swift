@@ -631,7 +631,7 @@ private extension GameViewController
 
 extension GameViewController: UIGestureRecognizerDelegate
 {
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
+    open func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
     {
         // We only need tap-to-resume when using Split View/Stage Manager to handle edge cases where emulation doesn't resume automatically.
         // However, we'll also respond to direct taps on primary game screen just in case.

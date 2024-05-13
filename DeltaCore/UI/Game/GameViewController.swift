@@ -85,6 +85,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     open weak var delegate: GameViewControllerDelegate?
     
+    public var automaticallyPausesWhileInactive: Bool = true
+    
     public var gameView: GameView! {
         return self.gameViews.first
     }
@@ -659,10 +661,7 @@ private extension GameViewController
     
     @objc func didBecomeActive(with notification: Notification)
     {
-        if #available(iOS 13, *)
-        {
-            guard let scene = notification.object as? UIWindowScene, scene == self.view.window?.windowScene else { return }
-        }
+        guard let scene = notification.object as? UIWindowScene, scene == self.view.window?.windowScene else { return }
                         
         if #available(iOS 16, *), self.isEnteringForeground
         {
@@ -687,10 +686,10 @@ private extension GameViewController
             self.isEnteringForeground = false
         }
         
-        if #available(iOS 13, *)
+        if self.automaticallyPausesWhileInactive
         {
             // Make sure scene has keyboard focus before automatically resuming.
-            guard let scene = self.view.window?.windowScene, scene.hasKeyboardFocus else { return }
+            guard scene.hasKeyboardFocus else { return }
         }
         
         self.emulatorCoreQueue.async {
@@ -819,12 +818,13 @@ private extension GameViewController
         self.emulatorCoreQueue.async {
             if scene.hasKeyboardFocus
             {
+                // Always resume emulation, even if automaticallyPausesWhileInactive == false
                 guard self.emulatorCore?.state == .paused else { return }
                 _ = self._resumeEmulation()
             }
             else
             {
-                guard self.emulatorCore?.state == .running else { return }
+                guard self.emulatorCore?.state == .running, self.automaticallyPausesWhileInactive else { return }
                 _ = self._pauseEmulation()
             }
         }

@@ -21,7 +21,7 @@ extension UIScene
 {
     static let keyboardFocusDidChangeNotification: Notification.Name = .init("keyboardFocusDidChangeNotification")
     
-    var hasKeyboardFocus: Bool {
+    public var hasKeyboardFocus: Bool {
         guard self.responds(to: #selector(getter: UIScenePrivate._isTargetOfKeyboardEventDeferringEnvironment)) else {
             // Default to true, or else emulation will never resume due to thinking we don't have keyboard focus.
             return true

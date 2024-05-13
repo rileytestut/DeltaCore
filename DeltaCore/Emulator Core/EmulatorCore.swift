@@ -348,6 +348,12 @@ extension EmulatorCore: GameControllerReceiver
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
         
+        if !self.gameViews.isEmpty
+        {
+            // Ignore unless there is a game screen in the active scene.
+            guard self.gameViews.contains(where: { $0.window?.windowScene?.hasKeyboardFocus == true }) else { return }
+        }
+        
         self.gameControllers.add(gameController)
         
         guard let input = self.mappedInput(for: controllerInput), input.type == .game(self.gameType) else { return }
@@ -423,6 +429,12 @@ extension EmulatorCore: GameControllerReceiver
     {
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
+        
+        if !self.gameViews.isEmpty
+        {
+            // Ignore unless there is a game screen in the active scene.
+            guard self.gameViews.contains(where: { $0.window?.windowScene?.hasKeyboardFocus == true }) else { return }
+        }
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         

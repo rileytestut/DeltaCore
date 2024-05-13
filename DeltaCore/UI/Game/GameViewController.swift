@@ -426,11 +426,17 @@ open class GameViewController: UIViewController, GameControllerReceiver
     // These would normally be declared in an extension, but non-ObjC compatible methods cannot be overridden if declared in extension :(
     open func gameController(_ gameController: GameController, didActivate input: Input, value: Double)
     {
+        // Ignore unless we're the active scene.
+        guard self.view.window?.windowScene?.hasKeyboardFocus == true else { return }
+        
         // This method intentionally left blank
     }
     
     open func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
+        // Ignore unless we're the active scene.
+        guard self.view.window?.windowScene?.hasKeyboardFocus == true else { return }
+        
         // Wait until menu button is released before calling handleMenuInputFrom:
         // Fixes potentially missing key-up inputs due to showing pause menu.
         guard let standardInput = StandardGameControllerInput(input: input), standardInput == .menu else { return }
@@ -727,7 +733,12 @@ private extension GameViewController
     
     @objc func keyboardWillShow(with notification: Notification)
     {
-        guard let window = self.view.window, let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
+        guard let window = self.view.window, let windowScene = window.windowScene,
+              let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView
+        else { return }
+        
+        // Only adjust screen if we have keyboard focus OR emulatorCore is running.
+        guard windowScene.hasKeyboardFocus || self.emulatorCore?.state == .running else { return }
         
         let systemKeyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
         guard systemKeyboardFrame.height > 0 else { return }
@@ -767,6 +778,11 @@ private extension GameViewController
     
     @objc func keyboardWillHide(with notification: Notification)
     {
+        guard let traits = self.controllerView.controllerSkinTraits, traits.displayType == .splitView else { return }
+        
+        // Always allow resizing screen back to original size to ensure it never gets stuck at small size.
+        // guard windowScene.hasKeyboardFocus || self.emulatorCore?.state == .running else { return }
+        
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
         
         let rawAnimationCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! Int

@@ -111,6 +111,7 @@ public class GameView: UIView
     
     private var lock = os_unfair_lock()
     private var didLayoutSubviews = false
+    private var didRenderInitialFrame = false
     
     public override init(frame: CGRect)
     {
@@ -228,7 +229,26 @@ private extension GameView
         // Otherwise, the app may crash due to race conditions when creating framebuffer from background thread.
         guard self.didLayoutSubviews else { return }
 
-        self.glkView.display()
+        if !self.didRenderInitialFrame
+        {
+            if Thread.isMainThread
+            {
+                self.glkView.display()
+            }
+            else
+            {
+                // Using `async` still results in occasional crash as of iOS 16.7.2.
+                DispatchQueue.main.sync {
+                    self.glkView.display()
+                }                
+            }
+            
+            self.didRenderInitialFrame = true
+        }
+        else
+        {
+            self.glkView.display()
+        }
     }
 }
 

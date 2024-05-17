@@ -354,7 +354,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             contentAspectRatio = gameScreenDimensions
         }
         
-        let appPlacementFrame = AVMakeRect(aspectRatio: contentAspectRatio, insideRect: self.view.bounds).rounded()
+        let appPlacementFrame = AVMakeRect(aspectRatio: contentAspectRatio, insideRect: availableGameFrame).rounded()
         if self.appPlacementLayoutGuide.layoutFrame.rounded() != appPlacementFrame
         {
             self.appPlacementXConstraint.constant = appPlacementFrame.minX

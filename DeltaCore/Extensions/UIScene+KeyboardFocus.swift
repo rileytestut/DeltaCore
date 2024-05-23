@@ -19,7 +19,7 @@ private var keyboardFocusTimerKey: UInt8 = 0
 @available(iOS 13, *)
 extension UIScene
 {
-    static let keyboardFocusDidChangeNotification: Notification.Name = .init("keyboardFocusDidChangeNotification")
+    public static let keyboardFocusDidChangeNotification: Notification.Name = .init("keyboardFocusDidChangeNotification")
     
     public var hasKeyboardFocus: Bool {
         guard self.responds(to: #selector(getter: UIScenePrivate._isTargetOfKeyboardEventDeferringEnvironment)) else {

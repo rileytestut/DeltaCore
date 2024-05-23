@@ -37,6 +37,9 @@ public class GameView: UIView
 {
     public var isEnabled: Bool = true
     
+    // Set to limit rendering to just a specific VideoManager.
+    public weak var exclusiveVideoManager: VideoManager?
+    
     @NSCopying public var inputImage: CIImage? {
         didSet {
             if self.inputImage?.extent != oldValue?.extent

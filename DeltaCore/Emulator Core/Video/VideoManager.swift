@@ -189,6 +189,11 @@ private extension VideoManager
     {
         for gameView in self.gameViews
         {
+            if let exclusiveVideoManager = gameView.exclusiveVideoManager
+            {
+                guard exclusiveVideoManager == self else { continue }
+            }
+            
             gameView.inputImage = self.displayedImage
         }
     }

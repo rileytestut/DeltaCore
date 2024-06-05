@@ -13,6 +13,7 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
     /* General */
     var name: String { get }
     var identifier: String { get }
+    var version: String? { get }
     
     var gameType: GameType { get }
     var gameSaveFileExtension: String { get }
@@ -35,6 +36,10 @@ public protocol DeltaCoreProtocol: CustomStringConvertible
 
 public extension DeltaCoreProtocol
 {
+    var version: String? {
+        return nil
+    }
+    
     var resourceBundle: Bundle {
         #if FRAMEWORK
         let bundle = Bundle(for: type(of: self.emulatorBridge))

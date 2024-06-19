@@ -77,11 +77,18 @@ extension ControllerSkin
                 {
                     device = .ipad
                     
-                    if !window.bounds.equalTo(window.screen.bounds)
+                    if window.isKeyboardWindow
                     {
                         displayType = .splitView
                         
-                        // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin)
+                        // Screen bounds may be incorrect when entering background, but keyboard window bounds is full screen and always accurate, so use window bounds instead.
+                        orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                    }
+                    else if !window.bounds.equalTo(window.screen.bounds)
+                    {
+                        displayType = .splitView
+                        
+                        // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin).
                         orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
                     }
                     else

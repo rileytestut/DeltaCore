@@ -590,8 +590,6 @@ public extension ControllerView
             self.dismissInputControllerView()
         }
         
-        self.controllerInputView?.controllerView.overrideControllerSkinTraits = self.controllerSkinTraits
-        
         self.invalidateIntrinsicContentSize()
         self.setNeedsUpdateConstraints()
         self.setNeedsLayout()

@@ -8,6 +8,17 @@
 
 import UIKit
 
+private var isKeyboardWindowKey: UInt8 = 0
+
+internal extension UIWindow
+{
+    // Hacky, but allows us to reliably detect keyboard window without private APIs.
+    var isKeyboardWindow: Bool {
+        get { objc_getAssociatedObject(self, &isKeyboardWindowKey) as? Bool ?? false }
+        set { objc_setAssociatedObject(self, &isKeyboardWindowKey, newValue as NSNumber, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY) }
+    }
+}
+
 class ControllerInputView: UIInputView
 {
     let controllerView: ControllerView
@@ -38,6 +49,14 @@ class ControllerInputView: UIInputView
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func didMoveToWindow() 
+    {
+        super.didMoveToWindow()
+        
+        guard let window = self.window else { return }
+        window.isKeyboardWindow = true
     }
     
     override func layoutSubviews()

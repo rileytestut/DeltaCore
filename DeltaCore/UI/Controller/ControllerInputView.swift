@@ -57,6 +57,13 @@ class ControllerInputView: UIInputView
         
         guard let window = self.window else { return }
         window.isKeyboardWindow = true
+        
+        if self.bounds.width == window.bounds.width
+        {
+            // Keyboard already matches window width, but other traits might have changed so update controller skin just to be safe.
+            // Limit this to when widths match to avoid duplicate calls to updateControllerSkin() via layoutSubviews().
+            self.controllerView.updateControllerSkin()
+        }
     }
     
     override func layoutSubviews()

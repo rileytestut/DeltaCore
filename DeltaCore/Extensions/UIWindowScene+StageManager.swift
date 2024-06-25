@@ -16,7 +16,8 @@ import UIKit
 @available(iOS 16, *)
 extension UIWindowScene
 {
-    var isStageManagerEnabled: Bool {
+    @_spi(Internal)
+    public var isStageManagerEnabled: Bool {
         guard self.responds(to: #selector(getter: UIWindowScenePrivate._enhancedWindowingEnabled)) else { return false }
         
         let windowScene = unsafeBitCast(self, to: UIWindowScenePrivate.self)

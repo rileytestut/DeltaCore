@@ -95,6 +95,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
     open private(set) var controllerView: ControllerView!
     private var splitViewInputViewHeight: CGFloat = 0
     
+    private var tapGestureRecognizer: UITapGestureRecognizer!
+    
     private let emulatorCoreQueue = DispatchQueue(label: "com.rileytestut.DeltaCore.GameViewController.emulatorCoreQueue", qos: .userInitiated)
     
     private var _previousControllerSkin: ControllerSkinProtocol?
@@ -191,9 +193,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.updateGameViews), name: ControllerView.controllerViewDidChangeControllerSkinNotification, object: self.controllerView)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.controllerViewDidUpdateGameViews(_:)), name: ControllerView.controllerViewDidUpdateGameViewsNotification, object: self.controllerView)
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resumeEmulationIfNeeded))
-        tapGestureRecognizer.delegate = self
-        self.view.addGestureRecognizer(tapGestureRecognizer)
+        self.tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(GameViewController.resumeEmulationIfNeeded))
+        self.tapGestureRecognizer.delegate = self
+        self.view.addGestureRecognizer(self.tapGestureRecognizer)
         
         self.prepareForGame()
         
@@ -641,6 +643,8 @@ extension GameViewController: UIGestureRecognizerDelegate
 {
     open func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
     {
+        guard gestureRecognizer == self.tapGestureRecognizer else { return true }
+        
         // We only need tap-to-resume when using Split View/Stage Manager to handle edge cases where emulation doesn't resume automatically.
         // However, we'll also respond to direct taps on primary game screen just in case.
         let location = touch.location(in: self.gameView)

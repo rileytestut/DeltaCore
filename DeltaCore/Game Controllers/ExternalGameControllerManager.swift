@@ -46,6 +46,19 @@ public class ExternalGameControllerManager: UIResponder
         return keyboardController
     }
     
+    internal var prefersModernKeyboardHandling: Bool {
+        if ProcessInfo.processInfo.isiOSAppOnMac
+        {
+            // Legacy keyboard handling doesn't work on macOS, so use modern handling instead.
+            // It's still in development, but better than nothing.
+            return true
+        }
+        else
+        {
+            return false
+        }
+    }
+    
     private var nextAvailablePlayerIndex: Int {
         var nextPlayerIndex = -1
         
@@ -95,7 +108,8 @@ public extension ExternalGameControllerManager
         
         if self.isKeyboardConnected
         {
-            let keyboardController = KeyboardGameController()
+            let keyboard = self.prefersModernKeyboardHandling ? GCKeyboard.coalesced : nil
+            let keyboardController = KeyboardGameController(keyboard: keyboard)
             self.add(keyboardController)
         }
         
@@ -254,7 +268,8 @@ private extension ExternalGameControllerManager
     {
         guard self.keyboardController == nil else { return }
         
-        let keyboardController = KeyboardGameController()
+        let keyboard = self.prefersModernKeyboardHandling ? GCKeyboard.coalesced : nil
+        let keyboardController = KeyboardGameController(keyboard: keyboard)
         self.add(keyboardController)
     }
     

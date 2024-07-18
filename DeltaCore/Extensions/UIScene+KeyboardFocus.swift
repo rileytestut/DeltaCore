@@ -27,6 +27,12 @@ extension UIScene
             return true
         }
         
+        guard !ProcessInfo.processInfo.isiOSAppOnMac && !ProcessInfo.processInfo.isRunningOnVisionPro else {
+            // scene._isTargetOfKeyboardEventDeferringEnvironment always returns false when running on macOS and visionOS,
+            // so return true instead to ensure everything continues working.
+            return true
+        }
+        
         let scene = unsafeBitCast(self, to: UIScenePrivate.self)
         let hasKeyboardFocus = scene._isTargetOfKeyboardEventDeferringEnvironment
         return hasKeyboardFocus

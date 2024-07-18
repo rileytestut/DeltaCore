@@ -72,6 +72,7 @@
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
 		D5537CFA2887558B00A66016 /* UIScene+KeyboardFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */; };
 		D5777512289882F5005E8B05 /* UIWindowScene+StageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */; };
+		D5E3AC952C48582900E17AE7 /* ProcessInfo+visionOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */; };
 		D5FFEEB128A573FD00882FCF /* GameWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FFEEB028A573FD00882FCF /* GameWindow.swift */; };
 /* End PBXBuildFile section */
 
@@ -167,6 +168,7 @@
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
 		D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScene+KeyboardFocus.swift"; sourceTree = "<group>"; };
 		D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIWindowScene+StageManager.swift"; sourceTree = "<group>"; };
+		D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+visionOS.swift"; sourceTree = "<group>"; };
 		D5FFEEB028A573FD00882FCF /* GameWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -380,6 +382,7 @@
 				BF0B260A23E91745007BE38B /* Bundle+Resources.swift */,
 				D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */,
 				D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */,
+				D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -543,7 +546,7 @@
 		};
 		BFCBD91320CC6F6F0028E309 /* ZIPFoundationTests.xctest */ = {
 			isa = PBXReferenceProxy;
-			fileType = file;
+			fileType = wrapper.cfbundle;
 			path = ZIPFoundationTests.xctest;
 			remoteRef = BFCBD91220CC6F6F0028E309 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -577,6 +580,7 @@
 				BF98D2A51F421DFA001D3219 /* GameControllerInputMappingProtocol.swift in Sources */,
 				BFA5FCEE20D37FF800A3C5AB /* KeyboardResponder.swift in Sources */,
 				BF57D1F81EA6DF840013CB1D /* VideoFormat.swift in Sources */,
+				D5E3AC952C48582900E17AE7 /* ProcessInfo+visionOS.swift in Sources */,
 				BFA5FCF520D3804400A3C5AB /* UIApplication+AppExtension.swift in Sources */,
 				BFA5FCEF20D37FF800A3C5AB /* KeyboardGameController.swift in Sources */,
 				BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */,

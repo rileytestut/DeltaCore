@@ -50,6 +50,10 @@ public extension ControllerSkinProtocol
                 traits.device = .iphone
                 traits.displayType = .edgeToEdge
             }
+            else
+            {
+                return nil
+            }
         }
         
         return traits

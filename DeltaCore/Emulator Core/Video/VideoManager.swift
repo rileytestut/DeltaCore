@@ -54,7 +54,7 @@ public class VideoManager: NSObject, VideoRendering
     
     public var isEnabled = true
     
-    private let context: EAGLContext
+    private let eaglContext: EAGLContext?
     private let ciContext: CIContext
     
     private var processor: VideoProcessor
@@ -68,13 +68,32 @@ public class VideoManager: NSObject, VideoRendering
     public init(videoFormat: VideoFormat)
     {
         self.videoFormat = videoFormat
-        self.context = EAGLContext(api: .openGLES2)!
-        self.ciContext = CIContext(eaglContext: self.context, options: [.workingColorSpace: NSNull()])
         
         switch videoFormat.format
         {
-        case .bitmap: self.processor = BitmapProcessor(videoFormat: videoFormat)
-        case .openGLES: self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: self.context)
+        case .bitmap:
+            if #available(iOS 18, macOS 15, *), ProcessInfo.processInfo.isiOSAppOnMac
+            {
+                // macOS 15 Sequoia no longer supports rendering bitmap CIImages with OpenGL ES,
+                // so switch to rendering with Metal instead.
+                
+                self.ciContext = CIContext(options: [.workingColorSpace: NSNull()])
+                self.processor = BitmapProcessor(videoFormat: videoFormat)
+                self.eaglContext = nil
+            }
+            else
+            {
+                let context = EAGLContext(api: .openGLES2)!
+                self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
+                self.processor = BitmapProcessor(videoFormat: videoFormat)
+                self.eaglContext = context
+            }
+            
+        case .openGLES:
+            let context = EAGLContext(api: .openGLES2)!
+            self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
+            self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: context)
+            self.eaglContext = context
         }
         
         super.init()
@@ -109,7 +128,7 @@ public extension VideoManager
     {
         guard !self.gameViews.contains(gameView) else { return }
         
-        gameView.eaglContext = self.context
+        gameView.eaglContext = self.eaglContext
         self._gameViews.add(gameView)
     }
     

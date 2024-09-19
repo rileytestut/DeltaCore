@@ -9,6 +9,7 @@
 import UIKit
 import CoreImage
 import GLKit
+import MetalKit
 import AVFoundation
 
 // Create wrapper class to prevent exposing GLKView (and its annoying deprecation warnings) to clients.
@@ -86,9 +87,8 @@ public class GameView: UIView
         return image
     }
     
-    internal var eaglContext: EAGLContext {
-        get { return self.glkView.context }
-        set {
+    internal var eaglContext: EAGLContext? {
+        didSet {
             os_unfair_lock_lock(&self.lock)
             defer { os_unfair_lock_unlock(&self.lock) }
             
@@ -98,8 +98,11 @@ public class GameView: UIView
             // to self.glkView may crash if we've already rendered to a game view.
             EAGLContext.setCurrent(nil)
             
-            self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: newValue.sharegroup)!
-            self.context = self.makeContext()
+            if let eaglContext
+            {
+                self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: eaglContext.sharegroup)!
+                self.openGLESContext = self.makeOpenGLESContext()
+            }
             
             DispatchQueue.main.async {
                 // layoutSubviews() must be called after setting self.eaglContext before we can display anything.
@@ -107,20 +110,32 @@ public class GameView: UIView
             }
         }
     }
-    private lazy var context: CIContext = self.makeContext()
+    private lazy var openGLESContext: CIContext = self.makeOpenGLESContext()
+    private lazy var metalContext: CIContext = self.makeMetalContext()
         
     private let glkView: GLKView
     private lazy var glkViewDelegate = GameViewGLKViewDelegate(gameView: self)
+    
+    private let mtkView: MTKView
+    private let metalDevice = MTLCreateSystemDefaultDevice()
+    private lazy var metalCommandQueue = self.metalDevice?.makeCommandQueue()
+    private weak var metalLayer: CAMetalLayer?
     
     private var lock = os_unfair_lock()
     private var didLayoutSubviews = false
     private var didRenderInitialFrame = false
     private var isRenderingInitialFrame = false
     
+    private var isUsingMetal: Bool {
+        let isUsingMetal = (self.eaglContext == nil)
+        return isUsingMetal
+    }
+    
     public override init(frame: CGRect)
     {
         let eaglContext = EAGLContext(api: .openGLES2)!
         self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
+        self.mtkView = MTKView(frame: .zero, device: self.metalDevice)
         
         super.init(frame: frame)
         
@@ -131,6 +146,7 @@ public class GameView: UIView
     {
         let eaglContext = EAGLContext(api: .openGLES2)!
         self.glkView = GLKView(frame: CGRect.zero, context: eaglContext)
+        self.mtkView = MTKView(frame: .zero, device: self.metalDevice)
         
         super.init(coder: aDecoder)
         
@@ -144,6 +160,19 @@ public class GameView: UIView
         self.glkView.delegate = self.glkViewDelegate
         self.glkView.enableSetNeedsDisplay = false
         self.addSubview(self.glkView)
+        
+        self.mtkView.frame = self.bounds
+        self.mtkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        self.mtkView.delegate = self
+        self.mtkView.enableSetNeedsDisplay = false
+        self.mtkView.framebufferOnly = false // Must be false to avoid "frameBufferOnly texture not supported for compute" assertion
+        self.mtkView.isPaused = true
+        self.addSubview(self.mtkView)
+        
+        if let metalLayer = self.mtkView.layer as? CAMetalLayer
+        {
+            self.metalLayer = metalLayer
+        }
     }
     
     public override func didMoveToWindow()
@@ -159,8 +188,25 @@ public class GameView: UIView
     {
         super.layoutSubviews()
         
-        self.glkView.isHidden = (self.outputImage == nil)
-        
+        if self.outputImage != nil
+        {
+            if self.isUsingMetal
+            {
+                self.mtkView.isHidden = false
+                self.glkView.isHidden = true
+            }
+            else
+            {
+                self.mtkView.isHidden = true
+                self.glkView.isHidden = false
+            }
+        }
+        else
+        {
+            self.mtkView.isHidden = true
+            self.glkView.isHidden = true
+        }
+                
         self.didLayoutSubviews = true
     }
 }
@@ -186,7 +232,14 @@ public extension GameView
         let renderer = UIGraphicsImageRenderer(size: rect.size, format: format)
         
         let snapshot = renderer.image { (context) in
-            self.glkView.drawHierarchy(in: rect, afterScreenUpdates: false)
+            if self.isUsingMetal
+            {
+                self.mtkView.drawHierarchy(in: rect, afterScreenUpdates: false)
+            }
+            else
+            {
+                self.glkView.drawHierarchy(in: rect, afterScreenUpdates: false)
+            }
         }
         
         return snapshot
@@ -215,9 +268,24 @@ public extension GameView
 
 private extension GameView
 {
-    func makeContext() -> CIContext
+    func makeOpenGLESContext() -> CIContext
     {
         let context = CIContext(eaglContext: self.glkView.context, options: [.workingColorSpace: NSNull()])
+        return context
+    }
+    
+    func makeMetalContext() -> CIContext
+    {
+        guard let metalCommandQueue else {
+            // This should never be called, but just in case we return dummy CIContext.
+            return CIContext(options: [.workingColorSpace: NSNull()])
+        }
+        
+        let options: [CIContextOption: Any] = [.workingColorSpace: NSNull(),
+                                               .cacheIntermediates: true,
+                                               .name: "GameView Context"]
+                
+        let context = CIContext(mtlCommandQueue: metalCommandQueue, options: options)
         return context
     }
     
@@ -237,7 +305,7 @@ private extension GameView
         {
             if Thread.isMainThread
             {
-                self.glkView.display()
+                self.render()
                 self.didRenderInitialFrame = true
             }
             else if !self.isRenderingInitialFrame
@@ -246,11 +314,23 @@ private extension GameView
                 self.isRenderingInitialFrame = true
                 
                 DispatchQueue.main.async {
-                    self.glkView.display()
+                    self.render()
                     self.didRenderInitialFrame = true
                     self.isRenderingInitialFrame = false
                 }
             }
+        }
+        else
+        {
+            self.render()
+        }
+    }
+    
+    func render()
+    {
+        if self.isUsingMetal
+        {
+            self.mtkView.draw()
         }
         else
         {
@@ -269,7 +349,49 @@ private extension GameView
         if let outputImage = self.outputImage
         {
             let bounds = CGRect(x: 0, y: 0, width: self.glkView.drawableWidth, height: self.glkView.drawableHeight)
-            self.context.draw(outputImage, in: bounds, from: outputImage.extent)
+            self.openGLESContext.draw(outputImage, in: bounds, from: outputImage.extent)
+        }
+    }
+}
+
+extension GameView: MTKViewDelegate
+{
+    public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize)
+    {
+    }
+    
+    public func draw(in view: MTKView)
+    {
+        autoreleasepool {
+            guard let image = self.outputImage,
+                  let commandBuffer = self.metalCommandQueue?.makeCommandBuffer(),
+                  let currentDrawable = self.metalLayer?.nextDrawable()
+            else { return }
+            
+            let scaleX = view.drawableSize.width / image.extent.width
+            let scaleY = view.drawableSize.height / image.extent.height
+            let outputImage = image.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+            
+            do
+            {
+                let destination = CIRenderDestination(width: Int(view.drawableSize.width),
+                                                      height: Int(view.drawableSize.height),
+                                                      pixelFormat: view.colorPixelFormat,
+                                                      commandBuffer: nil) { [unowned currentDrawable] () -> MTLTexture in
+                    // Lazily return texture to prevent hangs due to waiting for previous command to finish.
+                    let texture = currentDrawable.texture
+                    return texture
+                }
+                
+                try self.metalContext.startTask(toRender: outputImage, from: outputImage.extent, to: destination, at: .zero)
+                
+                commandBuffer.present(currentDrawable)
+                commandBuffer.commit()
+            }
+            catch
+            {
+                print("Failed to render frame with Metal.", error)
+            }
         }
     }
 }

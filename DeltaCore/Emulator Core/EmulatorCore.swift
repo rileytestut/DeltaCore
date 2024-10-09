@@ -576,6 +576,11 @@ private extension EmulatorCore
 {
     @objc func emulationDidQuit(_ notification: Notification)
     {
+        guard let bridge = notification.object as? EmulatorBridging, bridge.gameURL == self.game.fileURL else { return }
+        
+        // Re-post notification with `self` as object.
+        NotificationCenter.default.post(name: EmulatorCore.emulationDidQuitNotification, object: self, userInfo: nil)
+        
         DispatchQueue.global(qos: .userInitiated).async {
             // Dispatch onto global queue to prevent deadlock.
             self.stop()

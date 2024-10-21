@@ -83,14 +83,20 @@ public class VideoManager: NSObject, VideoRendering
             }
             else
             {
-                let context = EAGLContext(api: .openGLES2)!
+                let context = EAGLContext(api: .openGLES3)!
                 self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
                 self.processor = BitmapProcessor(videoFormat: videoFormat)
                 self.eaglContext = context
             }
             
-        case .openGLES:
+        case .openGLES2:
             let context = EAGLContext(api: .openGLES2)!
+            self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
+            self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: context)
+            self.eaglContext = context
+            
+        case .openGLES3:
+            let context = EAGLContext(api: .openGLES3)!
             self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
             self.processor = OpenGLESProcessor(videoFormat: videoFormat, context: context)
             self.eaglContext = context
@@ -108,12 +114,12 @@ public class VideoManager: NSObject, VideoRendering
         case .bitmap:
             self.processor = BitmapProcessor(videoFormat: self.videoFormat)
             
-        case .openGLES:
+        case .openGLES2, .openGLES3:
             guard let processor = self.processor as? OpenGLESProcessor else { return }
             processor.videoFormat = self.videoFormat
         }
         
-        processor.viewport = self.viewport
+        self.processor.viewport = self.viewport
     }
     
     deinit

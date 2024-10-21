@@ -100,7 +100,7 @@ public class GameView: UIView
             
             if let eaglContext
             {
-                self.glkView.context = EAGLContext(api: .openGLES2, sharegroup: eaglContext.sharegroup)!
+                self.glkView.context = EAGLContext(api: eaglContext.api, sharegroup: eaglContext.sharegroup)!
                 self.openGLESContext = self.makeOpenGLESContext()
             }
             

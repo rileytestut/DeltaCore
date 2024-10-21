@@ -110,11 +110,18 @@ public final class EmulatorCore: NSObject
         self.gameType = self.game.type
         self.gameSaveURL = self.game.gameSaveURL
         
+        var videoFormat = deltaCore.videoFormat
+        if let prefersOpenGLES2 = self.options[.openGLES2] as? Bool, prefersOpenGLES2, videoFormat.format == .openGLES3
+        {
+            // Override core's video format to use OpenGL ES 2.0 instead.
+            videoFormat.format = .openGLES2
+        }
+        
         // These were previously lazy variables, but turns out Swift lazy variables are not thread-safe.
         // Since they don't actually need to be lazy, we now explicitly initialize them in the initializer.
         self.audioManager = AudioManager(audioFormat: deltaCore.audioFormat)
-        self.videoManager = VideoManager(videoFormat: deltaCore.videoFormat)
-        
+        self.videoManager = VideoManager(videoFormat: videoFormat)
+                
         super.init()
         
         NotificationCenter.default.addObserver(self, selector: #selector(EmulatorCore.emulationDidQuit), name: EmulatorCore.emulationDidQuitNotification, object: nil)

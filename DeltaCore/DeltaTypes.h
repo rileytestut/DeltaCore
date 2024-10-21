@@ -14,6 +14,9 @@ typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString *CheatType NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString *GameControllerInputType NS_TYPED_EXTENSIBLE_ENUM;
 
+// Emulator Core Options
+typedef NSString *EmulatorCoreOption NS_REFINED_FOR_SWIFT NS_TYPED_EXTENSIBLE_ENUM;
+
 extern NSNotificationName const DeltaRegistrationRequestNotification;
 
 // Used by GameWindow.

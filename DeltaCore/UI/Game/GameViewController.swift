@@ -36,6 +36,8 @@ public protocol GameViewControllerDelegate: AnyObject
     
     func gameViewControllerDidUpdate(_ gameViewController: GameViewController)
     func gameViewController(_ gameViewController: GameViewController, didUpdateGameViews gameViews: [GameView])
+    
+    func gameViewController(_ gameViewController: GameViewController, optionsFor game: GameProtocol) -> [EmulatorCore.Option: Any]
 }
 
 public extension GameViewControllerDelegate
@@ -47,6 +49,8 @@ public extension GameViewControllerDelegate
     
     func gameViewControllerDidUpdate(_ gameViewController: GameViewController) {}
     func gameViewController(_ gameViewController: GameViewController, didUpdateGameViews gameViews: [GameView]) {}
+    
+    func gameViewController(_ gameViewController: GameViewController, optionsFor game: GameProtocol) -> [EmulatorCore.Option: Any] { return [:] }
 }
 
 private var kvoContext = 0
@@ -59,7 +63,8 @@ open class GameViewController: UIViewController, GameControllerReceiver
         {
             if let game = self.game
             {
-                self.emulatorCore = EmulatorCore(game: game)
+                let options = self.delegate?.gameViewController(self, optionsFor: game) ?? [:]
+                self.emulatorCore = EmulatorCore(game: game, options: options)
             }
             else
             {

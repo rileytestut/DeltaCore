@@ -17,6 +17,8 @@ extension EmulatorCore
 
 public extension EmulatorCore
 {
+    typealias Option = __EmulatorCoreOption
+    
     @objc enum State: Int
     {
         case stopped
@@ -41,6 +43,7 @@ public final class EmulatorCore: NSObject
     //MARK: - Properties -
     /** Properties **/
     public let game: GameProtocol
+    public let options: [Option: Any]
     
     public var gameViews: Set<GameView> {
         return _gameViews.setRepresentation as! Set<GameView>
@@ -86,7 +89,7 @@ public final class EmulatorCore: NSObject
     
     //MARK: - Initializers -
     /** Initializers **/
-    public required init?(game: GameProtocol)
+    public required init?(game: GameProtocol, options: [Option: Any] = [:])
     {
         // These MUST be set in start(), because it's possible the same emulator core might be stopped, another one started, and then resumed back to this one
         // AKA, these need to always be set at start to ensure it points to the correct managers
@@ -101,6 +104,7 @@ public final class EmulatorCore: NSObject
         self.deltaCore = deltaCore
         
         self.game = game
+        self.options = options
         
         // Store separately in case self.game is an NSManagedObject subclass, and we need to access .type or .gameSaveURL on a different thread than its NSManagedObjectContext
         self.gameType = self.game.type

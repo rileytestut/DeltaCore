@@ -17,6 +17,7 @@ typedef NSString *GameControllerInputType NS_TYPED_EXTENSIBLE_ENUM;
 // Emulator Core Options
 typedef NSString *EmulatorCoreOption NS_REFINED_FOR_SWIFT NS_TYPED_EXTENSIBLE_ENUM;
 FOUNDATION_EXPORT EmulatorCoreOption const EmulatorCoreOptionOpenGLES2;
+FOUNDATION_EXPORT EmulatorCoreOption const EmulatorCoreOptionMetal;
 
 extern NSNotificationName const DeltaRegistrationRequestNotification;
 

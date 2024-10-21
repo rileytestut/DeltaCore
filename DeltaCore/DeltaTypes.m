@@ -12,4 +12,5 @@
 
 NSNotificationName const DeltaRegistrationRequestNotification = @"DeltaRegistrationRequestNotification";
 
-EmulatorCoreOption const EmulatorCoreOptionOpenGLES2 = @"DLTAEmulationOptionOpenGLES2";
+EmulatorCoreOption const EmulatorCoreOptionOpenGLES2 = @"DLTAEmulatorCoreOptionOpenGLES2";
+EmulatorCoreOption const EmulatorCoreOptionMetal = @"DLTAEmulatorCoreOptionMetal";

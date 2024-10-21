@@ -41,6 +41,8 @@ public class VideoManager: NSObject, VideoRendering
         }
     }
     
+    public let options: [EmulatorCore.Option: Any]
+    
     public var viewport: CGRect = .zero {
         didSet {
             self.processor.viewport = self.viewport
@@ -65,27 +67,25 @@ public class VideoManager: NSObject, VideoRendering
         self?._render()
     })
     
-    public init(videoFormat: VideoFormat)
+    public init(videoFormat: VideoFormat, options: [EmulatorCore.Option: Any] = [:])
     {
         self.videoFormat = videoFormat
+        self.options = options
         
         switch videoFormat.format
         {
         case .bitmap:
-            if #available(iOS 18, macOS 15, *), ProcessInfo.processInfo.isiOSAppOnMac
+            self.processor = BitmapProcessor(videoFormat: videoFormat)
+            
+            if let prefersMetal = options[.metal] as? Bool, prefersMetal
             {
-                // macOS 15 Sequoia no longer supports rendering bitmap CIImages with OpenGL ES,
-                // so switch to rendering with Metal instead.
-                
                 self.ciContext = CIContext(options: [.workingColorSpace: NSNull()])
-                self.processor = BitmapProcessor(videoFormat: videoFormat)
                 self.eaglContext = nil
             }
             else
             {
                 let context = EAGLContext(api: .openGLES3)!
                 self.ciContext = CIContext(eaglContext: context, options: [.workingColorSpace: NSNull()])
-                self.processor = BitmapProcessor(videoFormat: videoFormat)
                 self.eaglContext = context
             }
             

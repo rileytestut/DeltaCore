@@ -120,7 +120,7 @@ public final class EmulatorCore: NSObject
         // These were previously lazy variables, but turns out Swift lazy variables are not thread-safe.
         // Since they don't actually need to be lazy, we now explicitly initialize them in the initializer.
         self.audioManager = AudioManager(audioFormat: deltaCore.audioFormat)
-        self.videoManager = VideoManager(videoFormat: videoFormat)
+        self.videoManager = VideoManager(videoFormat: videoFormat, options: options)
                 
         super.init()
         

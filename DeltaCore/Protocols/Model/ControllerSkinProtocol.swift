@@ -30,6 +30,8 @@ public protocol ControllerSkinProtocol
     func aspectRatio(for traits: ControllerSkin.Traits) -> CGSize?
     func contentSize(for traits: ControllerSkin.Traits) -> CGSize?
     
+    func menuInsets(for traits: ControllerSkin.Traits) -> UIEdgeInsets?
+    
     func supportedTraits(for traits: ControllerSkin.Traits) -> ControllerSkin.Traits?
 }
 

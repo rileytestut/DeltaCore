@@ -341,6 +341,12 @@ public extension ControllerSkin
         //TODO: Support `contentSize` for JSON controller skins.
         return nil
     }
+    
+    func menuInsets(for traits: ControllerSkin.Traits) -> UIEdgeInsets?
+    {
+        guard let representation = self.representation(for: traits) else { return nil }
+        return representation.menuInsets
+    }
 }
 
 private extension ControllerSkin
@@ -751,6 +757,8 @@ private extension ControllerSkin
         
         let items: [Item]
         
+        let menuInsets: UIEdgeInsets?
+        
         /// CustomStringConvertible
         var description: String {
             return self.traits.description
@@ -776,6 +784,15 @@ private extension ControllerSkin
             
             self.traits = traits
             self.aspectRatio = mappingSize
+            
+            if let menuInsetsDictionary = dictionary["menuInsets"] as? [String: CGFloat]
+            {
+                self.menuInsets = UIEdgeInsets(dictionary: menuInsetsDictionary)
+            }
+            else
+            {
+                self.menuInsets = nil
+            }
             
             // Controller skins with no items or assets are now supported.
             let itemsArray = dictionary["items"] as? [[String: AnyObject]] ?? []

@@ -60,14 +60,15 @@ internal extension UIEdgeInsets
 {
     init?(dictionary: [String: CGFloat])
     {
-        guard
-            let top = dictionary["top"],
-            let bottom = dictionary["bottom"],
-            let left = dictionary["left"],
-            let right = dictionary["right"]
-        else { return nil }
+        let top = dictionary["top"]
+        let bottom = dictionary["bottom"]
+        let left = dictionary["left"]
+        let right = dictionary["right"]
         
-        self = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+        // Make sure it contains at least one valid value.
+        guard top != nil || bottom != nil || left != nil || right != nil else { return nil }
+        
+        self = UIEdgeInsets(top: top ?? 0, left: left ?? 0, bottom: bottom ?? 0, right: right ?? 0)
     }
 }
 

@@ -371,6 +371,13 @@ extension EmulatorCore: GameControllerReceiver
         let discreteThreshold = 0.33
         var adjustedValue: Double? = value
         
+        if !input.isContinuous, controllerInput.isContinuous, value > (1.0 - discreteThreshold)
+        {
+            // input is discrete while controller input is continuous, so activate values greater than 0.66 for better responsiveness.
+            // this helps when using analog sticks as button inputs (especially for controllers with poor analog stick calibration).
+            adjustedValue = 1.0
+        }
+        
         if !input.isContinuous, value < discreteThreshold
         {
             // input is discrete, so ignore values less than 0.33 to avoid eagerly activating.

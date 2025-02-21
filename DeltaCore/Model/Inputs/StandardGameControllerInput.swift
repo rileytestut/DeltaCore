@@ -26,12 +26,14 @@ public enum StandardGameControllerInput: String, Codable
     case leftThumbstickDown
     case leftThumbstickLeft
     case leftThumbstickRight
-    
+    case leftThumbstickButton
+
     case rightThumbstickUp
     case rightThumbstickDown
     case rightThumbstickLeft
     case rightThumbstickRight
-    
+    case rightThumbstickButton
+
     case a
     case b
     case x

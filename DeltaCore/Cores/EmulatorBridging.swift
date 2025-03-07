@@ -53,4 +53,6 @@ public protocol EmulatorBridging: NSObjectProtocol
     @discardableResult func addCheatCode(_ cheatCode: String, type: String) -> Bool
     func resetCheats()
     func updateCheats()
+    
+    @objc(readMemoryAtAddress:size:) optional func readMemory(at address: Int, size: Int) -> Data?
 }

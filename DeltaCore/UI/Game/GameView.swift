@@ -127,6 +127,7 @@ public class GameView: UIView
     private var didRenderInitialFrame = false
     private var isRenderingInitialFrame = false
     private var pixelAlignmentOffset = CGPointZero
+    private var lastGLKOffset = CGPointZero
     
     private var isUsingMetal: Bool {
         let isUsingMetal = (self.eaglContext == nil)
@@ -359,6 +360,12 @@ private extension GameView
                 height = floor(CGFloat(self.glkView.drawableHeight) / outputImage.extent.height) * outputImage.extent.height
                 x = floor((CGFloat(self.glkView.drawableWidth) - width) / 2)
                 y = floor((CGFloat(self.glkView.drawableHeight) - height) / 2)
+                if lastGLKOffset != pixelAlignmentOffset {
+                    DispatchQueue.main.async {
+                        self.glkView.frame.origin = self.pixelAlignmentOffset
+                        self.lastGLKOffset = self.glkView.frame.origin
+                    }
+                }
             default:
                 width = CGFloat(self.glkView.drawableWidth)
                 height = CGFloat(self.glkView.drawableHeight)
@@ -366,7 +373,6 @@ private extension GameView
                 y = 0
             }
             let bounds = CGRect(x: x, y: y, width: width, height: height)
-            self.glkView.layer.frame.origin = pixelAlignmentOffset
             self.openGLESContext.draw(outputImage, in: bounds, from: outputImage.extent)
         }
     }

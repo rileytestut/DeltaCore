@@ -32,6 +32,7 @@ public enum SamplerMode
 {
     case linear
     case nearestNeighbor
+    case pixelPerfect
 }
 
 public class GameView: UIView
@@ -75,7 +76,7 @@ public class GameView: UIView
         switch self.samplerMode
         {
         case .linear: image = inputImage.samplingLinear()
-        case .nearestNeighbor: image = inputImage.samplingNearest()
+        case .nearestNeighbor, .pixelPerfect: image = inputImage.samplingNearest()
         }
                 
         if let filter = self.filter
@@ -125,6 +126,8 @@ public class GameView: UIView
     private var didLayoutSubviews = false
     private var didRenderInitialFrame = false
     private var isRenderingInitialFrame = false
+    private var pixelAlignmentOffset = CGPointZero
+    private var lastGLKOffset = CGPointZero
     
     private var isUsingMetal: Bool {
         let isUsingMetal = (self.eaglContext == nil)
@@ -154,7 +157,7 @@ public class GameView: UIView
     }
     
     private func initialize()
-    {        
+    {
         self.glkView.frame = self.bounds
         self.glkView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.glkView.delegate = self.glkViewDelegate
@@ -187,6 +190,8 @@ public class GameView: UIView
     public override func layoutSubviews()
     {
         super.layoutSubviews()
+        self.pixelAlignmentOffset.y = ceil(self.frame.minY) - self.frame.minY
+        self.pixelAlignmentOffset.x = ceil(self.frame.minX) - self.frame.minX
         
         if self.outputImage != nil
         {
@@ -348,7 +353,26 @@ private extension GameView
         
         if let outputImage = self.outputImage
         {
-            let bounds = CGRect(x: 0, y: 0, width: self.glkView.drawableWidth, height: self.glkView.drawableHeight)
+            let x, y, width, height: CGFloat
+            switch samplerMode {
+            case .pixelPerfect:
+                width = floor(CGFloat(self.glkView.drawableWidth) / outputImage.extent.width) * outputImage.extent.width
+                height = floor(CGFloat(self.glkView.drawableHeight) / outputImage.extent.height) * outputImage.extent.height
+                x = floor((CGFloat(self.glkView.drawableWidth) - width) / 2)
+                y = floor((CGFloat(self.glkView.drawableHeight) - height) / 2)
+                if lastGLKOffset != pixelAlignmentOffset {
+                    DispatchQueue.main.async {
+                        self.glkView.frame.origin = self.pixelAlignmentOffset
+                        self.lastGLKOffset = self.glkView.frame.origin
+                    }
+                }
+            default:
+                width = CGFloat(self.glkView.drawableWidth)
+                height = CGFloat(self.glkView.drawableHeight)
+                x = 0
+                y = 0
+            }
+            let bounds = CGRect(x: x, y: y, width: width, height: height)
             self.openGLESContext.draw(outputImage, in: bounds, from: outputImage.extent)
         }
     }
@@ -368,8 +392,21 @@ extension GameView: MTKViewDelegate
                   let currentDrawable = self.metalLayer?.nextDrawable()
             else { return }
             
-            let scaleX = view.drawableSize.width / image.extent.width
-            let scaleY = view.drawableSize.height / image.extent.height
+            let scaleX, scaleY, offsetX, offsetY: CGFloat
+            
+            switch samplerMode {
+            case .pixelPerfect:
+                scaleX = floor(view.drawableSize.width / image.extent.width)
+                scaleY = floor(view.drawableSize.height / image.extent.height)
+                offsetX = floor((view.drawableSize.width - image.extent.width * scaleX) / 2)
+                offsetY = floor((view.drawableSize.height - image.extent.height * scaleY) / 2)
+                self.metalLayer?.frame.origin = self.pixelAlignmentOffset
+            default:
+                scaleX = view.drawableSize.width / image.extent.width
+                scaleY = view.drawableSize.height / image.extent.height
+                offsetX = 0
+                offsetY = 0
+            }
             let outputImage = image.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
             
             do
@@ -383,7 +420,7 @@ extension GameView: MTKViewDelegate
                     return texture
                 }
                 
-                try self.metalContext.startTask(toRender: outputImage, from: outputImage.extent, to: destination, at: .zero)
+                try self.metalContext.startTask(toRender: outputImage, from: outputImage.extent, to: destination, at: CGPoint(x: offsetX, y: offsetY))
                 
                 commandBuffer.present(currentDrawable)
                 commandBuffer.commit()

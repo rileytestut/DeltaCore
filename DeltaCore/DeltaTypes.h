@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+NS_HEADER_AUDIT_BEGIN(nullability, sendability)
+
 // Extensible Enums
 typedef NSString *GameType NS_TYPED_EXTENSIBLE_ENUM;
 typedef NSString *CheatType NS_TYPED_EXTENSIBLE_ENUM;
@@ -28,3 +30,5 @@ extern NSNotificationName const DeltaRegistrationRequestNotification;
 - (void)_restoreFirstResponder /* API_AVAILABLE(ios(16)) */;
 
 @end
+
+NS_HEADER_AUDIT_END(nullability, sendability)

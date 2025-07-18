@@ -43,13 +43,19 @@
     
     self.isMonitoring = YES;
     
+    __weak __typeof(self) weakSelf = self;
     void (^updateMutedState)(void) = ^{
+        if (weakSelf == nil)
+        {
+            return;
+        }
+        
         uint64_t state;
-        uint32_t result = notify_get_state(_notifyToken, &state);
+        uint32_t result = notify_get_state(weakSelf.notifyToken, &state);
         if (result == NOTIFY_STATUS_OK)
         {
-            self.isMuted = (state == 0);
-            muteHandler(self.isMuted);
+            weakSelf.isMuted = (state == 0);
+            muteHandler(weakSelf.isMuted);
         }
         else
         {

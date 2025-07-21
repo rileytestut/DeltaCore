@@ -40,7 +40,7 @@ public extension String
     func formatted(with cheatFormat: CheatFormat) -> String
     {
         // NOTE: We do not use cheatFormat.allowedCodeCharacters because the code format typically includes non-legal characters.
-        // Ex: Using "XXXX-YYYY" for the code format despite the actual code format being strictly hexadecial characters.
+        // Ex: Using "XXXX-YYYY" for the code format despite the actual code format being strictly hexadecimal characters.
         // This is okay because this function's job is not to validate the input, but simply to format it
         let characterSet = CharacterSet.alphanumerics
         
@@ -74,13 +74,12 @@ public extension String
         while !scanner.isAtEnd
         {
             // Scan up until the first separator character
-            var string: NSString? = nil
-            scanner.scanCharacters(from: characterSet, into: &string)
+            let string = scanner.scanCharacters(from: characterSet)
             
             // Might start with separator characters, in which case scannedString would be nil/empty
-            if let scannedString = string, scannedString.length > 0
+            if let scannedString = string, !scannedString.isEmpty
             {
-                let range = NSRange(location: 0, length: min(scannedString.length, codeBuffer.length))
+                let range = NSRange(location: 0, length: min(scannedString.count, codeBuffer.length))
                 
                 // "Pop off" characters from the front of codeBuffer
                 let code = codeBuffer.substring(with: range)
@@ -92,14 +91,9 @@ public extension String
                 guard codeBuffer.length > 0 else { break }
             }
             
-            // Scan all separator characters
-            var separatorString: NSString? = nil
-            scanner.scanUpToCharacters(from: characterSet, into: &separatorString)
-            
-            // If no separator characters, we're done!
-            guard let tempString = separatorString as String?, separatorString?.length ?? 0 > 0 else { break }
-            
-            formattedString += tempString
+            // Scan all separator characters. If no separator characters, we're done!
+            guard let separatorString = scanner.scanUpToCharacters(from: characterSet), !separatorString.isEmpty else { break }
+            formattedString += separatorString
         }
         
         // Ensure it is all uppercase

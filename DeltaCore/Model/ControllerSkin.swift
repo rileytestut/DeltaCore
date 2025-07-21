@@ -78,8 +78,16 @@ public struct ControllerSkin: ControllerSkinProtocol
     {
         self.fileURL = fileURL
         
-        guard let archive = Archive(url: fileURL, accessMode: .read) else { return nil }
-        self.archive = archive
+        do
+        {
+            let archive = try Archive(url: fileURL, accessMode: .read)
+            self.archive = archive
+        }
+        catch
+        {
+            print("Failed to load controller skin.", error.localizedDescription)
+            return nil
+        }
         
         guard let infoEntry = archive["info.json"] else { return nil }
         

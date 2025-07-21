@@ -11,7 +11,7 @@ import ObjectiveC
 private var gameControllerStateManagerKey = 0
 
 //MARK: - GameControllerReceiver -
-public protocol GameControllerReceiver: class
+public protocol GameControllerReceiver: AnyObject
 {
     /// Equivalent to pressing a button, or moving an analog stick
     func gameController(_ gameController: GameController, didActivate input: Input, value: Double)

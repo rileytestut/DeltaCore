@@ -53,6 +53,11 @@ public class ExternalGameControllerManager: UIResponder
             // It's still in development, but better than nothing.
             return true
         }
+        else if #available(iOS 26.0, *)
+        {
+            // Legacy keyboard handling no longer works on iOS 26, RIP.
+            return true
+        }
         else
         {
             return false

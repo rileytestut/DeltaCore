@@ -31,6 +31,7 @@ public extension Notification.Name
     static let externalKeyboardDidDisconnect = Notification.Name("ExternalKeyboardDidDisconnect")
 }
 
+@Observable
 public class ExternalGameControllerManager: UIResponder
 {
     public static let shared = ExternalGameControllerManager()

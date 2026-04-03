@@ -17,10 +17,11 @@ internal extension AVAudioFormat
 
 private extension AVAudioSession
 {
-    func setDeltaCategory() throws
+    func setDeltaCategory(mixWithOthers: Bool = true) throws
     {
-        try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
-                                                        options: [.mixWithOthers, .allowBluetoothA2DP, .allowAirPlay])
+        var options: AVAudioSession.CategoryOptions = [.allowBluetoothA2DP, .allowAirPlay]
+        if mixWithOthers { options.insert(.mixWithOthers) }
+        try self.setCategory(.playAndRecord, options: options)
     }
 }
 
@@ -84,6 +85,13 @@ public class AudioManager: NSObject, AudioRendering
     public var respectsSilentMode: Bool = true {
         didSet {
             self.updateOutputVolume()
+            self.updateAudioSessionMixing()
+        }
+    }
+
+    public var mixesWithOtherAudio: Bool = true {
+        didSet {
+            self.updateAudioSessionMixing()
         }
     }
     
@@ -133,6 +141,7 @@ public class AudioManager: NSObject, AudioRendering
     private var isMuted: Bool = false {
         didSet {
             self.updateOutputVolume()
+            self.updateAudioSessionMixing()
         }
     }
     
@@ -148,7 +157,7 @@ public class AudioManager: NSObject, AudioRendering
         do
         {
             // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
-            try AVAudioSession.sharedInstance().setDeltaCategory()
+            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: mixesWithOtherAudio)
         }
         catch
         {
@@ -171,9 +180,6 @@ public class AudioManager: NSObject, AudioRendering
         }
         
         self.updateOutputVolume()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
 }
 
@@ -187,7 +193,8 @@ public extension AudioManager
         
         do
         {
-            try AVAudioSession.sharedInstance().setDeltaCategory()
+            // effectiveMixesWithOtherAudio is accurate here since isMuted is synchronously set by startMonitoring above.
+            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: self.effectiveMixesWithOtherAudio)
             try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
             
             if #available(iOS 13.0, *)
@@ -203,18 +210,29 @@ public extension AudioManager
         }
         
         self.resetAudioEngine()
+
+        // Register AFTER activation + engine reset, so route changes from setup don't trigger unintended resets.
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
     
     func stop()
     {
         self.muteSwitchMonitor.stopMonitoring()
         
+        // Remove observers FIRST so deactivation can't trigger resetAudioEngine.
+        NotificationCenter.default.removeObserver(self, name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: nil)
+
         self.renderingQueue.sync {
             self.audioPlayerNode.stop()
             self.audioEngine.stop()
         }
         
         self.audioBuffer.isEnabled = false
+
+        // Relinquish audio session so other apps can resume playback.
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
 
@@ -373,6 +391,20 @@ private extension AudioManager
         }
     }
     
+    // When respectsSilentMode is on and device is muted, Delta will be silent regardless, so there's no reason to interrupt background audio. Mix with others in that case too.
+    private var effectiveMixesWithOtherAudio: Bool {
+        return self.mixesWithOtherAudio || (self.respectsSilentMode && self.isMuted)
+    }
+
+    private func updateAudioSessionMixing()
+    {
+        guard self.audioEngine.isRunning else { return }
+        let shouldMix = self.effectiveMixesWithOtherAudio
+        let currentlyMixing = AVAudioSession.sharedInstance().categoryOptions.contains(.mixWithOthers)
+        guard shouldMix != currentlyMixing else { return }
+        try? AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: shouldMix)
+    }
+
     @objc func updateOutputVolume()
     {
         if !self.isEnabled
@@ -383,9 +415,9 @@ private extension AudioManager
         {
             let route = AVAudioSession.sharedInstance().currentRoute
             
-            if AVAudioSession.sharedInstance().isOtherAudioPlaying
+            if AVAudioSession.sharedInstance().isOtherAudioPlaying && !self.mixesWithOtherAudio
             {
-                // Always mute if another app is playing audio.
+                // Mute if another app is playing audio and we're not mixing with it.
                 self.audioEngine.mainMixerNode.outputVolume = 0.0
             }
             else if self.respectsSilentMode
@@ -403,7 +435,7 @@ private extension AudioManager
             }
             else
             {
-                // Ignore silent mode and always play game audio (unless another app is playing audio).
+                // Ignore silent mode and always play game audio.
                 self.audioEngine.mainMixerNode.outputVolume = 1.0
             }
         }

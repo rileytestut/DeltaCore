@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreImage.CIFilterBuiltins
 
 class ButtonsInputView: UIView
 {
@@ -18,13 +19,20 @@ class ButtonsInputView: UIView
     var deactivateInputsHandler: ((Set<AnyInput>) -> Void)?
     
     var image: UIImage? {
-        get {
-            return self.imageView.image
-        }
-        set {
-            self.imageView.image = newValue
+        didSet {
+            self.ciImage = self.image.flatMap { CIImage(image: $0) }
+            self.imageView.image = self.image
         }
     }
+    
+    var pressedImage: UIImage? {
+        didSet {
+            self.pressedCIImage = self.pressedImage.flatMap { CIImage(image: $0) }
+        }
+    }
+    
+    private var ciImage: CIImage?
+    private var pressedCIImage: CIImage?
     
     private let imageView = UIImageView(frame: .zero)
     
@@ -35,6 +43,8 @@ class ButtonsInputView: UIView
     private var touchInputs: Set<AnyInput> {
         return self.touchInputsMappingDictionary.values.reduce(Set<AnyInput>(), { $0.union($1) })
     }
+    
+    private var activeTouchItems = Set<ControllerSkin.Item>()
     
     override var intrinsicContentSize: CGSize {
         return self.imageView.intrinsicContentSize
@@ -94,9 +104,21 @@ class ButtonsInputView: UIView
 
 extension ButtonsInputView
 {
+    func items(at point: CGPoint) -> [ControllerSkin.Item]?
+    {
+        guard let allItems = self.items else { return nil }
+        
+        var point = point
+        point.x /= self.bounds.width
+        point.y /= self.bounds.height
+        
+        let items = allItems.filter { $0.extendedFrame.contains(point) }
+        return items
+    }
+    
     func inputs(at point: CGPoint) -> [Input]?
     {
-        guard let items = self.items else { return nil }
+        guard let items = self.items(at: point) else { return nil }
         
         var point = point
         point.x /= self.bounds.width
@@ -106,8 +128,6 @@ extension ButtonsInputView
         
         for item in items
         {
-            guard item.extendedFrame.contains(point) else { continue }
-            
             switch item.inputs
             {
             // Don't return inputs for thumbsticks or touch screens since they're handled separately.
@@ -164,6 +184,8 @@ private extension ButtonsInputView
 {
     func updateInputs(for touches: Set<UITouch>)
     {
+        var activeTouchItems = Set<ControllerSkin.Item>()
+        
         // Don't add the touches if it has been removed in touchesEnded:/touchesCancelled:
         for touch in touches where self.touchInputsMappingDictionary[touch] != nil
         {
@@ -183,6 +205,20 @@ private extension ButtonsInputView
                 self.touchInputsMappingDictionary[touch] = Set(inputs)
             }
         }
+        
+        for (touch, _) in self.touchInputsMappingDictionary
+        {
+            guard touch.view == self else { continue }
+            
+            let point = touch.location(in: self)
+            
+            if let items = self.items(at: point)
+            {
+                activeTouchItems.formUnion(items)
+            }
+        }
+        
+        let shouldUpdateImage = (activeTouchItems != self.activeTouchItems)
         
         let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)
         let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
@@ -209,5 +245,69 @@ private extension ButtonsInputView
         {
             self.deactivateInputsHandler?(deactivatedInputs)
         }
+        
+        // Update image
+        
+        if shouldUpdateImage, var backgroundImage = self.ciImage, var foregroundImage = self.pressedCIImage
+        {
+            // We use a mask to selectively replace contents of background image (default image) with foreground image (pressed image).
+            
+            backgroundImage = backgroundImage.transformed(by: .init(translationX: -backgroundImage.extent.origin.x, y: -backgroundImage.extent.origin.y)) // Move origin to (0,0)
+            
+            // Scale foreground image to match background image scale
+            let scaleX = backgroundImage.extent.width / foregroundImage.extent.width
+            let scaleY = backgroundImage.extent.height / foregroundImage.extent.height
+            foregroundImage = foregroundImage.transformed(by: .init(scaleX: scaleX, y: scaleY))
+            foregroundImage = foregroundImage.transformed(by: .init(translationX: -foregroundImage.extent.origin.x, y: -foregroundImage.extent.origin.y)) // Move origin to (0,0)
+            
+            var ciimage = backgroundImage
+            let clearImage = CIImage(color: .clear).cropped(to: backgroundImage.extent)
+            
+            // Loop over active items, iteratively mask in inputs from pressed image.
+            for activeItem in activeTouchItems
+            {
+                // Define the rectangle to mask out (i.e. make transparent)
+                var itemFrame = activeItem.frame.applying(.init(scaleX: ciimage.extent.width, y: ciimage.extent.height))
+                itemFrame.origin.y = ciimage.extent.height - itemFrame.origin.y - itemFrame.height // Invert coordinates
+                itemFrame.origin.x += ciimage.extent.origin.x
+                itemFrame.origin.y += ciimage.extent.origin.y
+                
+                let shapeImage: CIImage
+                
+                switch activeItem.mask
+                {
+                case .rectangle:
+                    shapeImage = CIImage(color: .white).cropped(to: itemFrame)
+                    
+                case .circle:
+                    let center = CGPoint(x: itemFrame.midX, y: itemFrame.midY)
+                    let radius = Float(itemFrame.width / 2.0)
+                    
+                    let radialGradient = CIFilter.radialGradient()
+                    radialGradient.center = center
+                    radialGradient.radius0 = radius
+                    radialGradient.radius1 = radius + 1
+                    radialGradient.color0 = .white
+                    radialGradient.color1 = .clear
+                    
+                    shapeImage = radialGradient.outputImage!.cropped(to: ciimage.extent)
+                }
+                
+                let maskImage = shapeImage.composited(over: clearImage)
+                
+                let filter = CIFilter.blendWithAlphaMask()
+                filter.inputImage = foregroundImage
+                filter.backgroundImage = ciimage
+                filter.maskImage = maskImage
+                
+                guard let maskedImage = filter.outputImage else { break }
+                ciimage = maskedImage
+            }
+            
+            let uiimage = UIImage(ciImage: ciimage)
+            self.imageView.image = uiimage
+        }
+        
+        self.activeTouchItems = activeTouchItems
     }
 }

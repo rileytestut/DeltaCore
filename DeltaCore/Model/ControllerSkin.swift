@@ -224,7 +224,7 @@ public extension ControllerSkin
         guard let imageName = item.thumbstickImageName, let size = item.thumbstickSize else { return nil }
         guard let entry = self.archive[imageName] else { return nil }
         
-        let cacheKey = imageName + self.cacheKey(for: traits, size: preferredSize)
+        let cacheKey = imageName + self.cacheKey(for: traits, size: preferredSize, isPressed: false)
         
         if let image = self.imageCache.object(forKey: cacheKey as NSString)
         {
@@ -266,9 +266,21 @@ public extension ControllerSkin
     
     func image(for traits: Traits, preferredSize: Size) -> UIImage?
     {
+        let image = self._image(for: traits, preferredSize: preferredSize, isPressed: false)
+        return image
+    }
+    
+    func pressedImage(for traits: Traits, preferredSize: Size) -> UIImage?
+    {
+        let pressedImage = self._image(for: traits, preferredSize: preferredSize, isPressed: true)
+        return pressedImage
+    }
+    
+    private func _image(for traits: Traits, preferredSize: Size, isPressed: Bool) -> UIImage?
+    {
         guard let representation = self.representation(for: traits) else { return nil }
         
-        let cacheKey = self.cacheKey(for: traits, size: preferredSize)
+        let cacheKey = self.cacheKey(for: traits, size: preferredSize, isPressed: isPressed)
         
         if let image = self.imageCache.object(forKey: cacheKey as NSString)
         {
@@ -280,29 +292,29 @@ public extension ControllerSkin
         switch preferredSize
         {
         case .small:
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small, resizable: true)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .small), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small, resizable: true), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large), isPressed: isPressed) { returnedImage = image }
             
         case .medium:
             // First, attempt to load a medium image
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .medium), isPressed: isPressed) { returnedImage = image }
                 
                 // If a medium image doesn't exist, fallback to trying to load a medium resizable image
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium, resizable: true)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium, resizable: true), isPressed: isPressed) { returnedImage = image }
                 
                 // If neither medium nor resizable exists, check for a large image (because downscaling large is better than upscaling small)
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large), isPressed: isPressed) { returnedImage = image }
                 
                 // If still no images exist, finally check the small image size
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small), isPressed: isPressed) { returnedImage = image }
             
         case .large:
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large, resizable: true)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
+            if let image = self.image(for: representation, assetSize: AssetSize(size: .large), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large, resizable: true), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium), isPressed: isPressed) { returnedImage = image }
+            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small), isPressed: isPressed) { returnedImage = image }
             
         }
         
@@ -359,9 +371,24 @@ public extension ControllerSkin
 
 private extension ControllerSkin
 {
-    func image(for representation: Representation, assetSize: AssetSize) -> UIImage?
+    func image(for representation: Representation, assetSize: AssetSize, isPressed: Bool) -> UIImage?
     {
-        guard let filename = representation.assets[assetSize], let entry = self.archive[filename] else { return nil }
+        guard var filename = representation.assets[assetSize] else { return nil }
+        
+        if isPressed
+        {
+            // Append "_pressed" to filename, but before file extension (if it exists).
+            if let fileExtensionIndex = filename.lastIndex(of: ".")
+            {
+                filename.insert(contentsOf: "_pressed", at: fileExtensionIndex)
+            }
+            else
+            {
+                filename += "_pressed"
+            }
+        }
+        
+        guard let entry = self.archive[filename] else { return nil }
         
         do
         {
@@ -390,9 +417,9 @@ private extension ControllerSkin
         }
     }
     
-    func cacheKey(for traits: Traits, size: Size) -> String
+    func cacheKey(for traits: Traits, size: Size, isPressed: Bool) -> String
     {
-        return String(describing: traits) + "-" + String(describing: size)
+        return String(describing: traits) + "-" + String(describing: size) + "-" + String(describing: isPressed)
     }
     
     func representation(for traits: Traits) -> Representation?
@@ -439,6 +466,12 @@ extension ControllerSkin
             }
         }
         
+        public enum Mask: String
+        {
+            case rectangle
+            case circle
+        }
+        
         public var id: String
         
         public var kind: Kind
@@ -448,6 +481,7 @@ extension ControllerSkin
         public var extendedFrame: CGRect
         
         public var placement: Placement
+        public var mask: Mask
         
         fileprivate var thumbstickImageName: String?
         fileprivate var thumbstickSize: CGSize?
@@ -532,6 +566,15 @@ extension ControllerSkin
             {
                 // Fall back to `controller` placement if it wasn't specified for backwards compatibility.
                 self.placement = .controller
+            }
+            
+            if let rawMask = dictionary["mask"] as? String, let mask = Mask(rawValue: rawMask)
+            {
+                self.mask = mask
+            }
+            else
+            {
+                self.mask = .rectangle
             }
             
             switch self.placement

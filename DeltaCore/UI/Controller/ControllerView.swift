@@ -451,35 +451,68 @@ public extension ControllerView
             else
             {
                 let image: UIImage?
+                let pressedImage: UIImage?
                 
                 if let controllerSkin = self.controllerSkin
                 {
-                    let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
-                    
-                    if
-                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
-                        let cachedImage = cache.object(forKey: cacheKey as NSString)
+                    do
                     {
-                        image = cachedImage
+                        // Image
+                        
+                        let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
+                        
+                        if
+                            let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
+                            let cachedImage = cache.object(forKey: cacheKey as NSString)
+                        {
+                            image = cachedImage
+                        }
+                        else
+                        {
+                            image = controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
+                        }
+                        
+                        if let image = image
+                        {
+                            let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
+                            cache.setObject(image, forKey: cacheKey as NSString)
+                            self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
+                        }
                     }
-                    else
-                    {
-                        image = controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
-                    }
                     
-                    if let image = image
+                    do
                     {
-                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
-                        cache.setObject(image, forKey: cacheKey as NSString)
-                        self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
+                        // Pressed
+                        
+                        let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize) + "-" + "pressed"
+                        
+                        if
+                            let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
+                            let cachedImage = cache.object(forKey: cacheKey as NSString)
+                        {
+                            pressedImage = cachedImage
+                        }
+                        else
+                        {
+                            pressedImage = controllerSkin.pressedImage(for: traits, preferredSize: self.controllerSkinSize)
+                        }
+                        
+                        if let pressedImage
+                        {
+                            let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
+                            cache.setObject(pressedImage, forKey: cacheKey as NSString)
+                            self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
+                        }
                     }
                 }
                 else
                 {
                     image = nil
+                    pressedImage = nil
                 }
                 
                 self.buttonsView.image = image
+                self.buttonsView.pressedImage = pressedImage
             }
             
             self.buttonsView.items = items

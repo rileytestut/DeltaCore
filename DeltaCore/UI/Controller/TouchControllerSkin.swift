@@ -48,6 +48,11 @@ extension TouchControllerSkin: ControllerSkinProtocol
         return nil
     }
     
+    public func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    {
+        return nil
+    }
+    
     public func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
     {
         return nil

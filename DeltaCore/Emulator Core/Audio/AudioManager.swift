@@ -17,10 +17,16 @@ internal extension AVAudioFormat
 
 private extension AVAudioSession
 {
-    func setDeltaCategory() throws
+    func setDeltaCategory(mixWithOthers: Bool = true) throws
     {
-        try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
-                                                        options: [.mixWithOthers, .allowBluetoothA2DP, .allowAirPlay])
+        var options: AVAudioSession.CategoryOptions = [.allowBluetoothA2DP, .allowAirPlay]
+
+        if mixWithOthers
+        {
+            options.insert(.mixWithOthers)
+        }
+
+        try self.setCategory(.playAndRecord, options: options)
     }
 }
 
@@ -84,9 +90,23 @@ public class AudioManager: NSObject, AudioRendering
     public var respectsSilentMode: Bool = true {
         didSet {
             self.updateOutputVolume()
+            self.updateAudioSessionCategory()
         }
     }
     
+    public var mixesWithOtherAudio: Bool = false {
+        didSet {
+            self.updateOutputVolume()
+            self.updateAudioSessionCategory()
+        }
+    }
+
+    public var pausesOtherAudio: Bool = false {
+        didSet {
+            self.updateAudioSessionCategory()
+        }
+    }
+
     public private(set) var audioBuffer: RingBuffer
     
     public internal(set) var rate = 1.0 {
@@ -133,6 +153,7 @@ public class AudioManager: NSObject, AudioRendering
     private var isMuted: Bool = false {
         didSet {
             self.updateOutputVolume()
+            self.updateAudioSessionCategory()
         }
     }
     
@@ -171,9 +192,6 @@ public class AudioManager: NSObject, AudioRendering
         }
         
         self.updateOutputVolume()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
 }
 
@@ -187,7 +205,17 @@ public extension AudioManager
         
         do
         {
-            try AVAudioSession.sharedInstance().setDeltaCategory()
+            // Interrupt other audio by activating a non-mixing session.
+            if self.shouldInterruptOtherAudio
+            {
+                // Explicitly say 'don't mix with others' to pause anything else that's playing
+                // Then change the category below to allow other audio to be resumed if mixing is on
+                try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: false)
+                try AVAudioSession.sharedInstance().setActive(true)
+            }
+
+            // Allow other audio if mixing is on, OR we're not interrupting other audio anyways.
+            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: self.mixesWithOtherAudio || !self.shouldInterruptOtherAudio)
             try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
             
             if #available(iOS 13.0, *)
@@ -203,18 +231,36 @@ public extension AudioManager
         }
         
         self.resetAudioEngine()
+
+        // Register after the reset above, so our own setup doesn't immediately trigger another one.
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(AudioManager.resetAudioEngine), name: AVAudioSession.routeChangeNotification, object: nil)
     }
     
     func stop()
     {
         self.muteSwitchMonitor.stopMonitoring()
         
+        // Remove observers before deactivating — otherwise deactivation could trigger a reset, which would undo setActive(false) below.
+        NotificationCenter.default.removeObserver(self, name: .AVAudioEngineConfigurationChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: nil)
+
         self.renderingQueue.sync {
             self.audioPlayerNode.stop()
             self.audioEngine.stop()
         }
         
         self.audioBuffer.isEnabled = false
+
+        do
+        {
+            // Relinquish audio session so other apps can resume playback.
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+        catch
+        {
+            print(error)
+        }
     }
 }
 
@@ -373,6 +419,32 @@ private extension AudioManager
         }
     }
     
+    // Interrupt other audio if the user wants to pause it AND we won't be silent.
+    private var shouldInterruptOtherAudio: Bool
+    {
+        return self.pausesOtherAudio && !(self.respectsSilentMode && self.isMuted)
+    }
+    
+    private func updateAudioSessionCategory()
+    {
+        guard self.audioEngine.isRunning else { return }
+
+        // Allow other audio if mixing is on, OR we're not interrupting other audio anyways.
+        let allowMixing = self.mixesWithOtherAudio || !self.shouldInterruptOtherAudio
+
+        let currentlyMixing = AVAudioSession.sharedInstance().categoryOptions.contains(.mixWithOthers)
+        guard allowMixing != currentlyMixing else { return }
+
+        do
+        {
+            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: allowMixing)
+        }
+        catch
+        {
+            print(error)
+        }
+    }
+
     @objc func updateOutputVolume()
     {
         if !self.isEnabled
@@ -383,9 +455,9 @@ private extension AudioManager
         {
             let route = AVAudioSession.sharedInstance().currentRoute
             
-            if AVAudioSession.sharedInstance().isOtherAudioPlaying
+            if AVAudioSession.sharedInstance().isOtherAudioPlaying && !self.mixesWithOtherAudio
             {
-                // Always mute if another app is playing audio.
+                // Mute if another app is playing audio and we're not mixing with it.
                 self.audioEngine.mainMixerNode.outputVolume = 0.0
             }
             else if self.respectsSilentMode

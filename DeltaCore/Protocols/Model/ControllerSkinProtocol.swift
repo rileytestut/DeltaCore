@@ -18,6 +18,7 @@ public protocol ControllerSkinProtocol
     func supports(_ traits: ControllerSkin.Traits) -> Bool
     
     func image(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
     
     func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
@@ -37,6 +38,12 @@ public protocol ControllerSkinProtocol
 
 public extension ControllerSkinProtocol
 {
+    // Optional; skins without pressed artwork fall back to a generated pressed appearance.
+    func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    {
+        return nil
+    }
+
     func supportedTraits(for traits: ControllerSkin.Traits) -> ControllerSkin.Traits?
     {
         var traits = traits

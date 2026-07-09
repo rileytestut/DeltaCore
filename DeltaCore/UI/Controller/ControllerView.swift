@@ -98,6 +98,12 @@ public class ControllerView: UIView, GameController
             self.thumbstickViews.values.forEach { $0.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled }
         }
     }
+
+    public var isButtonPressAnimationEnabled = false {
+        didSet {
+            self.buttonsView.isPressAnimationEnabled = self.isButtonPressAnimationEnabled
+        }
+    }
     
     //MARK: - <GameControllerType>
     /// <GameControllerType>
@@ -447,39 +453,19 @@ public extension ControllerView
             if traits.displayType == .splitView && !self.isControllerInputView
             {
                 self.buttonsView.image = nil
+                self.buttonsView.pressedImage = nil
             }
             else
             {
-                let image: UIImage?
-                
-                if let controllerSkin = self.controllerSkin
-                {
-                    let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
-                    
-                    if
-                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
-                        let cachedImage = cache.object(forKey: cacheKey as NSString)
-                    {
-                        image = cachedImage
-                    }
-                    else
-                    {
-                        image = controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
-                    }
-                    
-                    if let image = image
-                    {
-                        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
-                        cache.setObject(image, forKey: cacheKey as NSString)
-                        self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
-                    }
+                let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
+
+                self.buttonsView.image = self.cachedImage(cacheKey: cacheKey) { (controllerSkin) in
+                    controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
                 }
-                else
-                {
-                    image = nil
+
+                self.buttonsView.pressedImage = self.cachedImage(cacheKey: cacheKey + "-pressed") { (controllerSkin) in
+                    controllerSkin.pressedImage(for: traits, preferredSize: self.controllerSkinSize)
                 }
-                
-                self.buttonsView.image = image
             }
             
             self.buttonsView.items = items
@@ -681,6 +667,25 @@ public extension ControllerView
 
 private extension ControllerView
 {
+    func cachedImage(cacheKey: String, loader: (ControllerSkinProtocol) -> UIImage?) -> UIImage?
+    {
+        guard let controllerSkin = self.controllerSkin else { return nil }
+
+        if let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
+           let cachedImage = cache.object(forKey: cacheKey as NSString)
+        {
+            return cachedImage
+        }
+
+        guard let image = loader(controllerSkin) else { return nil }
+
+        let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
+        cache.setObject(image, forKey: cacheKey as NSString)
+        self.imageCache.setObject(cache, forKey: controllerSkin.identifier as NSString)
+
+        return image
+    }
+
     func presentInputControllerView()
     {
         guard !self.isControllerInputView else { return }

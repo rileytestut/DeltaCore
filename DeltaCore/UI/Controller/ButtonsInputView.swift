@@ -11,31 +11,61 @@ import UIKit
 class ButtonsInputView: UIView
 {
     var isHapticFeedbackEnabled = true
-    
-    var items: [ControllerSkin.Item]?
-    
+
+    var isPressAnimationEnabled = false {
+        didSet {
+            self.setNeedsRebuildPatchLayers()
+        }
+    }
+
+    var items: [ControllerSkin.Item]? {
+        didSet {
+            self.setNeedsRebuildPatchLayers()
+        }
+    }
+
     var activateInputsHandler: ((Set<AnyInput>) -> Void)?
     var deactivateInputsHandler: ((Set<AnyInput>) -> Void)?
-    
+
     var image: UIImage? {
         get {
             return self.imageView.image
         }
         set {
             self.imageView.image = newValue
+            self.setNeedsRebuildPatchLayers()
         }
     }
-    
+
+    var pressedImage: UIImage? {
+        didSet {
+            self.setNeedsRebuildPatchLayers()
+        }
+    }
+
     private let imageView = UIImageView(frame: .zero)
-    
+
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
-    
+    private let pressFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    private let releaseFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    private let detentFeedbackGenerator = UISelectionFeedbackGenerator()
+
     private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
     private var previousTouchInputs = Set<AnyInput>()
     private var touchInputs: Set<AnyInput> {
         return self.touchInputsMappingDictionary.values.reduce(Set<AnyInput>(), { $0.union($1) })
     }
-    
+
+    // Layers showing pressed appearances on top of the skin image.
+    private let patchesLayer = CALayer()
+    private var patchLayers = [String: ButtonPatchLayer]()
+    private var previousDPadInputs = [String: Set<AnyInput>]()
+
+    private var needsRebuildPatchLayers = false
+    private var lastPatchLayoutSize = CGSize.zero
+
+    private static let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
+
     override var intrinsicContentSize: CGSize {
         return self.imageView.intrinsicContentSize
     }
@@ -55,10 +85,30 @@ class ButtonsInputView: UIView
                                      self.imageView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
                                      self.imageView.topAnchor.constraint(equalTo: self.topAnchor),
                                      self.imageView.bottomAnchor.constraint(equalTo: self.bottomAnchor)])
+
+        // Added after imageView so patches composite on top of the skin image.
+        self.layer.addSublayer(self.patchesLayer)
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews()
+    {
+        super.layoutSubviews()
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        self.patchesLayer.frame = self.bounds
+
+        if self.needsRebuildPatchLayers || self.bounds.size != self.lastPatchLayoutSize
+        {
+            self.rebuildPatchLayers()
+        }
+
+        CATransaction.commit()
     }
     
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -67,7 +117,14 @@ class ButtonsInputView: UIView
         {
             self.touchInputsMappingDictionary[touch] = []
         }
-        
+
+        if self.isPressAnimationEnabled && self.isHapticFeedbackEnabled
+        {
+            self.pressFeedbackGenerator.prepare()
+            self.releaseFeedbackGenerator.prepare()
+            self.detentFeedbackGenerator.prepare()
+        }
+
         self.updateInputs(for: touches)
     }
     
@@ -171,8 +228,8 @@ private extension ButtonsInputView
             
             let point = touch.location(in: self)
             let inputs = Set((self.inputs(at: point) ?? []).map { AnyInput($0) })
-            
-            let menuInput = AnyInput(stringValue: StandardGameControllerInput.menu.stringValue, intValue: nil, type: .controller(.controllerSkin))
+
+            let menuInput = ButtonsInputView.menuInput
             if inputs.contains(menuInput)
             {
                 // If the menu button is located at this position, ignore all other inputs that might be overlapping.
@@ -194,8 +251,9 @@ private extension ButtonsInputView
         if !activatedInputs.isEmpty
         {
             self.activateInputsHandler?(activatedInputs)
-            
-            if self.isHapticFeedbackEnabled
+
+            // When press animations are enabled, haptics fire per-item alongside the visuals instead.
+            if self.isHapticFeedbackEnabled && !self.isPressAnimationEnabled
             {
                 switch UIDevice.current.feedbackSupportLevel
                 {
@@ -204,10 +262,229 @@ private extension ButtonsInputView
                 }
             }
         }
-        
+
         if !deactivatedInputs.isEmpty
         {
             self.deactivateInputsHandler?(deactivatedInputs)
         }
+
+        self.updatePressedPatchLayers()
+    }
+}
+
+private extension ButtonsInputView
+{
+    func setNeedsRebuildPatchLayers()
+    {
+        self.needsRebuildPatchLayers = true
+        self.setNeedsLayout()
+    }
+
+    func rebuildPatchLayers()
+    {
+        self.needsRebuildPatchLayers = false
+        self.lastPatchLayoutSize = self.bounds.size
+
+        for patchLayer in self.patchLayers.values
+        {
+            patchLayer.removeFromSuperlayer()
+        }
+
+        self.patchLayers = [:]
+        self.previousDPadInputs = [:]
+
+        guard self.isPressAnimationEnabled, !self.bounds.isEmpty, let image = self.image, let items = self.items else { return }
+
+        let tuning = ButtonPatchLayer.Tuning.shared
+
+        for item in items
+        {
+            guard item.placement == .controller, item.kind == .button || item.kind == .dPad else { continue }
+
+            let itemSize = CGSize(width: item.frame.width * self.bounds.width, height: item.frame.height * self.bounds.height)
+            guard itemSize.width > 0, itemSize.height > 0 else { continue }
+
+            // The margin gives the feather band room outside the item's artwork,
+            // and gives a tilting d-pad extra coverage over the base image.
+            let margin = max(tuning.minimumPatchMargin, tuning.patchMarginRatio * min(itemSize.width, itemSize.height))
+
+            var patchRect = item.frame.insetBy(dx: -margin / self.bounds.width, dy: -margin / self.bounds.height)
+
+            // Only feather edges that aren't clamped to the skin's bounds,
+            // so patches at the screen edge don't fade out actual artwork.
+            var featheredEdges = UIRectEdge()
+            if patchRect.minX >= 0 { featheredEdges.insert(.left) }
+            if patchRect.maxX <= 1 { featheredEdges.insert(.right) }
+            if patchRect.minY >= 0 { featheredEdges.insert(.top) }
+            if patchRect.maxY <= 1 { featheredEdges.insert(.bottom) }
+
+            patchRect = patchRect.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+            guard !patchRect.isEmpty else { continue }
+
+            let feather = tuning.featherRatio * margin
+            let featherFraction = CGSize(width: feather / (patchRect.width * self.bounds.width),
+                                         height: feather / (patchRect.height * self.bounds.height))
+
+            let geometry = ButtonPatchLayer.Geometry(patchRect: patchRect, itemRect: item.frame, featherFraction: featherFraction, featheredEdges: featheredEdges)
+
+            // With an authored pressed image we show its artwork directly.
+            // Otherwise we generate a pressed appearance from the base image.
+            let contents: CGImage?
+            if let pressedImage = self.pressedImage
+            {
+                contents = ButtonPatchLayer.makeContents(from: pressedImage, geometry: geometry, addsGeneratedShading: false)
+            }
+            else
+            {
+                contents = ButtonPatchLayer.makeContents(from: image, geometry: geometry, addsGeneratedShading: true)
+            }
+
+            guard let contents else { continue }
+
+            // Anchor on the item's visual center (not the patch's), so an
+            // edge-clamped d-pad still tilts around its actual pivot.
+            let anchorPoint = CGPoint(x: (item.frame.midX - patchRect.minX) / patchRect.width,
+                                      y: (item.frame.midY - patchRect.minY) / patchRect.height)
+
+            let patchLayer = ButtonPatchLayer(item: item, contents: contents, frame: patchRect.scaled(to: self.bounds), anchorPoint: anchorPoint)
+
+            self.patchesLayer.addSublayer(patchLayer)
+            self.patchLayers[item.id] = patchLayer
+        }
+    }
+
+    func updatePressedPatchLayers()
+    {
+        guard self.isPressAnimationEnabled, !self.patchLayers.isEmpty else { return }
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        for patchLayer in self.patchLayers.values
+        {
+            switch patchLayer.item.kind
+            {
+            case .dPad: self.updateDPadPatchLayer(patchLayer)
+            default: self.updateButtonPatchLayer(patchLayer)
+            }
+        }
+
+        CATransaction.commit()
+    }
+
+    func updateButtonPatchLayer(_ patchLayer: ButtonPatchLayer)
+    {
+        let itemInputs = Set(patchLayer.item.inputs.allInputs.map { AnyInput($0) })
+        let isPressed = !self.touchInputs.isDisjoint(with: itemInputs)
+
+        if isPressed && !patchLayer.isPressed
+        {
+            patchLayer.press()
+            self.performPressHaptic()
+        }
+        else if !isPressed && patchLayer.isPressed
+        {
+            patchLayer.release()
+            self.performReleaseHaptic()
+        }
+    }
+
+    func updateDPadPatchLayer(_ patchLayer: ButtonPatchLayer)
+    {
+        let item = patchLayer.item
+
+        // Track the d-pad from the touch's location rather than activated inputs,
+        // so a dead-center press still pushes the d-pad in (with no inputs firing),
+        // and the tilt follows the thumb continuously like a physical rocker.
+        if let point = self.trackedDPadTouchLocation(for: item)
+        {
+            let tilt = CGPoint(x: (point.x - item.frame.midX) / (item.frame.width / 2),
+                               y: (point.y - item.frame.midY) / (item.frame.height / 2))
+
+            let wasPressed = patchLayer.isPressed
+            patchLayer.press(tilt: tilt)
+
+            let itemInputs = Set(item.inputs.allInputs.map { AnyInput($0) })
+            let activeInputs = self.touchInputs.intersection(itemInputs)
+
+            if !wasPressed
+            {
+                self.performPressHaptic()
+            }
+            else if let previousInputs = self.previousDPadInputs[item.id], previousInputs != activeInputs
+            {
+                // Rolling to a different direction clicks like a detent.
+                self.performDetentHaptic()
+            }
+
+            self.previousDPadInputs[item.id] = activeInputs
+        }
+        else if patchLayer.isPressed
+        {
+            patchLayer.release()
+            self.performReleaseHaptic()
+
+            self.previousDPadInputs[item.id] = nil
+        }
+    }
+
+    func trackedDPadTouchLocation(for item: ControllerSkin.Item) -> CGPoint?
+    {
+        var trackedTouch: UITouch?
+
+        for (touch, inputs) in self.touchInputsMappingDictionary
+        {
+            guard touch.view == self else { continue }
+
+            // The menu button wins overlaps, so don't let its touches move the d-pad.
+            guard !inputs.contains(ButtonsInputView.menuInput) else { continue }
+
+            var point = touch.location(in: self)
+            point.x /= self.bounds.width
+            point.y /= self.bounds.height
+            guard item.extendedFrame.contains(point) else { continue }
+
+            // With multiple touches on the d-pad, the most recent one drives the tilt.
+            if let previousTouch = trackedTouch, previousTouch.timestamp > touch.timestamp { continue }
+            trackedTouch = touch
+        }
+
+        guard let trackedTouch else { return nil }
+
+        var point = trackedTouch.location(in: self)
+        point.x /= self.bounds.width
+        point.y /= self.bounds.height
+
+        return point
+    }
+
+    func performPressHaptic()
+    {
+        guard self.isHapticFeedbackEnabled else { return }
+
+        switch UIDevice.current.feedbackSupportLevel
+        {
+        case .feedbackGenerator:
+            self.pressFeedbackGenerator.impactOccurred()
+            self.pressFeedbackGenerator.prepare()
+
+        case .basic, .unsupported: UIDevice.current.vibrate()
+        }
+    }
+
+    func performReleaseHaptic()
+    {
+        guard self.isHapticFeedbackEnabled, UIDevice.current.feedbackSupportLevel == .feedbackGenerator else { return }
+
+        self.releaseFeedbackGenerator.impactOccurred(intensity: ButtonPatchLayer.Tuning.shared.releaseHapticIntensity)
+        self.releaseFeedbackGenerator.prepare()
+    }
+
+    func performDetentHaptic()
+    {
+        guard self.isHapticFeedbackEnabled, UIDevice.current.feedbackSupportLevel == .feedbackGenerator else { return }
+
+        self.detentFeedbackGenerator.selectionChanged()
+        self.detentFeedbackGenerator.prepare()
     }
 }

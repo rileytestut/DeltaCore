@@ -267,51 +267,43 @@ public extension ControllerSkin
     func image(for traits: Traits, preferredSize: Size) -> UIImage?
     {
         guard let representation = self.representation(for: traits) else { return nil }
-        
+
         let cacheKey = self.cacheKey(for: traits, size: preferredSize)
-        
+
         if let image = self.imageCache.object(forKey: cacheKey as NSString)
         {
             return image
         }
-        
-        var returnedImage: UIImage? = nil
-        
-        switch preferredSize
+
+        guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize),
+              let image = self.image(for: representation, assetSize: assetSize)
+        else { return nil }
+
+        self.imageCache.setObject(image, forKey: cacheKey as NSString)
+
+        return image
+    }
+
+    func pressedImage(for traits: Traits, preferredSize: Size) -> UIImage?
+    {
+        guard let representation = self.representation(for: traits) else { return nil }
+
+        let cacheKey = self.cacheKey(for: traits, size: preferredSize) + "-pressed"
+
+        if let image = self.imageCache.object(forKey: cacheKey as NSString)
         {
-        case .small:
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small, resizable: true)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
-            
-        case .medium:
-            // First, attempt to load a medium image
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
-                
-                // If a medium image doesn't exist, fallback to trying to load a medium resizable image
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium, resizable: true)) { returnedImage = image }
-                
-                // If neither medium nor resizable exists, check for a large image (because downscaling large is better than upscaling small)
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
-                
-                // If still no images exist, finally check the small image size
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
-            
-        case .large:
-            if let image = self.image(for: representation, assetSize: AssetSize(size: .large)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .large, resizable: true)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .medium)) { returnedImage = image }
-            else if let image = self.image(for: representation, assetSize: AssetSize(size: .small)) { returnedImage = image }
-            
+            return image
         }
-        
-        if let image = returnedImage
-        {
-            self.imageCache.setObject(image, forKey: cacheKey as NSString)
-        }
-        
-        return returnedImage
+
+        // Only use a pressed asset matching the exact size the regular image resolved to.
+        // A mismatched pair (e.g. large regular + medium pressed) would misalign the artwork.
+        guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize),
+              let image = self.image(for: representation, assetSize: assetSize, isPressed: true)
+        else { return nil }
+
+        self.imageCache.setObject(image, forKey: cacheKey as NSString)
+
+        return image
     }
     
     func items(for traits: Traits) -> [Item]?
@@ -359,9 +351,31 @@ public extension ControllerSkin
 
 private extension ControllerSkin
 {
-    func image(for representation: Representation, assetSize: AssetSize) -> UIImage?
+    func assetSize(for representation: Representation, preferredSize: Size) -> AssetSize?
     {
-        guard let filename = representation.assets[assetSize], let entry = self.archive[filename] else { return nil }
+        let fallbackSizes: [AssetSize]
+
+        switch preferredSize
+        {
+        case .small: fallbackSizes = [AssetSize(size: .small), AssetSize(size: .small, resizable: true), AssetSize(size: .medium), AssetSize(size: .large)]
+
+        // If a medium image doesn't exist, fall back to a medium resizable image.
+        // If neither exists, check for a large image (because downscaling large is better than upscaling small), then finally small.
+        case .medium: fallbackSizes = [AssetSize(size: .medium), AssetSize(size: .medium, resizable: true), AssetSize(size: .large), AssetSize(size: .small)]
+
+        case .large: fallbackSizes = [AssetSize(size: .large), AssetSize(size: .large, resizable: true), AssetSize(size: .medium), AssetSize(size: .small)]
+        }
+
+        return fallbackSizes.first { (assetSize) in
+            guard let filename = representation.assets[assetSize] else { return false }
+            return self.archive[filename] != nil
+        }
+    }
+
+    func image(for representation: Representation, assetSize: AssetSize, isPressed: Bool = false) -> UIImage?
+    {
+        let assets = isPressed ? representation.pressedAssets : representation.assets
+        guard let filename = assets[assetSize], let entry = self.archive[filename] else { return nil }
         
         do
         {
@@ -757,8 +771,9 @@ private extension ControllerSkin
     struct Representation: Hashable, CustomStringConvertible
     {
         let traits: Traits
-        
+
         let assets: [AssetSize: String]
+        let pressedAssets: [AssetSize: String]
         let isTranslucent: Bool
         let screens: [Screen]?
         let aspectRatio: CGSize
@@ -828,6 +843,19 @@ private extension ControllerSkin
                 }
             }
             self.assets = assets
+
+            // Optional assets showing every control in its pressed state.
+            let pressedAssetsDictionary = dictionary["pressedAssets"] as? [String: String] ?? [:]
+
+            var pressedAssets = [AssetSize: String]()
+            for (key, value) in pressedAssetsDictionary
+            {
+                if let size = AssetSize(rawValue: key)
+                {
+                    pressedAssets[size] = value
+                }
+            }
+            self.pressedAssets = pressedAssets
             
             // Controller skins with no assets are now supported.
             // guard self.assets.count > 0 else { return nil }

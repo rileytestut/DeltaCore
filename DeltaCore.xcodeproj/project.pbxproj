@@ -16,6 +16,7 @@
 		BF27601D22F91342005D98FE /* TouchInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27601C22F91342005D98FE /* TouchInputView.swift */; };
 		BF299F321CFAE5D000BF59A3 /* GameControllerStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */; };
 		BF31A1F62268DE5700C64A1B /* ThumbstickInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */; };
+		CA7B4A1E2E1A000100ABCDEF /* ButtonPatchLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7B4A1D2E1A000100ABCDEF /* ButtonPatchLayer.swift */; };
 		BF3273D51B86428200494CFC /* ExternalGameControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */; };
 		BF34FA131CF18E41006624C7 /* CheatFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF34FA121CF18E40006624C7 /* CheatFormat.swift */; };
 		BF425A7E1D23B15800F48ED9 /* DeltaCoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF425A7D1D23B15800F48ED9 /* DeltaCoreProtocol.swift */; };
@@ -111,6 +112,7 @@
 		BF27601C22F91342005D98FE /* TouchInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchInputView.swift; sourceTree = "<group>"; };
 		BF299F311CFAE5D000BF59A3 /* GameControllerStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameControllerStateManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbstickInputView.swift; sourceTree = "<group>"; };
+		CA7B4A1D2E1A000100ABCDEF /* ButtonPatchLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonPatchLayer.swift; sourceTree = "<group>"; };
 		BF3273D41B86428200494CFC /* ExternalGameControllerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExternalGameControllerManager.swift; sourceTree = "<group>"; };
 		BF34FA121CF18E40006624C7 /* CheatFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheatFormat.swift; sourceTree = "<group>"; };
 		BF425A7D1D23B15800F48ED9 /* DeltaCoreProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaCoreProtocol.swift; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 				BFE438111AF60CDA0095A5F1 /* ControllerView.swift */,
 				BF4696BB22F7DB98008DD7F2 /* ButtonsInputView.swift */,
 				BF31A1F52268DE5700C64A1B /* ThumbstickInputView.swift */,
+				CA7B4A1D2E1A000100ABCDEF /* ButtonPatchLayer.swift */,
 				BF27601C22F91342005D98FE /* TouchInputView.swift */,
 				BF46348E20D882F900CD12FD /* ControllerInputView.swift */,
 				BFAAB95A1C2780C40001B7C4 /* ControllerDebugView.swift */,
@@ -631,6 +634,7 @@
 				D5FFEEB128A573FD00882FCF /* GameWindow.swift in Sources */,
 				D5777512289882F5005E8B05 /* UIWindowScene+StageManager.swift in Sources */,
 				BF31A1F62268DE5700C64A1B /* ThumbstickInputView.swift in Sources */,
+				CA7B4A1E2E1A000100ABCDEF /* ButtonPatchLayer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

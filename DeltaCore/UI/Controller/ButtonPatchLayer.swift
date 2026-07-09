@@ -36,9 +36,9 @@ extension ButtonPatchLayer
         var featherRatio = 0.75 as CGFloat
 
         // Release springs
-        var buttonReleaseDuration = 0.22
+        var buttonReleaseDuration = 0.22 as CGFloat
         var buttonReleaseBounce = 0.15 as CGFloat
-        var dPadReleaseDuration = 0.3
+        var dPadReleaseDuration = 0.3 as CGFloat
         var dPadReleaseBounce = 0.28 as CGFloat
 
         // Haptics

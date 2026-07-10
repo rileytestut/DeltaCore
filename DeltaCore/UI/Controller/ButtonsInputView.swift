@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import simd
 
 class ButtonsInputView: UIView
 {
@@ -45,7 +46,7 @@ class ButtonsInputView: UIView
 
     // Per-item cap artwork for layered skins. Items with caps get physically
     // animated cap layers; items without fall back to pressed-appearance patches.
-    var caps = [String: ControllerSkin.Cap]() {
+    var caps = [ControllerSkin.Item.ID: ControllerSkin.Cap]() {
         didSet {
             self.setNeedsRebuildPatchLayers()
         }
@@ -66,8 +67,8 @@ class ButtonsInputView: UIView
 
     // Layers showing pressed appearances on top of the skin image.
     private let patchesLayer = CALayer()
-    private var patchLayers = [String: ButtonPatchLayer]()
-    private var previousDPadInputs = [String: Set<AnyInput>]()
+    private var patchLayers = [ControllerSkin.Item.ID: ButtonPatchLayer]()
+    private var previousDPadInputs = [ControllerSkin.Item.ID: Set<AnyInput>]()
 
     private var needsRebuildPatchLayers = false
     private var lastPatchLayoutSize = CGSize.zero
@@ -178,75 +179,25 @@ extension ButtonsInputView
             // Don't return inputs for thumbsticks or touch screens since they're handled separately.
             case .directional where item.kind == .thumbstick: break
             case .touch: break
-                
+
             case .standard(let itemInputs):
                 inputs.append(contentsOf: itemInputs)
-            
-            case let .directional(up, down, left, right) where item.kind == .thumbstick:
-
-                let divisor = 2.0 as CGFloat
-
-                let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
-                let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
-                let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
-                let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
-
-                if topRect.contains(point)
-                {
-                    inputs.append(up)
-                }
-
-                if bottomRect.contains(point)
-                {
-                    inputs.append(down)
-                }
-
-                if leftRect.contains(point)
-                {
-                    inputs.append(left)
-                }
-
-                if rightRect.contains(point)
-                {
-                    inputs.append(right)
-                }
 
             case let .directional(up, down, left, right):
 
                 // D-pads use angle-based zones like real hardware: each cardinal owns a
                 // wide sector from the pivot, so wiggling along an arm stays that direction.
                 // Diagonals only engage in the corner sectors between them.
-                let tuning = ButtonPatchLayer.Tuning.shared
+                let delta = self.normalizedOffset(of: point, in: item)
 
-                let deltaX = (point.x - item.frame.midX) / (item.frame.width / 2.0)
-                let deltaY = (point.y - item.frame.midY) / (item.frame.height / 2.0)
-
-                if hypot(deltaX, deltaY) > tuning.dPadDeadzone
+                if simd_length(delta) > ButtonPatchLayer.Tuning.shared.dPadDeadzone
                 {
-                    let degrees = atan2(deltaY, deltaX) * 180.0 / .pi
-                    let cardinalHalfAngle = tuning.dPadCardinalHalfAngle
+                    let direction = self.sectorDirection(for: delta)
 
-                    if abs(degrees + 90.0) <= cardinalHalfAngle
-                    {
-                        inputs.append(up)
-                    }
-                    else if abs(degrees - 90.0) <= cardinalHalfAngle
-                    {
-                        inputs.append(down)
-                    }
-                    else if abs(degrees) <= cardinalHalfAngle
-                    {
-                        inputs.append(right)
-                    }
-                    else if 180.0 - abs(degrees) <= cardinalHalfAngle
-                    {
-                        inputs.append(left)
-                    }
-                    else
-                    {
-                        inputs.append(deltaY < 0 ? up : down)
-                        inputs.append(deltaX < 0 ? left : right)
-                    }
+                    if direction.y < 0 { inputs.append(up) }
+                    if direction.y > 0 { inputs.append(down) }
+                    if direction.x < 0 { inputs.append(left) }
+                    if direction.x > 0 { inputs.append(right) }
                 }
             }
         }
@@ -450,20 +401,27 @@ private extension ButtonsInputView
     {
         let item = patchLayer.item
 
-        // Track presses from the touch's location (so a dead-center press still pushes
-        // the d-pad in with no inputs firing), but tilt from the *activated inputs* —
-        // discrete, fully-committed poses matching what the game receives, rather than
-        // a continuous lean toward the thumb.
-        if self.trackedDPadTouchLocation(for: item) != nil
+        // Like the physical part: past the saturation radius the cap is bottomed out in
+        // its committed sector pose (a discrete state), while near the pivot it floats —
+        // tracking the finger continuously and settling into the pose as it approaches
+        // the edge of the float zone.
+        if let point = self.trackedDPadTouchLocation(for: item)
         {
+            let tuning = ButtonPatchLayer.Tuning.shared
+
+            let delta = self.normalizedOffset(of: point, in: item)
+            let distance = simd_length(delta)
+
             var tilt = CGPoint.zero
 
-            if case let .directional(up, down, left, right) = item.inputs
+            if distance > tuning.tiltDeadzone
             {
-                if self.touchInputs.contains(AnyInput(up)) { tilt.y -= 1 }
-                if self.touchInputs.contains(AnyInput(down)) { tilt.y += 1 }
-                if self.touchInputs.contains(AnyInput(left)) { tilt.x -= 1 }
-                if self.touchInputs.contains(AnyInput(right)) { tilt.x += 1 }
+                let progress = min((distance - tuning.tiltDeadzone) / max(tuning.dPadSaturation - tuning.tiltDeadzone, 0.01), 1.0)
+
+                // The raw and sector directions are always within 90° of each other, so the mix can't vanish.
+                let direction = simd_normalize(simd_mix(delta / distance, self.sectorDirection(for: delta), SIMD2(repeating: progress)))
+
+                tilt = CGPoint(x: direction.x * progress, y: direction.y * progress)
             }
 
             let wasPressed = patchLayer.isPressed
@@ -493,9 +451,31 @@ private extension ButtonsInputView
         }
     }
 
+    // A normalized point's offset from the item's center, in units of its half-size.
+    func normalizedOffset(of point: CGPoint, in item: ControllerSkin.Item) -> SIMD2<Double>
+    {
+        return SIMD2(Double((point.x - item.frame.midX) / (item.frame.width / 2.0)),
+                     Double((point.y - item.frame.midY) / (item.frame.height / 2.0)))
+    }
+
+    // The committed pose's direction for a touch offset — the single source of truth
+    // for sector geometry, shared by input zones and the tilt visual.
+    func sectorDirection(for delta: SIMD2<Double>) -> SIMD2<Double>
+    {
+        let degrees = atan2(delta.y, delta.x) * 180.0 / .pi
+        let cardinalHalfAngle = ButtonPatchLayer.Tuning.shared.dPadCardinalHalfAngle
+
+        if abs(degrees + 90.0) <= cardinalHalfAngle { return SIMD2(0, -1) }
+        if abs(degrees - 90.0) <= cardinalHalfAngle { return SIMD2(0, 1) }
+        if abs(degrees) <= cardinalHalfAngle { return SIMD2(1, 0) }
+        if 180.0 - abs(degrees) <= cardinalHalfAngle { return SIMD2(-1, 0) }
+
+        return simd_normalize(SIMD2(delta.x < 0 ? -1 : 1, delta.y < 0 ? -1 : 1))
+    }
+
     func trackedDPadTouchLocation(for item: ControllerSkin.Item) -> CGPoint?
     {
-        var trackedTouch: UITouch?
+        var trackedTouch: (touch: UITouch, location: CGPoint)?
 
         for (touch, inputs) in self.touchInputsMappingDictionary
         {
@@ -510,17 +490,11 @@ private extension ButtonsInputView
             guard item.extendedFrame.contains(point) else { continue }
 
             // With multiple touches on the d-pad, the most recent one drives the tilt.
-            if let previousTouch = trackedTouch, previousTouch.timestamp > touch.timestamp { continue }
-            trackedTouch = touch
+            if let previousTouch = trackedTouch, previousTouch.touch.timestamp > touch.timestamp { continue }
+            trackedTouch = (touch, point)
         }
 
-        guard let trackedTouch else { return nil }
-
-        var point = trackedTouch.location(in: self)
-        point.x /= self.bounds.width
-        point.y /= self.bounds.height
-
-        return point
+        return trackedTouch?.location
     }
 
     func performPressHaptic()

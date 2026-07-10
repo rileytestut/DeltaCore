@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import CoreImage.CIFilterBuiltins
 
 extension ButtonPatchLayer
 {
@@ -18,47 +17,50 @@ extension ButtonPatchLayer
         static var shared = Tuning()
 
         // D-pad tilt
-        var tiltDegrees = 10.0 as CGFloat
-        var perspectiveDistance = 500.0 as CGFloat
-        var pressDepth = 2.5 as CGFloat
-        var pressedScale = 1.01 as CGFloat // Patch mode only — slight overscan hides seams while tilting.
-        var dPadPressedScale = 0.99 as CGFloat
-        var tiltDeadzone = 0.08 as CGFloat
-        var dPadRollDuration = 0.12 as CGFloat // Easing between committed tilt poses while rolling.
-        var dPadDeadzone = 0.2 as CGFloat // Neutral radius around the pivot, as a fraction of the d-pad's half-size.
-        var dPadCardinalHalfAngle = 30.0 as CGFloat // Degrees each side of a cardinal direction; the rest is diagonal territory.
+        var tiltDegrees: CGFloat = 10.0
+        var perspectiveDistance: CGFloat = 500.0
+        var pressDepth: CGFloat = 2.5
+        var pressedScale: CGFloat = 1.01 // Patch mode only — slight overscan hides seams while tilting.
+        var dPadPressedScale: CGFloat = 0.99
+        var tiltDeadzone: CGFloat = 0.08 // Radius where the cap starts tilting (below = pure center push).
+        var dPadSaturation: CGFloat = 0.5 // Radius where the cap bottoms out into its full committed pose.
 
-        // Generated pressed shading
-        var minimumDarkenAlpha = 0.06 as CGFloat
-        var maximumDarkenAlpha = 0.17 as CGFloat
-        var occlusionAlphaRatio = 2.0 as CGFloat
-        var occlusionHeight = 0.25 as CGFloat
-        var shadeFeather = 0.2 as CGFloat
+        // TODO: These two define *input* zones, not animation — they belong with the input
+        // code once values are final. They live here so the tuning panel keeps zones and
+        // tilt in lockstep while iterating.
+        var dPadDeadzone: CGFloat = 0.2 // Neutral input radius around the pivot, as a fraction of the d-pad's half-size.
+        var dPadCardinalHalfAngle: CGFloat = 30.0 // Degrees each side of a cardinal direction; the rest is diagonal territory.
+
+        // Generated pressed shading (patch mode)
+        var minimumDarkenAlpha: CGFloat = 0.06
+        var maximumDarkenAlpha: CGFloat = 0.17
+        var occlusionAlphaRatio: CGFloat = 2.0
+        var occlusionHeight: CGFloat = 0.25
+        var shadeFeather: CGFloat = 0.2
 
         // Patch geometry
-        var patchMarginRatio = 0.15 as CGFloat
-        var minimumPatchMargin = 8.0 as CGFloat
-        var featherRatio = 0.75 as CGFloat
+        var patchMarginRatio: CGFloat = 0.15
+        var minimumPatchMargin: CGFloat = 8.0
+        var featherRatio: CGFloat = 0.75
 
         // Caps (layered skins)
-        var capTravel = 1.5 as CGFloat
-        var generatedCapTravel = 1.0 as CGFloat // Baked into the generated pressed scene, along with...
-        var generatedCapPressedScale = 0.96 as CGFloat // ...a scale-down, reading as a top-down press.
-        var capHighlightCompression = 0.5 as CGFloat
-        var capShadowOpacity = 0.0 as CGFloat // Runtime shadows disabled for now.
-        var capShadowRadius = 3.0 as CGFloat
-        var capShadowOffset = 2.0 as CGFloat
-        var pressedShadowOpacityRatio = 0.35 as CGFloat
-        var pressedShadowScale = 0.94 as CGFloat
+        var capTravel: CGFloat = 1.5
+        var generatedCapTravel: CGFloat = 1.0 // Baked into the generated pressed scene, along with...
+        var generatedCapPressedScale: CGFloat = 0.96 // ...a scale-down, reading as a top-down press.
+        var capShadowOpacity: CGFloat = 0.0 // Runtime shadows disabled for now.
+        var capShadowRadius: CGFloat = 3.0
+        var capShadowOffset: CGFloat = 2.0
+        var pressedShadowOpacityRatio: CGFloat = 0.35
+        var pressedShadowScale: CGFloat = 0.94
 
         // Release springs (0 = discrete, no animation)
-        var buttonReleaseDuration = 0.0 as CGFloat
-        var buttonReleaseBounce = 0.15 as CGFloat
-        var dPadReleaseDuration = 0.0 as CGFloat
-        var dPadReleaseBounce = 0.28 as CGFloat
+        var buttonReleaseDuration: CGFloat = 0.0
+        var buttonReleaseBounce: CGFloat = 0.15
+        var dPadReleaseDuration: CGFloat = 0.0
+        var dPadReleaseBounce: CGFloat = 0.28
 
         // Haptics
-        var releaseHapticIntensity = 0.5 as CGFloat
+        var releaseHapticIntensity: CGFloat = 0.5
     }
 
     struct Geometry
@@ -106,7 +108,7 @@ class ButtonPatchLayer: CALayer
     private(set) var isPressed = false
 
     private var isCap = false
-    private var idleShadowOpacity = 0.0 as CGFloat
+    private var idleShadowOpacity: CGFloat = 0.0
 
     // Cap mode sublayers. Only capContainerLayer transforms (d-pad tilt);
     // the shadow and pressed scene stay on the chassis plane.
@@ -208,15 +210,12 @@ extension ButtonPatchLayer
     {
         let tuning = Tuning.shared
 
-        // Cancel any in-flight release fades — a new press snaps immediately.
-        // (Transforms are handled per-path below so direction rolls stay continuous.)
-        self.removeAnimation(forKey: "opacity")
-        self.shadowLayer.removeAllAnimations()
-        self.capLayer.removeAllAnimations()
-        self.pressedLayer.removeAllAnimations()
-
         if self.isCap
         {
+            // Cancel any in-flight release fades — a new press snaps immediately.
+            self.shadowLayer.removeAllAnimations()
+            self.pressedLayer.removeAllAnimations()
+
             // Buttons' press motion is baked into the pressed scene; d-pads tilt live.
             self.pressedLayer.opacity = 1.0
             self.shadowLayer.opacity = Float(self.idleShadowOpacity * tuning.pressedShadowOpacityRatio)
@@ -224,16 +223,22 @@ extension ButtonPatchLayer
 
             if self.item.kind == .dPad
             {
-                self.tilt(self.capContainerLayer, to: ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.dPadPressedScale))
+                // Set directly, no animation: while pressed, the cap's orientation is a
+                // pure function of the touch — bottomed out in a committed pose, or
+                // floating with the finger near the pivot.
+                self.capContainerLayer.removeAnimation(forKey: "transform")
+                self.capContainerLayer.transform = ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.dPadPressedScale)
             }
         }
         else
         {
+            self.removeAnimation(forKey: "opacity")
             self.opacity = 1.0
 
             if self.item.kind == .dPad
             {
-                self.tilt(self, to: ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.pressedScale))
+                self.removeAnimation(forKey: "transform")
+                self.transform = ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.pressedScale)
             }
         }
 
@@ -271,21 +276,6 @@ extension ButtonPatchLayer
 
 private extension ButtonPatchLayer
 {
-    // Initial press-in tilts instantly, but rolling between committed poses eases
-    // briefly — snapping from pose to pose reads as glitchy.
-    func tilt(_ layer: CALayer, to transform: CATransform3D)
-    {
-        if self.isPressed
-        {
-            self.addSpringAnimation(keyPath: "transform", to: transform, layer: layer, duration: Tuning.shared.dPadRollDuration, bounce: 0)
-        }
-        else
-        {
-            layer.removeAnimation(forKey: "transform")
-            layer.transform = transform
-        }
-    }
-
     func addSpringAnimation(keyPath: String, to value: Any, layer: CALayer, duration: CGFloat, bounce: CGFloat)
     {
         // Duration 0 = discrete state change, no animation.
@@ -335,7 +325,7 @@ extension ButtonPatchLayer
     }
 }
 
-//MARK: - Bitmap generation -
+//MARK: - Bitmap Generation -
 
 extension ButtonPatchLayer
 {
@@ -347,76 +337,67 @@ extension ButtonPatchLayer
         let scale = max(cap.image.scale, 1.0)
 
         var pressedSceneImage: CGImage? = nil
-        var pressedScenePadding = 0.0 as CGFloat
+        var pressedScenePadding: CGFloat = 0.0
 
-        // Generous padding so the region includes the pressed state's entire shadow ring,
-        // with its boundary landing on flat chassis that matches the background.
-        let pressedSkinImagePadding = ceil(16.0 * scale)
-
-        if generatesPressedAppearance, cap.pressedImage != nil, let (sceneImage, sceneRect) = self.wellImage(behind: cap, in: pressedSkinImage, outsetByPixels: pressedSkinImagePadding)
+        if generatesPressedAppearance
         {
-            // The skin provides a full pressed image: the item's pressed scene is simply
-            // its region of that image, exactly as the designer composed it — no motion.
-            let canvasSize = CGSize(width: CGFloat(capImage.width) + pressedSkinImagePadding * 2.0,
-                                    height: CGFloat(capImage.height) + pressedSkinImagePadding * 2.0)
+            // Generous padding so the region includes the pressed state's entire shadow ring,
+            // with its boundary landing on flat chassis that matches the background.
+            let pressedSkinImagePadding = ceil(16.0 * scale)
 
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = 1.0
-            format.opaque = false
-
-            let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
-            pressedSceneImage = renderer.image { _ in
-                UIImage(cgImage: sceneImage).draw(in: sceneRect)
-            }.cgImage
-
-            pressedScenePadding = pressedSkinImagePadding / scale
-        }
-        else if generatesPressedAppearance
-        {
-            let pressedArt: CGImage?
-            let travel: CGFloat
-            let pressedScale: CGFloat
-
-            if let authoredPressedImage = cap.pressedImage?.cgImage
+            // A pressedCap opts the item into authored pressed artwork. When the skin also
+            // ships a full pressed image, prefer its region — everything (well, shadow,
+            // button) exactly as the designer composed it, no motion.
+            if cap.pressedImage != nil, let (sceneImage, sceneRect) = self.wellImage(behind: cap, in: pressedSkinImage, outsetByPixels: pressedSkinImagePadding)
             {
-                pressedArt = authoredPressedImage
-                travel = tuning.capTravel
-                pressedScale = 1.0
-            }
-            else
-            {
-                // Without authored pressed artwork, scaling down + slight travel reads as
-                // a top-down press — geometry only, no generated shading.
-                pressedArt = capImage
-                travel = tuning.generatedCapTravel
-                pressedScale = tuning.generatedCapPressedScale
-            }
-
-            let padding = ceil(travel * scale)
-
-            if let pressedArt, let (wellImage, wellRect) = self.wellImage(behind: cap, in: background, outsetByPixels: padding)
-            {
-                // Bake the complete pressed scene: the (static) well and its surroundings
-                // filling the whole canvas — any transparent gap would resample into a
-                // hairline seam — with the pressed artwork drawn at its traveled position.
-                let capSize = CGSize(width: capImage.width, height: capImage.height)
-                let canvasSize = CGSize(width: capSize.width + padding * 2.0, height: capSize.height + padding * 2.0)
-                let capRect = CGRect(x: padding, y: padding, width: capSize.width, height: capSize.height)
+                let canvasSize = CGSize(width: CGFloat(capImage.width) + pressedSkinImagePadding * 2.0,
+                                        height: CGFloat(capImage.height) + pressedSkinImagePadding * 2.0)
 
                 let format = UIGraphicsImageRendererFormat()
                 format.scale = 1.0
                 format.opaque = false
 
-                var artRect = capRect.offsetBy(dx: 0, dy: travel * scale)
-                artRect = artRect.insetBy(dx: artRect.width * (1.0 - pressedScale) / 2.0, dy: artRect.height * (1.0 - pressedScale) / 2.0)
-
                 let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
                 pressedSceneImage = renderer.image { _ in
-                    UIImage(cgImage: wellImage).draw(in: wellRect)
-                    UIImage(cgImage: pressedArt).draw(in: artRect)
+                    UIImage(cgImage: sceneImage).draw(in: sceneRect)
                 }.cgImage
 
-                pressedScenePadding = padding / scale
+                pressedScenePadding = pressedSkinImagePadding / scale
+            }
+            else
+            {
+                // Otherwise the pressed scene is baked: the (static) well and its
+                // surroundings filling the whole canvas — any transparent gap would
+                // resample into a hairline seam — with the pressed artwork drawn at
+                // its traveled position. Without authored artwork, scaling down +
+                // slight travel reads as a top-down press; geometry only, no shading.
+                let pressedArt = cap.pressedImage?.cgImage ?? capImage
+                let travel = (cap.pressedImage != nil) ? tuning.capTravel : tuning.generatedCapTravel
+                let pressedScale = (cap.pressedImage != nil) ? 1.0 : tuning.generatedCapPressedScale
+
+                let padding = ceil(travel * scale)
+
+                if let (wellImage, wellRect) = self.wellImage(behind: cap, in: background, outsetByPixels: padding)
+                {
+                    let capSize = CGSize(width: capImage.width, height: capImage.height)
+                    let canvasSize = CGSize(width: capSize.width + padding * 2.0, height: capSize.height + padding * 2.0)
+                    let capRect = CGRect(x: padding, y: padding, width: capSize.width, height: capSize.height)
+
+                    let format = UIGraphicsImageRendererFormat()
+                    format.scale = 1.0
+                    format.opaque = false
+
+                    var artRect = capRect.offsetBy(dx: 0, dy: travel * scale)
+                    artRect = artRect.insetBy(dx: artRect.width * (1.0 - pressedScale) / 2.0, dy: artRect.height * (1.0 - pressedScale) / 2.0)
+
+                    let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
+                    pressedSceneImage = renderer.image { _ in
+                        UIImage(cgImage: wellImage).draw(in: wellRect)
+                        UIImage(cgImage: pressedArt).draw(in: artRect)
+                    }.cgImage
+
+                    pressedScenePadding = padding / scale
+                }
             }
         }
 
@@ -458,20 +439,14 @@ extension ButtonPatchLayer
     {
         guard let cgImage = image.cgImage else { return nil }
 
-        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+        let imageBounds = CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
 
         // Crop against this image's own pixel dimensions — the base and pressed
         // images may have different sizes, but normalized coordinates hold for both.
-        let pixelRect = CGRect(x: geometry.patchRect.minX * imageSize.width,
-                               y: geometry.patchRect.minY * imageSize.height,
-                               width: geometry.patchRect.width * imageSize.width,
-                               height: geometry.patchRect.height * imageSize.height).integral
+        let pixelRect = geometry.patchRect.scaled(to: imageBounds).integral
         guard !pixelRect.isEmpty, let croppedImage = cgImage.cropping(to: pixelRect) else { return nil }
 
-        let itemFrame = CGRect(x: geometry.itemRect.minX * imageSize.width - pixelRect.minX,
-                               y: geometry.itemRect.minY * imageSize.height - pixelRect.minY,
-                               width: geometry.itemRect.width * imageSize.width,
-                               height: geometry.itemRect.height * imageSize.height)
+        let itemFrame = geometry.itemRect.scaled(to: imageBounds).offsetBy(dx: -pixelRect.minX, dy: -pixelRect.minY)
 
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1.0
@@ -497,8 +472,6 @@ extension ButtonPatchLayer
 
 private extension ButtonPatchLayer
 {
-    static let ciContext = CIContext()
-
     // Returns the background behind the cap plus `outsetByPixels` on each side, along with
     // the rect it occupies in the padded scene canvas (differs at skin edges, where the
     // outset gets clamped to the background's bounds).
@@ -506,13 +479,11 @@ private extension ButtonPatchLayer
     {
         guard let backgroundImage = background?.cgImage else { return nil }
 
-        let capRect = CGRect(x: cap.frame.minX * CGFloat(backgroundImage.width),
-                             y: cap.frame.minY * CGFloat(backgroundImage.height),
-                             width: cap.frame.width * CGFloat(backgroundImage.width),
-                             height: cap.frame.height * CGFloat(backgroundImage.height)).integral
+        let imageBounds = CGRect(x: 0, y: 0, width: backgroundImage.width, height: backgroundImage.height)
 
+        let capRect = cap.frame.scaled(to: imageBounds).integral
         let outsetRect = capRect.insetBy(dx: -padding, dy: -padding)
-        let clampedRect = outsetRect.intersection(CGRect(x: 0, y: 0, width: backgroundImage.width, height: backgroundImage.height)).integral
+        let clampedRect = outsetRect.intersection(imageBounds).integral
 
         guard !clampedRect.isEmpty, let wellImage = backgroundImage.cropping(to: clampedRect) else { return nil }
 
@@ -522,81 +493,6 @@ private extension ButtonPatchLayer
                                 height: clampedRect.height)
 
         return (wellImage, canvasRect)
-    }
-
-    // Approximates hand-authored pressed artwork: compress the specular highlights,
-    // darken adaptively to the artwork's brightness, and occlude the top edge —
-    // all confined to the cap's own alpha.
-    static func makeGeneratedPressedCap(from image: UIImage) -> CGImage?
-    {
-        guard var cgImage = image.cgImage else { return nil }
-
-        let tuning = Tuning.shared
-
-        // Highlight compression — the dome catches less light when it sits deeper in the well.
-        if tuning.capHighlightCompression < 1.0
-        {
-            let inputImage = CIImage(cgImage: cgImage)
-
-            let filter = CIFilter.highlightShadowAdjust()
-            filter.inputImage = inputImage
-            filter.highlightAmount = Float(tuning.capHighlightCompression)
-            filter.shadowAmount = 0.0
-
-            // Crop to the input's extent — the filter blurs internally, which pads its
-            // output extent and would misalign the pressed artwork over the regular cap.
-            if let outputImage = filter.outputImage, let filteredImage = self.ciContext.createCGImage(outputImage, from: inputImage.extent)
-            {
-                cgImage = filteredImage
-            }
-        }
-
-        let size = CGSize(width: cgImage.width, height: cgImage.height)
-        let luminance = self.averageLuminance(of: cgImage, in: CGRect(origin: .zero, size: size))
-        let darkenAlpha = tuning.minimumDarkenAlpha + (tuning.maximumDarkenAlpha - tuning.minimumDarkenAlpha) * (1.0 - luminance)
-        let occlusionAlpha = min(darkenAlpha * tuning.occlusionAlphaRatio, 1.0)
-
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        format.opaque = false
-
-        let renderer = UIGraphicsImageRenderer(size: size, format: format)
-        let pressedImage = renderer.image { (rendererContext) in
-            let context = rendererContext.cgContext
-
-            UIImage(cgImage: cgImage).draw(in: CGRect(origin: .zero, size: size))
-
-            // .sourceAtop confines the shading to the cap's alpha without thinning its edges.
-            context.setBlendMode(.sourceAtop)
-
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
-
-            // Center-weighted darkening, fading toward the rim — a uniform fill reads
-            // as a hard tonal step at the cap's edge.
-            let center = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
-            let outerRadius = hypot(size.width, size.height) / 2.0 * 1.05
-
-            let darkenColors = [UIColor.black.withAlphaComponent(darkenAlpha).cgColor,
-                                UIColor.black.withAlphaComponent(darkenAlpha).cgColor,
-                                UIColor.black.withAlphaComponent(0).cgColor]
-
-            if let gradient = CGGradient(colorsSpace: colorSpace, colors: darkenColors as CFArray, locations: [0, 0.55, 1])
-            {
-                context.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center, endRadius: outerRadius, options: [])
-            }
-
-            let occlusionColors = [UIColor.black.withAlphaComponent(occlusionAlpha).cgColor,
-                                   UIColor.black.withAlphaComponent(0).cgColor]
-
-            if let gradient = CGGradient(colorsSpace: colorSpace, colors: occlusionColors as CFArray, locations: [0, 1])
-            {
-                context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: size.height * tuning.occlusionHeight), options: [])
-            }
-
-            context.setBlendMode(.normal)
-        }
-
-        return pressedImage.cgImage
     }
 
     // A drop shadow rendered from the cap's silhouette, so it can tighten as the cap descends.
@@ -741,8 +637,8 @@ private extension ButtonPatchLayer
         context.interpolationQuality = .medium
         context.draw(sampleImage, in: CGRect(x: 0, y: 0, width: dimension, height: dimension))
 
-        var totalLuminance = 0.0 as CGFloat
-        var totalAlpha = 0.0 as CGFloat
+        var totalLuminance: CGFloat = 0.0
+        var totalAlpha: CGFloat = 0.0
 
         for index in stride(from: 0, to: pixels.count, by: 4)
         {

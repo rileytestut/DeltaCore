@@ -299,7 +299,8 @@ public extension ControllerSkin
         // Only use a pressed asset matching the exact size the regular image resolved to.
         // A mismatched pair (e.g. large regular + medium pressed) would misalign the artwork.
         guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize),
-              let image = self.image(for: representation, assetSize: assetSize, isPressed: true)
+              let filename = representation.pressedAssets[assetSize],
+              let image = self.image(named: filename, assetSize: assetSize, representation: representation)
         else { return nil }
 
         self.imageCache.setObject(image, forKey: cacheKey as NSString)
@@ -335,7 +336,8 @@ public extension ControllerSkin
         guard let representation = self.representation(for: traits) else { return nil }
         guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize) else { return nil }
 
-        let cacheKey = (capImageName + self.cacheKey(for: traits, size: preferredSize)) as NSString
+        // Keyed by item, not filename — the cached Cap also bakes in the item's pressedCap and shadow.
+        let cacheKey = (item.id + "-" + self.cacheKey(for: traits, size: preferredSize)) as NSString
 
         if let box = self.capCache.object(forKey: cacheKey)
         {
@@ -438,10 +440,9 @@ private extension ControllerSkin
         }
     }
 
-    func image(for representation: Representation, assetSize: AssetSize, isPressed: Bool = false) -> UIImage?
+    func image(for representation: Representation, assetSize: AssetSize) -> UIImage?
     {
-        let assets = isPressed ? representation.pressedAssets : representation.assets
-        guard let filename = assets[assetSize] else { return nil }
+        guard let filename = representation.assets[assetSize] else { return nil }
 
         return self.image(named: filename, assetSize: assetSize, representation: representation)
     }
@@ -566,7 +567,7 @@ extension ControllerSkin
             {
                 self.capShadow = Cap.Shadow(offset: CGSize(width: x / mappingSize.width, height: y / mappingSize.height),
                                             blur: blur / mappingSize.width,
-                                            opacity: shadowDictionary["opacity"] ?? 0.4)
+                                            opacity: shadowDictionary["opacity"] ?? 0.4) // Illustrator's default drop shadow opacity.
             }
             
             if let inputs = dictionary["inputs"] as? [String]
@@ -669,10 +670,11 @@ extension ControllerSkin.Item: Hashable
         guard
             lhs.kind == rhs.kind,
             lhs.thumbstickImageName == rhs.thumbstickImageName, lhs.thumbstickSize == rhs.thumbstickSize,
+            lhs.capImageName == rhs.capImageName, lhs.pressedCapImageName == rhs.pressedCapImageName,
             lhs.inputs.allInputs.map({ $0.stringValue }) == rhs.inputs.allInputs.map({ $0.stringValue }),
             lhs.frame == rhs.frame && lhs.extendedFrame == rhs.extendedFrame
         else { return false }
-        
+
         return true
     }
     
@@ -689,6 +691,8 @@ extension ControllerSkin.Item: Hashable
         hasher.combine(self.thumbstickImageName)
         hasher.combine(self.thumbstickSize?.width)
         hasher.combine(self.thumbstickSize?.height)
+        hasher.combine(self.capImageName)
+        hasher.combine(self.pressedCapImageName)
         
         for input in self.inputs.allInputs
         {
@@ -708,11 +712,11 @@ extension ControllerSkin.Item: Hashable
 @available(iOS 13, *)
 extension ControllerSkin.Item: Identifiable {}
 
-public extension ControllerSkin
+extension ControllerSkin
 {
     // An item's movable artwork, cropped from its full-canvas image.
     // `frame` is normalized [0,1] relative to the skin image.
-    struct Cap
+    public struct Cap
     {
         // Authored drop shadow parameters, normalized [0,1] relative to the skin image
         // (blur is a fraction of the image's width).
@@ -731,7 +735,7 @@ public extension ControllerSkin
 }
 
 // NSCache values must be reference types.
-internal class CapBox
+private final class CapBox
 {
     let cap: ControllerSkin.Cap
 
@@ -753,8 +757,15 @@ private extension UIImage
         let height = cgImage.height
 
         var alphas = [UInt8](repeating: 0, count: width * height)
-        guard let context = CGContext(data: &alphas, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) else { return nil }
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        // The context writes through the buffer's pointer, so both creating and drawing
+        // must happen inside withUnsafeMutableBytes for the pointer to remain valid.
+        let didRender = alphas.withUnsafeMutableBytes { (buffer) -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) else { return false }
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard didRender else { return nil }
 
         let threshold: UInt8 = 8
 
@@ -788,10 +799,12 @@ private extension UIImage
     {
         guard let cgImage = self.cgImage else { return nil }
 
-        let pixelRect = CGRect(x: normalizedRect.minX * CGFloat(cgImage.width),
-                               y: normalizedRect.minY * CGFloat(cgImage.height),
-                               width: normalizedRect.width * CGFloat(cgImage.width),
-                               height: normalizedRect.height * CGFloat(cgImage.height)).integral
+        // Round to nearest — .integral rounds outward, which can produce a rect
+        // one pixel larger than the cap this crop is layered over.
+        let pixelRect = CGRect(x: (normalizedRect.minX * CGFloat(cgImage.width)).rounded(),
+                               y: (normalizedRect.minY * CGFloat(cgImage.height)).rounded(),
+                               width: (normalizedRect.width * CGFloat(cgImage.width)).rounded(),
+                               height: (normalizedRect.height * CGFloat(cgImage.height)).rounded())
 
         guard let croppedImage = cgImage.cropping(to: pixelRect) else { return nil }
         return UIImage(cgImage: croppedImage, scale: self.scale, orientation: self.imageOrientation)

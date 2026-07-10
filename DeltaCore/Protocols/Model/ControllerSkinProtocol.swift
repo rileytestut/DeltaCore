@@ -19,7 +19,9 @@ public protocol ControllerSkinProtocol
     
     func image(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    func layeredImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
+    func cap(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> ControllerSkin.Cap?
     
     func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
     
@@ -40,6 +42,17 @@ public extension ControllerSkinProtocol
 {
     // Optional; skins without pressed artwork fall back to a generated pressed appearance.
     func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    {
+        return nil
+    }
+
+    // Optional; layered skins provide a background with movable caps removed, plus per-item cap images.
+    func layeredImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
+    {
+        return nil
+    }
+
+    func cap(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> ControllerSkin.Cap?
     {
         return nil
     }

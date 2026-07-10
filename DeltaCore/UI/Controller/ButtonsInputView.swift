@@ -43,6 +43,14 @@ class ButtonsInputView: UIView
         }
     }
 
+    // Per-item cap artwork for layered skins. Items with caps get physically
+    // animated cap layers; items without fall back to pressed-appearance patches.
+    var caps = [String: ControllerSkin.Cap]() {
+        didSet {
+            self.setNeedsRebuildPatchLayers()
+        }
+    }
+
     private let imageView = UIImageView(frame: .zero)
 
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
@@ -252,8 +260,8 @@ private extension ButtonsInputView
         {
             self.activateInputsHandler?(activatedInputs)
 
-            // When press animations are enabled, haptics fire per-item alongside the visuals instead.
-            if self.isHapticFeedbackEnabled && !self.isPressAnimationEnabled
+            // When press animations are active, haptics fire per-item alongside the visuals instead.
+            if self.isHapticFeedbackEnabled && self.patchLayers.isEmpty
             {
                 switch UIDevice.current.feedbackSupportLevel
                 {
@@ -300,6 +308,19 @@ private extension ButtonsInputView
         for item in items
         {
             guard item.placement == .controller, item.kind == .button || item.kind == .dPad else { continue }
+
+            if let cap = self.caps[item.id]
+            {
+                // Tilting is enough press feedback for a d-pad — a shading overlay on top reads as a gray film.
+                guard let capContents = ButtonPatchLayer.makeCapContents(from: cap, background: image, pressedSkinImage: self.pressedImage, generatesPressedAppearance: item.kind != .dPad) else { continue }
+
+                let patchLayer = ButtonPatchLayer(item: item, capContents: capContents, frame: cap.frame.scaled(to: self.bounds))
+
+                self.patchesLayer.addSublayer(patchLayer)
+                self.patchLayers[item.id] = patchLayer
+
+                continue
+            }
 
             let itemSize = CGSize(width: item.frame.width * self.bounds.width, height: item.frame.height * self.bounds.height)
             guard itemSize.width > 0, itemSize.height > 0 else { continue }
@@ -351,6 +372,12 @@ private extension ButtonsInputView
             self.patchesLayer.addSublayer(patchLayer)
             self.patchLayers[item.id] = patchLayer
         }
+
+        // DEBUG: keep the screenshot-verification demo state applied across rebuilds. Removed before merge.
+        if let demo = UserDefaults.standard.string(forKey: "DemoPressState"), !self.patchLayers.isEmpty
+        {
+            self.performPressDemo(demo)
+        }
     }
 
     func updatePressedPatchLayers()
@@ -393,13 +420,21 @@ private extension ButtonsInputView
     {
         let item = patchLayer.item
 
-        // Track the d-pad from the touch's location rather than activated inputs,
-        // so a dead-center press still pushes the d-pad in (with no inputs firing),
-        // and the tilt follows the thumb continuously like a physical rocker.
-        if let point = self.trackedDPadTouchLocation(for: item)
+        // Track presses from the touch's location (so a dead-center press still pushes
+        // the d-pad in with no inputs firing), but tilt from the *activated inputs* —
+        // discrete, fully-committed poses matching what the game receives, rather than
+        // a continuous lean toward the thumb.
+        if self.trackedDPadTouchLocation(for: item) != nil
         {
-            let tilt = CGPoint(x: (point.x - item.frame.midX) / (item.frame.width / 2),
-                               y: (point.y - item.frame.midY) / (item.frame.height / 2))
+            var tilt = CGPoint.zero
+
+            if case let .directional(up, down, left, right) = item.inputs
+            {
+                if self.touchInputs.contains(AnyInput(up)) { tilt.y -= 1 }
+                if self.touchInputs.contains(AnyInput(down)) { tilt.y += 1 }
+                if self.touchInputs.contains(AnyInput(left)) { tilt.x -= 1 }
+                if self.touchInputs.contains(AnyInput(right)) { tilt.x += 1 }
+            }
 
             let wasPressed = patchLayer.isPressed
             patchLayer.press(tilt: tilt)
@@ -486,5 +521,52 @@ private extension ButtonsInputView
 
         self.detentFeedbackGenerator.selectionChanged()
         self.detentFeedbackGenerator.prepare()
+    }
+}
+
+// DEBUG: applies pressed visuals directly so specific states can be screenshotted. Removed before merge.
+// Demo format: "+"-separated components, e.g. "a", "b+a", "dpad:0,-1", "a+dpad:0.7,0.7". Anything else releases everything.
+internal extension ButtonsInputView
+{
+    func performPressDemo(_ demo: String)
+    {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        var pressedItemIDs = Set<String>()
+
+        for component in demo.components(separatedBy: "+")
+        {
+            if component.hasPrefix("dpad")
+            {
+                let values = component.components(separatedBy: ":").last?.components(separatedBy: ",").compactMap { Double($0) } ?? []
+                let tilt = (values.count == 2) ? CGPoint(x: values[0], y: values[1]) : CGPoint.zero
+
+                for patchLayer in self.patchLayers.values where patchLayer.item.kind == .dPad
+                {
+                    patchLayer.press(tilt: tilt)
+                    pressedItemIDs.insert(patchLayer.item.id)
+                }
+            }
+            else
+            {
+                for patchLayer in self.patchLayers.values where patchLayer.item.kind == .button
+                {
+                    let inputs = patchLayer.item.inputs.allInputs.map { $0.stringValue }
+                    if inputs.contains(component)
+                    {
+                        patchLayer.press()
+                        pressedItemIDs.insert(patchLayer.item.id)
+                    }
+                }
+            }
+        }
+
+        for patchLayer in self.patchLayers.values where !pressedItemIDs.contains(patchLayer.item.id)
+        {
+            patchLayer.release()
+        }
+
+        CATransaction.commit()
     }
 }

@@ -102,6 +102,9 @@ public class ControllerView: UIView, GameController
     public var isButtonPressAnimationEnabled = false {
         didSet {
             self.buttonsView.isPressAnimationEnabled = self.isButtonPressAnimationEnabled
+
+            // Layered skins swap between their flattened and layered backgrounds based on this flag.
+            self.updateControllerSkin()
         }
     }
     
@@ -454,14 +457,53 @@ public extension ControllerView
             {
                 self.buttonsView.image = nil
                 self.buttonsView.pressedImage = nil
+                self.buttonsView.caps = [:]
             }
             else
             {
                 let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
 
-                self.buttonsView.image = self.cachedImage(cacheKey: cacheKey) { (controllerSkin) in
-                    controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
+                // Layered skins provide a background with the movable caps removed, plus per-item cap
+                // images we animate directly. Only used when press animations are enabled — otherwise
+                // (and whenever any cap fails to load) we show the regular flattened image.
+                var caps = [ControllerSkin.Item.ID: ControllerSkin.Cap]()
+                var layeredImage: UIImage? = nil
+
+                if self.isButtonPressAnimationEnabled, let controllerSkin = self.controllerSkin
+                {
+                    layeredImage = self.cachedImage(cacheKey: cacheKey + "-layered") { (controllerSkin) in
+                        controllerSkin.layeredImage(for: traits, preferredSize: self.controllerSkinSize)
+                    }
+
+                    for item in items ?? [] where item.hasCap
+                    {
+                        if let cap = controllerSkin.cap(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                        {
+                            caps[item.id] = cap
+                        }
+                        else
+                        {
+                            caps = [:]
+                            layeredImage = nil
+                            break
+                        }
+                    }
                 }
+
+                if let layeredImage, !caps.isEmpty
+                {
+                    self.buttonsView.image = layeredImage
+                }
+                else
+                {
+                    caps = [:]
+
+                    self.buttonsView.image = self.cachedImage(cacheKey: cacheKey) { (controllerSkin) in
+                        controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
+                    }
+                }
+
+                self.buttonsView.caps = caps
 
                 self.buttonsView.pressedImage = self.cachedImage(cacheKey: cacheKey + "-pressed") { (controllerSkin) in
                     controllerSkin.pressedImage(for: traits, preferredSize: self.controllerSkinSize)

@@ -71,6 +71,7 @@ public struct ControllerSkin: ControllerSkinProtocol
     
     private let representations: [Traits: Representation]
     private let imageCache = NSCache<NSString, UIImage>()
+    private let capCache = NSCache<NSString, CapBox>()
     
     private let archive: Archive
     
@@ -305,6 +306,71 @@ public extension ControllerSkin
 
         return image
     }
+
+    func layeredImage(for traits: Traits, preferredSize: Size) -> UIImage?
+    {
+        guard let representation = self.representation(for: traits) else { return nil }
+
+        let cacheKey = self.cacheKey(for: traits, size: preferredSize) + "-layered"
+
+        if let image = self.imageCache.object(forKey: cacheKey as NSString)
+        {
+            return image
+        }
+
+        // Same rule as pressedImage: the layered background must match the regular image's asset size.
+        guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize),
+              let filename = representation.layeredAssets[assetSize],
+              let image = self.image(named: filename, assetSize: assetSize, representation: representation)
+        else { return nil }
+
+        self.imageCache.setObject(image, forKey: cacheKey as NSString)
+
+        return image
+    }
+
+    func cap(for item: Item, traits: Traits, preferredSize: Size) -> Cap?
+    {
+        guard let capImageName = item.capImageName else { return nil }
+        guard let representation = self.representation(for: traits) else { return nil }
+        guard let assetSize = self.assetSize(for: representation, preferredSize: preferredSize) else { return nil }
+
+        let cacheKey = (capImageName + self.cacheKey(for: traits, size: preferredSize)) as NSString
+
+        if let box = self.capCache.object(forKey: cacheKey)
+        {
+            return box.cap
+        }
+
+        // Caps are drawn in place on a full-size canvas, so their position comes
+        // from the artwork itself rather than coordinates in info.json.
+        guard let fullImage = self.image(named: capImageName, assetSize: assetSize, representation: representation) else { return nil }
+
+        // A cap exported tightly around its artwork (instead of on the full canvas) has lost
+        // its position, so reject it rather than stretch it across the whole controller.
+        let imageAspect = fullImage.size.width / fullImage.size.height
+        let canvasAspect = representation.aspectRatio.width / representation.aspectRatio.height
+
+        guard abs(imageAspect - canvasAspect) / canvasAspect < 0.02 else {
+            print("Cap image \(capImageName) must be exported on the full skin canvas (expected aspect \(canvasAspect), got \(imageAspect)). Falling back to flattened skin.")
+            return nil
+        }
+
+        guard let (image, frame) = fullImage.croppingToAlphaBoundingBox() else { return nil }
+
+        var pressedImage: UIImage? = nil
+        if let pressedCapImageName = item.pressedCapImageName,
+           let fullPressedImage = self.image(named: pressedCapImageName, assetSize: assetSize, representation: representation)
+        {
+            // Crop to the same region as the regular cap so both map onto the same layer.
+            pressedImage = fullPressedImage.cropping(toNormalizedRect: frame)
+        }
+
+        let cap = Cap(image: image, pressedImage: pressedImage, frame: frame, shadow: item.capShadow)
+        self.capCache.setObject(CapBox(cap: cap), forKey: cacheKey)
+
+        return cap
+    }
     
     func items(for traits: Traits) -> [Item]?
     {
@@ -375,31 +441,38 @@ private extension ControllerSkin
     func image(for representation: Representation, assetSize: AssetSize, isPressed: Bool = false) -> UIImage?
     {
         let assets = isPressed ? representation.pressedAssets : representation.assets
-        guard let filename = assets[assetSize], let entry = self.archive[filename] else { return nil }
-        
+        guard let filename = assets[assetSize] else { return nil }
+
+        return self.image(named: filename, assetSize: assetSize, representation: representation)
+    }
+
+    func image(named filename: String, assetSize: AssetSize, representation: Representation) -> UIImage?
+    {
+        guard let entry = self.archive[filename] else { return nil }
+
         do
         {
             let data = try self.archive.extract(entry)
-            
+
             let image: UIImage?
-            
+
             switch assetSize
             {
             case .small, .medium, .large:
                 guard let imageScale = assetSize.imageScale(for: representation.traits) else { return nil }
                 image = UIImage(data: data, scale: imageScale)
-                
+
             case .resizable:
                 guard let targetSize = assetSize.targetSize(for: representation.traits) else { return nil }
                 image = UIImage.image(withPDFData: data, targetSize: targetSize)
             }
-            
+
             return image
         }
         catch
         {
             print(error)
-            
+
             return nil
         }
     }
@@ -454,25 +527,47 @@ extension ControllerSkin
         }
         
         public var id: String
-        
+
         public var kind: Kind
         public var inputs: Inputs
-        
+
         public var frame: CGRect
         public var extendedFrame: CGRect
-        
+
         public var placement: Placement
+
+        public var hasCap: Bool {
+            return self.capImageName != nil
+        }
         
         fileprivate var thumbstickImageName: String?
         fileprivate var thumbstickSize: CGSize?
-        
+
+        // Full-canvas images of just this item's movable "cap", drawn in place over the skin's layered background.
+        fileprivate var capImageName: String?
+        fileprivate var pressedCapImageName: String?
+
+        // Normalized by mappingSize, so authors can use the same values as their design canvas.
+        fileprivate var capShadow: Cap.Shadow?
+
         fileprivate init?(id: String, dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
             guard
                 let frameDictionary = dictionary["frame"] as? [String: CGFloat], let frame = CGRect(dictionary: frameDictionary)
             else { return nil }
-            
+
             self.id = id
+
+            self.capImageName = dictionary["cap"] as? String
+            self.pressedCapImageName = dictionary["pressedCap"] as? String
+
+            if let shadowDictionary = dictionary["shadow"] as? [String: CGFloat],
+               let x = shadowDictionary["x"], let y = shadowDictionary["y"], let blur = shadowDictionary["blur"]
+            {
+                self.capShadow = Cap.Shadow(offset: CGSize(width: x / mappingSize.width, height: y / mappingSize.height),
+                                            blur: blur / mappingSize.width,
+                                            opacity: shadowDictionary["opacity"] ?? 0.4)
+            }
             
             if let inputs = dictionary["inputs"] as? [String]
             {
@@ -612,6 +707,96 @@ extension ControllerSkin.Item: Hashable
 
 @available(iOS 13, *)
 extension ControllerSkin.Item: Identifiable {}
+
+public extension ControllerSkin
+{
+    // An item's movable artwork, cropped from its full-canvas image.
+    // `frame` is normalized [0,1] relative to the skin image.
+    struct Cap
+    {
+        // Authored drop shadow parameters, normalized [0,1] relative to the skin image
+        // (blur is a fraction of the image's width).
+        public struct Shadow
+        {
+            public var offset: CGSize
+            public var blur: CGFloat
+            public var opacity: CGFloat
+        }
+
+        public var image: UIImage
+        public var pressedImage: UIImage?
+        public var frame: CGRect
+        public var shadow: Shadow?
+    }
+}
+
+// NSCache values must be reference types.
+internal class CapBox
+{
+    let cap: ControllerSkin.Cap
+
+    init(cap: ControllerSkin.Cap)
+    {
+        self.cap = cap
+    }
+}
+
+private extension UIImage
+{
+    // Crops to the smallest rect containing all (meaningfully) non-transparent pixels.
+    // Returns the cropped image and its normalized frame within the original canvas.
+    func croppingToAlphaBoundingBox() -> (UIImage, CGRect)?
+    {
+        guard let cgImage = self.cgImage else { return nil }
+
+        let width = cgImage.width
+        let height = cgImage.height
+
+        var alphas = [UInt8](repeating: 0, count: width * height)
+        guard let context = CGContext(data: &alphas, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) else { return nil }
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        let threshold: UInt8 = 8
+
+        var minX = width, maxX = -1, minY = height, maxY = -1
+        for y in 0 ..< height
+        {
+            let row = y * width
+            for x in 0 ..< width where alphas[row + x] > threshold
+            {
+                if x < minX { minX = x }
+                if x > maxX { maxX = x }
+                if y < minY { minY = y }
+                if y > maxY { maxY = y }
+            }
+        }
+
+        guard maxX >= minX, maxY >= minY else { return nil }
+
+        let pixelRect = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+        guard let croppedImage = cgImage.cropping(to: pixelRect) else { return nil }
+
+        let normalizedFrame = CGRect(x: pixelRect.minX / CGFloat(width),
+                                     y: pixelRect.minY / CGFloat(height),
+                                     width: pixelRect.width / CGFloat(width),
+                                     height: pixelRect.height / CGFloat(height))
+
+        return (UIImage(cgImage: croppedImage, scale: self.scale, orientation: self.imageOrientation), normalizedFrame)
+    }
+
+    func cropping(toNormalizedRect normalizedRect: CGRect) -> UIImage?
+    {
+        guard let cgImage = self.cgImage else { return nil }
+
+        let pixelRect = CGRect(x: normalizedRect.minX * CGFloat(cgImage.width),
+                               y: normalizedRect.minY * CGFloat(cgImage.height),
+                               width: normalizedRect.width * CGFloat(cgImage.width),
+                               height: normalizedRect.height * CGFloat(cgImage.height)).integral
+
+        guard let croppedImage = cgImage.cropping(to: pixelRect) else { return nil }
+        return UIImage(cgImage: croppedImage, scale: self.scale, orientation: self.imageOrientation)
+    }
+}
 
 private extension ControllerSkin
 {
@@ -774,6 +959,7 @@ private extension ControllerSkin
 
         let assets: [AssetSize: String]
         let pressedAssets: [AssetSize: String]
+        let layeredAssets: [AssetSize: String]
         let isTranslucent: Bool
         let screens: [Screen]?
         let aspectRatio: CGSize
@@ -856,6 +1042,19 @@ private extension ControllerSkin
                 }
             }
             self.pressedAssets = pressedAssets
+
+            // Optional background variant with the movable caps removed, for skins providing per-item "cap" images.
+            let layeredAssetsDictionary = dictionary["layeredAssets"] as? [String: String] ?? [:]
+
+            var layeredAssets = [AssetSize: String]()
+            for (key, value) in layeredAssetsDictionary
+            {
+                if let size = AssetSize(rawValue: key)
+                {
+                    layeredAssets[size] = value
+                }
+            }
+            self.layeredAssets = layeredAssets
             
             // Controller skins with no assets are now supported.
             // guard self.assets.count > 0 else { return nil }

@@ -191,7 +191,7 @@ extension ButtonsInputView
                 }
                 else
                 {
-                    divisor = 3.0
+                    divisor = ButtonPatchLayer.Tuning.shared.dPadZoneDivisor
                 }
                 
                 let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))

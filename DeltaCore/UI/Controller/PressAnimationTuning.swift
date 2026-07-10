@@ -50,6 +50,7 @@ public enum PressAnimationTuning
         PressAnimationParameter(name: "Generated Cap Travel (pt)", range: 0...6, rebuildsPatches: true, keyPath: \.generatedCapTravel),
         PressAnimationParameter(name: "Generated Cap Scale", range: 0.88...1.0, rebuildsPatches: true, keyPath: \.generatedCapPressedScale),
         PressAnimationParameter(name: "D-Pad Roll Duration", range: 0...0.3, rebuildsPatches: false, keyPath: \.dPadRollDuration),
+        PressAnimationParameter(name: "D-Pad Zone Divisor", range: 1.6...4.0, rebuildsPatches: false, keyPath: \.dPadZoneDivisor),
         PressAnimationParameter(name: "Cap Highlight Compression", range: 0...1, rebuildsPatches: true, keyPath: \.capHighlightCompression),
         PressAnimationParameter(name: "Cap Shadow Opacity", range: 0...1, rebuildsPatches: true, keyPath: \.capShadowOpacity),
         PressAnimationParameter(name: "Cap Shadow Radius (pt)", range: 0...10, rebuildsPatches: true, keyPath: \.capShadowRadius),

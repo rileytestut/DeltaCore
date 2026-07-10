@@ -25,6 +25,7 @@ extension ButtonPatchLayer
         var dPadPressedScale = 0.99 as CGFloat
         var tiltDeadzone = 0.08 as CGFloat
         var dPadRollDuration = 0.12 as CGFloat // Easing between committed tilt poses while rolling.
+        var dPadZoneDivisor = 2.4 as CGFloat // Each direction covers frame/divisor from its edge — smaller engages sooner, especially diagonals.
 
         // Generated pressed shading
         var minimumDarkenAlpha = 0.06 as CGFloat
@@ -383,8 +384,9 @@ extension ButtonPatchLayer
             }
             else
             {
-                // Without authored pressed artwork, scaling down + slight travel reads as a top-down press.
-                pressedArt = self.makeGeneratedPressedCap(from: cap.image)
+                // Without authored pressed artwork, scaling down + slight travel reads as
+                // a top-down press — geometry only, no generated shading.
+                pressedArt = capImage
                 travel = tuning.generatedCapTravel
                 pressedScale = tuning.generatedCapPressedScale
             }

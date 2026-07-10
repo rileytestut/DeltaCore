@@ -25,7 +25,8 @@ extension ButtonPatchLayer
         var dPadPressedScale = 0.99 as CGFloat
         var tiltDeadzone = 0.08 as CGFloat
         var dPadRollDuration = 0.12 as CGFloat // Easing between committed tilt poses while rolling.
-        var dPadZoneDivisor = 2.4 as CGFloat // Each direction covers frame/divisor from its edge — smaller engages sooner, especially diagonals.
+        var dPadDeadzone = 0.2 as CGFloat // Neutral radius around the pivot, as a fraction of the d-pad's half-size.
+        var dPadCardinalHalfAngle = 30.0 as CGFloat // Degrees each side of a cardinal direction; the rest is diagonal territory.
 
         // Generated pressed shading
         var minimumDarkenAlpha = 0.06 as CGFloat

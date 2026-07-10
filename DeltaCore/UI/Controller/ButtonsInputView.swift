@@ -182,41 +182,71 @@ extension ButtonsInputView
             case .standard(let itemInputs):
                 inputs.append(contentsOf: itemInputs)
             
-            case let .directional(up, down, left, right):
+            case let .directional(up, down, left, right) where item.kind == .thumbstick:
 
-                let divisor: CGFloat
-                if case .thumbstick = item.kind
-                {
-                    divisor = 2.0
-                }
-                else
-                {
-                    divisor = ButtonPatchLayer.Tuning.shared.dPadZoneDivisor
-                }
-                
+                let divisor = 2.0 as CGFloat
+
                 let topRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.frame.minY - item.extendedFrame.minY))
                 let bottomRect = CGRect(x: item.extendedFrame.minX, y: item.frame.maxY - item.frame.height / divisor, width: item.extendedFrame.width, height: (item.frame.height / divisor) + (item.extendedFrame.maxY - item.frame.maxY))
                 let leftRect = CGRect(x: item.extendedFrame.minX, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.frame.minX - item.extendedFrame.minX), height: item.extendedFrame.height)
                 let rightRect = CGRect(x: item.frame.maxX - item.frame.width / divisor, y: item.extendedFrame.minY, width: (item.frame.width / divisor) + (item.extendedFrame.maxX - item.frame.maxX), height: item.extendedFrame.height)
-                
+
                 if topRect.contains(point)
                 {
                     inputs.append(up)
                 }
-                
+
                 if bottomRect.contains(point)
                 {
                     inputs.append(down)
                 }
-                
+
                 if leftRect.contains(point)
                 {
                     inputs.append(left)
                 }
-                
+
                 if rightRect.contains(point)
                 {
                     inputs.append(right)
+                }
+
+            case let .directional(up, down, left, right):
+
+                // D-pads use angle-based zones like real hardware: each cardinal owns a
+                // wide sector from the pivot, so wiggling along an arm stays that direction.
+                // Diagonals only engage in the corner sectors between them.
+                let tuning = ButtonPatchLayer.Tuning.shared
+
+                let deltaX = (point.x - item.frame.midX) / (item.frame.width / 2.0)
+                let deltaY = (point.y - item.frame.midY) / (item.frame.height / 2.0)
+
+                if hypot(deltaX, deltaY) > tuning.dPadDeadzone
+                {
+                    let degrees = atan2(deltaY, deltaX) * 180.0 / .pi
+                    let cardinalHalfAngle = tuning.dPadCardinalHalfAngle
+
+                    if abs(degrees + 90.0) <= cardinalHalfAngle
+                    {
+                        inputs.append(up)
+                    }
+                    else if abs(degrees - 90.0) <= cardinalHalfAngle
+                    {
+                        inputs.append(down)
+                    }
+                    else if abs(degrees) <= cardinalHalfAngle
+                    {
+                        inputs.append(right)
+                    }
+                    else if 180.0 - abs(degrees) <= cardinalHalfAngle
+                    {
+                        inputs.append(left)
+                    }
+                    else
+                    {
+                        inputs.append(deltaY < 0 ? up : down)
+                        inputs.append(deltaX < 0 ? left : right)
+                    }
                 }
             }
         }

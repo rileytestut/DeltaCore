@@ -24,6 +24,7 @@ extension ButtonPatchLayer
         var pressedScale = 1.01 as CGFloat // Patch mode only — slight overscan hides seams while tilting.
         var dPadPressedScale = 0.99 as CGFloat
         var tiltDeadzone = 0.08 as CGFloat
+        var dPadRollDuration = 0.12 as CGFloat // Easing between committed tilt poses while rolling.
 
         // Generated pressed shading
         var minimumDarkenAlpha = 0.06 as CGFloat
@@ -39,7 +40,8 @@ extension ButtonPatchLayer
 
         // Caps (layered skins)
         var capTravel = 1.5 as CGFloat
-        var generatedCapTravel = 2.5 as CGFloat // Without authored pressed artwork, motion carries more of the press.
+        var generatedCapTravel = 1.0 as CGFloat // Baked into the generated pressed scene, along with...
+        var generatedCapPressedScale = 0.96 as CGFloat // ...a scale-down, reading as a top-down press.
         var capHighlightCompression = 0.5 as CGFloat
         var capShadowOpacity = 0.0 as CGFloat // Runtime shadows disabled for now.
         var capShadowRadius = 3.0 as CGFloat
@@ -204,10 +206,10 @@ extension ButtonPatchLayer
     {
         let tuning = Tuning.shared
 
-        // Cancel any in-flight release springs — a new press snaps immediately.
-        self.removeAllAnimations()
+        // Cancel any in-flight release fades — a new press snaps immediately.
+        // (Transforms are handled per-path below so direction rolls stay continuous.)
+        self.removeAnimation(forKey: "opacity")
         self.shadowLayer.removeAllAnimations()
-        self.capContainerLayer.removeAllAnimations()
         self.capLayer.removeAllAnimations()
         self.pressedLayer.removeAllAnimations()
 
@@ -220,7 +222,7 @@ extension ButtonPatchLayer
 
             if self.item.kind == .dPad
             {
-                self.capContainerLayer.transform = ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.dPadPressedScale)
+                self.tilt(self.capContainerLayer, to: ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.dPadPressedScale))
             }
         }
         else
@@ -229,7 +231,7 @@ extension ButtonPatchLayer
 
             if self.item.kind == .dPad
             {
-                self.transform = ButtonPatchLayer.tiltTransform(for: tilt, scale: Tuning.shared.pressedScale)
+                self.tilt(self, to: ButtonPatchLayer.tiltTransform(for: tilt, scale: tuning.pressedScale))
             }
         }
 
@@ -267,6 +269,21 @@ extension ButtonPatchLayer
 
 private extension ButtonPatchLayer
 {
+    // Initial press-in tilts instantly, but rolling between committed poses eases
+    // briefly — snapping from pose to pose reads as glitchy.
+    func tilt(_ layer: CALayer, to transform: CATransform3D)
+    {
+        if self.isPressed
+        {
+            self.addSpringAnimation(keyPath: "transform", to: transform, layer: layer, duration: Tuning.shared.dPadRollDuration, bounce: 0)
+        }
+        else
+        {
+            layer.removeAnimation(forKey: "transform")
+            layer.transform = transform
+        }
+    }
+
     func addSpringAnimation(keyPath: String, to value: Any, layer: CALayer, duration: CGFloat, bounce: CGFloat)
     {
         // Duration 0 = discrete state change, no animation.
@@ -356,18 +373,20 @@ extension ButtonPatchLayer
         {
             let pressedArt: CGImage?
             let travel: CGFloat
+            let pressedScale: CGFloat
 
             if let authoredPressedImage = cap.pressedImage?.cgImage
             {
                 pressedArt = authoredPressedImage
                 travel = tuning.capTravel
+                pressedScale = 1.0
             }
             else
             {
+                // Without authored pressed artwork, scaling down + slight travel reads as a top-down press.
                 pressedArt = self.makeGeneratedPressedCap(from: cap.image)
-
-                // Without authored pressed artwork, motion carries more of the press.
                 travel = tuning.generatedCapTravel
+                pressedScale = tuning.generatedCapPressedScale
             }
 
             let padding = ceil(travel * scale)
@@ -385,10 +404,13 @@ extension ButtonPatchLayer
                 format.scale = 1.0
                 format.opaque = false
 
+                var artRect = capRect.offsetBy(dx: 0, dy: travel * scale)
+                artRect = artRect.insetBy(dx: artRect.width * (1.0 - pressedScale) / 2.0, dy: artRect.height * (1.0 - pressedScale) / 2.0)
+
                 let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
                 pressedSceneImage = renderer.image { _ in
                     UIImage(cgImage: wellImage).draw(in: wellRect)
-                    UIImage(cgImage: pressedArt).draw(in: capRect.offsetBy(dx: 0, dy: travel * scale))
+                    UIImage(cgImage: pressedArt).draw(in: artRect)
                 }.cgImage
 
                 pressedScenePadding = padding / scale

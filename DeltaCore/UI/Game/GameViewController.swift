@@ -92,6 +92,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     public var automaticallyPausesWhileInactive: Bool = true
     
+    // Offset applied to the game view while it's centered with no on-screen controls.
+    public var gameScreenOffset: CGPoint = .zero
+
     public var gameView: GameView! {
         return self.gameViews.first
     }
@@ -361,7 +364,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
             contentAspectRatio = gameScreenDimensions
         }
         
-        let appPlacementFrame = AVMakeRect(aspectRatio: contentAspectRatio, insideRect: availableGameFrame).rounded()
+        let appPlacementFrame = AVMakeRect(aspectRatio: contentAspectRatio, insideRect: availableGameFrame).rounded().offsetBy(dx: self.gameScreenOffset.x, dy: self.gameScreenOffset.y)
         if self.appPlacementLayoutGuide.layoutFrame.rounded() != appPlacementFrame
         {
             self.appPlacementXConstraint.constant = appPlacementFrame.minX
@@ -401,7 +404,7 @@ open class GameViewController: UIViewController, GameControllerReceiver
         else
         {
             let gameScreenFrame = AVMakeRect(aspectRatio: gameScreenDimensions, insideRect: availableGameFrame)
-            self.gameView.frame = gameScreenFrame
+            self.gameView.frame = gameScreenFrame.offsetBy(dx: self.gameScreenOffset.x, dy: self.gameScreenOffset.y)
         }
         
         if let emulatorCore = self.emulatorCore, emulatorCore.state != .running

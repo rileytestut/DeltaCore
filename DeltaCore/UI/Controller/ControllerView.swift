@@ -143,6 +143,7 @@ public class ControllerView: UIView, GameController
     private let buttonsView = ButtonsInputView(frame: CGRect.zero)
     private var thumbstickViews = [ControllerSkin.Item.ID: ThumbstickInputView]()
     private var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
+    private var buttonImageViews = [ControllerSkin.Item.ID: UIImageView]()
     
     private var _performedInitialLayout = false
     private var _delayedUpdatingControllerSkin = false
@@ -186,6 +187,12 @@ public class ControllerView: UIView, GameController
         }
         self.buttonsView.deactivateInputsHandler = { [weak self] (inputs) in
             self?.deactivateButtonInputs(inputs)
+        }
+        self.buttonsView.activateItemsHandler = { [weak self] (items) in
+            self?.activateControllerSkinItems(items)
+        }
+        self.buttonsView.deactivateItemsHandler = { [weak self] (items) in
+            self?.deactivateControllerSkinItems(items)
         }
         self.contentView.addSubview(self.buttonsView)
         
@@ -249,12 +256,25 @@ public class ControllerView: UIView, GameController
             
             switch item.kind
             {
-            case .button, .dPad: break
+            case .button, .dPad:
+                guard let imageView = self.buttonImageViews[item.id] else { continue }
+                
+                if imageView.image == nil, let (image, size) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                {
+                    imageView.image = image
+                    
+                    let imageSize = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
+                    imageView.bounds.size = imageSize
+                }
+                
+                let itemFrame = item.frame.applying(.identity.scaledBy(x: self.bounds.width, y: self.bounds.height))
+                imageView.center = CGPoint(x: itemFrame.midX, y: itemFrame.midY)
+                
             case .thumbstick:
                 guard let thumbstickView = self.thumbstickViews[item.id] else { continue }
                 thumbstickView.frame = frame
                 
-                if thumbstickView.thumbstickSize == nil, let (image, size) = controllerSkin.thumbstick(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                if thumbstickView.thumbstickSize == nil, let (image, size) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
                 {
                     // Update thumbstick in first layoutSubviews() post-updateControllerSkin() to ensure correct size.
                     
@@ -526,11 +546,29 @@ public extension ControllerView
             var touchViews = [ControllerSkin.Item.ID: TouchInputView]()
             var previousTouchViews = self.touchViews
             
-            for item in items ?? []
+            var buttonImageViews: [ControllerSkin.Item.ID: UIImageView] = [:]
+            var previousButtonImageViews = self.buttonImageViews
+            
+            for item in items ?? [] where item.imageName != nil
             {
                 switch item.kind
                 {
-                case .button, .dPad: break
+                case .button, .dPad:
+                    let imageView: UIImageView
+                    
+                    if let previousImageView = previousButtonImageViews[item.id]
+                    {
+                        imageView = previousImageView
+                        previousButtonImageViews[item.id] = nil
+                    }
+                    else
+                    {
+                        imageView = UIImageView(frame: .zero)
+                        self.addSubview(imageView)
+                    }
+                    
+                    buttonImageViews[item.id] = imageView
+                    
                 case .thumbstick:
                     let thumbstickView: ThumbstickInputView
                     
@@ -583,6 +621,9 @@ public extension ControllerView
             
             previousTouchViews.values.forEach { $0.removeFromSuperview() }
             self.touchViews = touchViews
+            
+            previousButtonImageViews.values.forEach { $0.removeFromSuperview() }
+            self.buttonImageViews = buttonImageViews
         }
         else
         {
@@ -764,6 +805,119 @@ private extension ControllerView
         for input in inputs
         {
             self.deactivate(input)
+        }
+    }
+    
+    func activateControllerSkinItems(_ items: Set<ControllerSkin.Item>)
+    {
+        for item in items
+        {
+            guard let imageView = self.buttonImageViews[item.id] else { continue }
+            
+            let perspectiveDistance = 500.0
+            
+            var transform = CATransform3DIdentity
+            transform.m34 = -1.0/perspectiveDistance
+            
+            switch (item.kind, item.inputs)
+            {
+            case (.button, _):
+                let pressDepthInPoints = 2.0
+                
+                let scaleX = 1 - (2 * pressDepthInPoints) / imageView.bounds.width
+                let scaleY = 1 - (2 * pressDepthInPoints) / imageView.bounds.height
+                transform = CATransform3DScale(transform, scaleX, scaleY, 1.0)
+                
+            case (.dPad, .directional(let up, let down, let left, let right)):
+                let pressDepthInPoints = 3.0
+                
+                // Calculate tilt angle so a point `radius` from center of dpad appears to be pressed `pressDepthInPoints`
+                func theta(distanceFromCenter radius: Double) -> Double
+                {
+                    // Equation = sqrt[(r / D)^2 + 2e / r] - (r / D)
+                    return sqrt(pow(radius / perspectiveDistance, 2) + 2 * pressDepthInPoints / radius) - (radius / perspectiveDistance)
+                }
+                
+                let thetaHorizontal = theta(distanceFromCenter: imageView.bounds.width / 2) // Smaller input == bigger theta
+                let thetaVertical = theta(distanceFromCenter: imageView.bounds.height / 2)
+                let thetaDiagonal = max(thetaHorizontal, thetaVertical) // Prefer larger theta for diagonals
+                
+                if self.activatedInputs.keys.contains(AnyInput(up))
+                {
+                    if self.activatedInputs.keys.contains(AnyInput(left))
+                    {
+                        // Up + Left
+                        transform = CATransform3DRotate(transform, thetaDiagonal, 0.707, -0.707, 0)
+                    }
+                    else if self.activatedInputs.keys.contains(AnyInput(right))
+                    {
+                        // Up + Right
+                        transform = CATransform3DRotate(transform, thetaDiagonal, 0.707, 0.707, 0)
+                    }
+                    else
+                    {
+                        // Up
+                        transform = CATransform3DRotate(transform, thetaVertical, 1, 0, 0)
+                    }
+                }
+                else if self.activatedInputs.keys.contains(AnyInput(down))
+                {
+                    if self.activatedInputs.keys.contains(AnyInput(left))
+                    {
+                        // Down + Left
+                        transform = CATransform3DRotate(transform, thetaDiagonal, -0.707, -0.707, 0)
+                    }
+                    else if self.activatedInputs.keys.contains(AnyInput(right))
+                    {
+                        // Down + Right
+                        transform = CATransform3DRotate(transform, thetaDiagonal, -0.707, 0.707, 0)
+                    }
+                    else
+                    {
+                        // Down
+                        transform = CATransform3DRotate(transform, thetaVertical, -1, 0, 0)
+                    }
+                }
+                else if self.activatedInputs.keys.contains(AnyInput(left))
+                {
+                    // Left
+                    transform = CATransform3DRotate(transform, thetaHorizontal, 0, -1, 0)
+                    
+                }
+                else if self.activatedInputs.keys.contains(AnyInput(right))
+                {
+                    // Right
+                    transform = CATransform3DRotate(transform, thetaHorizontal, 0, 1, 0)
+                }
+                else
+                {
+                    // None (center)
+                }
+                
+                // "Press" entire d-pad down additional 1 point into screen.
+                // Makes effect easier to see, and handles pressing center of dpad (with no active inputs).
+                let centerDPadPressDepthInPoints = 1.0
+                
+                let scaleX = 1 - (2 * centerDPadPressDepthInPoints) / imageView.bounds.width
+                let scaleY = 1 - (2 * centerDPadPressDepthInPoints) / imageView.bounds.height
+                transform = CATransform3DScale(transform, scaleX, scaleY, 1.0)
+            
+            default: break
+            }
+            
+            imageView.transform3D = transform
+            imageView.layer.zPosition = 100 // Make sure it's large enough we're not clipped by views behind us.
+            imageView.layer.allowsEdgeAntialiasing = true // Ensure edges appear smooth regardless of transform.
+        }
+    }
+    
+    func deactivateControllerSkinItems(_ items: Set<ControllerSkin.Item>)
+    {
+        for item in items
+        {
+            guard let imageView = self.buttonImageViews[item.id] else { continue }
+            imageView.transform3D = CATransform3DIdentity
+            imageView.layer.zPosition = 0
         }
     }
     

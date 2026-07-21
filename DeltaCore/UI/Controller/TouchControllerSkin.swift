@@ -53,7 +53,7 @@ extension TouchControllerSkin: ControllerSkinProtocol
         return nil
     }
     
-    public func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
+    public func image(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
     {
         return nil
     }

@@ -20,7 +20,7 @@ public protocol ControllerSkinProtocol
     func image(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     func pressedImage(for traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> UIImage?
     
-    func thumbstick(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
+    func image(for item: ControllerSkin.Item, traits: ControllerSkin.Traits, preferredSize: ControllerSkin.Size) -> (UIImage, CGSize)?
     
     func items(for traits: ControllerSkin.Traits) -> [ControllerSkin.Item]?
     

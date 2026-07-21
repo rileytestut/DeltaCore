@@ -18,6 +18,9 @@ class ButtonsInputView: UIView
     var activateInputsHandler: ((Set<AnyInput>) -> Void)?
     var deactivateInputsHandler: ((Set<AnyInput>) -> Void)?
     
+    var activateItemsHandler: ((Set<ControllerSkin.Item>) -> Void)?
+    var deactivateItemsHandler: ((Set<ControllerSkin.Item>) -> Void)?
+    
     var image: UIImage? {
         didSet {
             self.ciImage = self.image.flatMap { CIImage(image: $0) }
@@ -223,6 +226,10 @@ private extension ButtonsInputView
         let activatedInputs = self.touchInputs.subtracting(self.previousTouchInputs)
         let deactivatedInputs = self.previousTouchInputs.subtracting(self.touchInputs)
         
+        let previousActiveTouchItems = self.activeTouchItems.filter { $0.kind != .dPad } // D-pad reports continuous changes, so exclude from previous active touches so we can "activate" it again
+        let activatedItems = activeTouchItems.subtracting(previousActiveTouchItems)
+        let deactivatedItems = self.activeTouchItems.subtracting(activeTouchItems)
+        
         // We must update previousTouchInputs *before* calling activate() and deactivate().
         // Otherwise, race conditions that cause duplicate touches from activate() or deactivate() calls can result in various bugs.
         self.previousTouchInputs = self.touchInputs
@@ -244,6 +251,16 @@ private extension ButtonsInputView
         if !deactivatedInputs.isEmpty
         {
             self.deactivateInputsHandler?(deactivatedInputs)
+        }
+        
+        if !activatedItems.isEmpty
+        {
+            self.activateItemsHandler?(activatedItems)
+        }
+        
+        if !deactivatedItems.isEmpty
+        {
+            self.deactivateItemsHandler?(deactivatedItems)
         }
         
         // Update image
@@ -310,4 +327,54 @@ private extension ButtonsInputView
         
         self.activeTouchItems = activeTouchItems
     }
+    
+//    func updateItems()
+//    {
+//        guard let controllerSkin else { return }
+//        
+//        var buttonImageViews: [ControllerSkin.Item.ID: UIImageView] = [:]
+//        var previousButtonImageViews = self.buttonImageViews
+//        
+//        for item in self.items ?? []
+//        {
+//            switch item.kind
+//            {
+//            case .button:
+//                guard let image = controllerSkin.image(for: item, traits: tra, preferredSize: <#T##ControllerSkin.Size#>)
+//                
+//                let imageView: UIImageView
+//                
+//                if let previousImageView = previousButtonImageViews[item.id]
+//                {
+//                    imageView = previousImageView
+//                    previousButtonImageViews[item.id] = nil
+//                }
+//                else
+//                {
+//                    imageView = UIImageView(frame: .zero)
+//                    self.addSubview(imageView)
+//                }
+//                
+//                //                thumbstickView.valueChangedHandler = { [weak self] (xAxis, yAxis) in
+//                //                    self?.updateThumbstickValues(item: item, xAxis: xAxis, yAxis: yAxis)
+//                //                }
+//                
+//                // Calculate correct `thumbstickSize` in layoutSubviews().
+//                //                thumbstickView.thumbstickSize = nil
+//                //
+//                //                thumbstickView.isHapticFeedbackEnabled = self.isThumbstickHapticFeedbackEnabled
+//                
+//                buttonImageViews[item.id] = imageView
+//                
+//            case .dPad: break
+//            case .thumbstick: break
+//            case .touchScreen: break
+//            }
+//        }
+//        
+//        previousButtonImageViews.values.forEach { $0.removeFromSuperview() }
+//        self.buttonImageViews = buttonImageViews
+//        
+//        self.setNeedsLayout()
+//    }
 }

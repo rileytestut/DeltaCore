@@ -218,11 +218,14 @@ public extension ControllerSkin
         return representation != nil
     }
     
-    func thumbstick(for item: ControllerSkin.Item, traits: Traits, preferredSize: Size) -> (UIImage, CGSize)?
+    func image(for item: ControllerSkin.Item, traits: Traits, preferredSize: Size) -> (UIImage, CGSize)?
     {
         guard let representation = self.representation(for: traits) else { return nil }
-        guard let imageName = item.thumbstickImageName, let size = item.thumbstickSize else { return nil }
+        guard let imageName = item.imageName else { return nil }
         guard let entry = self.archive[imageName] else { return nil }
+        
+        // Use explicit imageSize if provided, then fallback to item's size.
+        let size = item.imageSize ?? CGSize(width: item.frame.width, height: item.frame.height)
         
         let cacheKey = imageName + self.cacheKey(for: traits, size: preferredSize, isPressed: false)
         
@@ -231,7 +234,7 @@ public extension ControllerSkin
             return (image, size)
         }
         
-        let thumbstickImage: UIImage?
+        let itemImage: UIImage?
         
         do
         {
@@ -243,11 +246,11 @@ public extension ControllerSkin
                 let assetSize = AssetSize(size: preferredSize)
                 guard let targetSize = assetSize.targetSize(for: representation.traits) else { return nil }
                 
-                let thumbstickSize = CGSize(width: size.width * targetSize.width, height: size.height * targetSize.height)
-                thumbstickImage = UIImage.image(withPDFData: data, targetSize: thumbstickSize)
+                let imageSize = CGSize(width: size.width * targetSize.width, height: size.height * targetSize.height)
+                itemImage = UIImage.image(withPDFData: data, targetSize: imageSize)
                 
             default:
-                thumbstickImage = UIImage(data: data, scale: 1.0)
+                itemImage = UIImage(data: data, scale: 1.0)
             }
         }
         catch
@@ -257,7 +260,7 @@ public extension ControllerSkin
             return nil
         }
         
-        guard let image = thumbstickImage else { return nil }
+        guard let image = itemImage else { return nil }
         
         self.imageCache.setObject(image, forKey: cacheKey as NSString)
         
@@ -483,8 +486,8 @@ extension ControllerSkin
         public var placement: Placement
         public var mask: Mask
         
-        fileprivate var thumbstickImageName: String?
-        fileprivate var thumbstickSize: CGSize?
+        internal var imageName: String?
+        fileprivate var imageSize: CGSize?
         
         fileprivate init?(id: String, dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {
@@ -493,6 +496,22 @@ extension ControllerSkin
             else { return nil }
             
             self.id = id
+            
+            if let assetDictionary = dictionary["asset"] as? [String: Any] ?? dictionary["thumbstick"] as? [String: Any], // Fall back to legacy `thumbstick` key
+               let imageName = assetDictionary["name"] as? String ?? assetDictionary["normal"] as? String // Fall back to Manic's `normal` key
+            {
+                self.imageName = imageName
+                
+                if let width = assetDictionary["width"] as? Double, let height = assetDictionary["height"] as? Double
+                {
+                    // Allow specifying image size separately from item size.
+                    self.imageSize = CGSize(width: width / mappingSize.width, height: height / mappingSize.height)
+                }
+                else
+                {
+                    self.imageSize = nil
+                }
+            }
             
             if let inputs = dictionary["inputs"] as? [String]
             {
@@ -511,8 +530,9 @@ extension ControllerSkin
                         let width = thumbstickDictionary["width"] as? CGFloat,
                         let height = thumbstickDictionary["height"] as? CGFloat
                     {
-                        self.thumbstickImageName = imageName
-                        self.thumbstickSize = CGSize(width: CGFloat(width) / mappingSize.width, height: CGFloat(height) / mappingSize.height)
+                        // Thumbsticks MUST have `thumbstick` dictionary with explicit width and height
+                        self.imageName = imageName
+                        self.imageSize = CGSize(width: CGFloat(width) / mappingSize.width, height: CGFloat(height) / mappingSize.height)
                         
                         self.kind = .thumbstick
                         isContinuous = true
@@ -602,7 +622,7 @@ extension ControllerSkin.Item: Hashable
     {
         guard
             lhs.kind == rhs.kind,
-            lhs.thumbstickImageName == rhs.thumbstickImageName, lhs.thumbstickSize == rhs.thumbstickSize,
+            lhs.imageName == rhs.imageName, lhs.imageSize == rhs.imageSize,
             lhs.inputs.allInputs.map({ $0.stringValue }) == rhs.inputs.allInputs.map({ $0.stringValue }),
             lhs.frame == rhs.frame && lhs.extendedFrame == rhs.extendedFrame
         else { return false }
@@ -620,9 +640,9 @@ extension ControllerSkin.Item: Hashable
         case .touchScreen: hasher.combine(3)
         }
         
-        hasher.combine(self.thumbstickImageName)
-        hasher.combine(self.thumbstickSize?.width)
-        hasher.combine(self.thumbstickSize?.height)
+        hasher.combine(self.imageName)
+        hasher.combine(self.imageSize?.width)
+        hasher.combine(self.imageSize?.height)
         
         for input in self.inputs.allInputs
         {

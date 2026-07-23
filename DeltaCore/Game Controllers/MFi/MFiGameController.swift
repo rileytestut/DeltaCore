@@ -31,6 +31,46 @@ extension MFiGameController
 
 extension MFiGameController
 {
+    public enum ControllerType
+    {
+        case xbox
+        case playstation
+        
+        case joyConL
+        case joyConR
+        case joyConsCombined
+        
+        case switchPro
+        case switchOnlineNES
+        case switchOnlineSNES
+        case switchOnlineN64
+        
+        case generic
+    }
+    
+    public var controllerType: ControllerType {
+        switch self.controller.physicalInputProfile
+        {
+        case is GCDualSenseGamepad, is GCDualShockGamepad: return .playstation
+        case is GCXboxGamepad: return .xbox
+        default: break
+        }
+        
+        switch ProductCategory(rawValue: self.controller.productCategory)
+        {
+        case .joyConL: return .joyConL
+        case .joyConR: return .joyConR
+        case .joyConsCombined: return .joyConsCombined
+        case .switchPro: return .switchPro
+        case .switchOnlineNES: return .switchOnlineNES
+        case .switchOnlineSNES: return .switchOnlineSNES
+        case .mfi, nil: return .generic
+        }
+    }
+}
+
+extension MFiGameController
+{
     public enum Input: String, Codable
     {
         case menu
@@ -291,3 +331,110 @@ public class MFiGameController: NSObject, GameController
         }
     }
 }
+
+public extension MFiGameController
+{
+    struct InputInfo
+    {
+        public let localizedName: String
+        public let symbolName: String?
+    }
+    
+    // The physical button that currently produces this input, accounting for
+    // system-level remapping in iOS Settings. Nil when no button produces it.
+    func mappedInfo(for input: Input) -> InputInfo?
+    {
+        guard let element = self.element(for: input), let name = element.localizedName else { return nil }
+        return InputInfo(localizedName: name, symbolName: element.sfSymbolsName)
+    }
+    
+    // The button's physical identity, ignoring any system-level remapping.
+    func unmappedInfo(for input: Input) -> InputInfo?
+    {
+        guard let element = self.element(for: input), let name = element.unmappedLocalizedName else { return nil }
+        return InputInfo(localizedName: name, symbolName: element.unmappedSfSymbolsName)
+    }
+}
+
+private extension MFiGameController
+{
+    // Mirrors the input wiring in init(controller:).
+    func element(for input: Input) -> GCControllerElement?
+    {
+        let profile = self.controller.physicalInputProfile
+        
+        // Category-specific inputs.
+        switch ProductCategory(rawValue: self.controller.productCategory)
+        {
+        case .joyConL, .joyConR:
+            // Single Joy-Con inputs are rotated 90º.
+            switch input
+            {
+            case .a: return profile.buttons[GCInputButtonX]
+            case .b: return profile.buttons[GCInputButtonA]
+            case .x: return profile.buttons[GCInputButtonY]
+            case .y: return profile.buttons[GCInputButtonB]
+            default: break
+            }
+            
+        case .switchOnlineNES, .switchOnlineSNES:
+            // Shoulder buttons act as Menu, so Start acts as regular input (.start).
+            switch input
+            {
+            case .menu: return nil
+            case .start: return profile.buttons[GCInputButtonMenu] // The physical Start button is exposed as GCInputButtonMenu...for some reason.
+            default: break
+            }
+            
+        case .mfi:
+            break
+            
+        default:
+            // For non-MFi controllers with Home/"Logo" button: Home button acts as Menu, and Menu button acts as Start.
+            // e.g. Switch Pro, PlayStation, and Xbox controllers
+            guard profile.buttons[GCInputButtonHome] != nil else { break }
+            
+            switch input
+            {
+            case .menu: return profile.buttons[GCInputButtonHome]
+            case .start: return profile.buttons[GCInputButtonMenu]
+            default: break
+            }
+        }
+        
+        // Base inputs.
+        switch input
+        {
+        case .a: return profile.buttons[GCInputButtonA]
+        case .b: return profile.buttons[GCInputButtonB]
+        case .x: return profile.buttons[GCInputButtonX]
+        case .y: return profile.buttons[GCInputButtonY]
+            
+        case .up: return profile.dpads[GCInputDirectionPad]?.up
+        case .down: return profile.dpads[GCInputDirectionPad]?.down
+        case .left: return profile.dpads[GCInputDirectionPad]?.left
+        case .right: return profile.dpads[GCInputDirectionPad]?.right
+            
+        case .leftThumbstickUp: return profile.dpads[GCInputLeftThumbstick]?.up
+        case .leftThumbstickDown: return profile.dpads[GCInputLeftThumbstick]?.down
+        case .leftThumbstickLeft: return profile.dpads[GCInputLeftThumbstick]?.left
+        case .leftThumbstickRight: return profile.dpads[GCInputLeftThumbstick]?.right
+            
+        case .rightThumbstickUp: return profile.dpads[GCInputRightThumbstick]?.up
+        case .rightThumbstickDown: return profile.dpads[GCInputRightThumbstick]?.down
+        case .rightThumbstickLeft: return profile.dpads[GCInputRightThumbstick]?.left
+        case .rightThumbstickRight: return profile.dpads[GCInputRightThumbstick]?.right
+            
+        case .leftShoulder: return profile.buttons[GCInputLeftShoulder]
+        case .leftTrigger: return profile.buttons[GCInputLeftTrigger]
+        case .rightShoulder: return profile.buttons[GCInputRightShoulder]
+        case .rightTrigger: return profile.buttons[GCInputRightTrigger]
+            
+        case .menu: return profile.buttons[GCInputButtonMenu]
+        case .start: return nil
+        case .select: return profile.buttons[GCInputButtonOptions]
+        }
+    }
+}
+
+// TODO: think about how to use this in init, so we're not replicating logic/structure that could become fragile later

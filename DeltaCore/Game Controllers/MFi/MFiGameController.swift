@@ -291,3 +291,102 @@ public class MFiGameController: NSObject, GameController
         }
     }
 }
+
+public extension MFiGameController
+{
+    func sfSymbolName(for input: Input) -> String?
+    {
+        self.element(for: input)?.sfSymbolsName
+    }
+    
+    func localizedName(for input: Input) -> String?
+    {
+        self.element(for: input)?.localizedName
+    }
+}
+
+private extension MFiGameController
+{
+    // Mirrors the input wiring in init(controller:).
+    func element(for input: Input) -> GCControllerElement?
+    {
+        let profile = self.controller.physicalInputProfile
+        
+        // Category-specific inputs.
+        switch ProductCategory(rawValue: self.controller.productCategory)
+        {
+        case .joyConL, .joyConR:
+            // Single Joy-Con inputs are rotated 90º.
+            switch input
+            {
+            case .a: return profile.buttons[GCInputButtonX]
+            case .b: return profile.buttons[GCInputButtonA]
+            case .x: return profile.buttons[GCInputButtonY]
+            case .y: return profile.buttons[GCInputButtonB]
+            default: break
+            }
+            
+        case .switchOnlineNES, .switchOnlineSNES:
+            // Shoulder buttons act as Menu, so Start acts as regular input (.start).
+            switch input
+            {
+            case .menu: return nil
+            case .start: return profile.buttons[GCInputButtonMenu] // The physical Start button is exposed as GCInputButtonMenu...for some reason.
+            default: break
+            }
+            
+        case .mfi:
+            break
+            
+            //TODO: add case for PS5 (new "create" button) -- look into documentation dualsense/dualshock see if it exists
+            // The PS5 DualSense Create button is accessed using the GCInputButtonShare constant -- see comments below for correct representation
+            
+        default:
+            // For non-MFi controllers with Home/"Logo" button: Home button acts as Menu, and Menu button acts as Start.
+            // e.g. Switch Pro, PlayStation, and Xbox controllers
+            guard profile.buttons[GCInputButtonHome] != nil else { break }
+            
+            switch input
+            {
+            case .menu: return profile.buttons[GCInputButtonHome]
+            case .start: return profile.buttons[GCInputButtonMenu] //Specifically this -> GCInputButtonOptions
+            default: break
+            }
+        }
+        
+        // Base inputs.
+        switch input
+        {
+        case .a: return profile.buttons[GCInputButtonA]
+        case .b: return profile.buttons[GCInputButtonB]
+        case .x: return profile.buttons[GCInputButtonX]
+        case .y: return profile.buttons[GCInputButtonY]
+            
+        case .up: return profile.dpads[GCInputDirectionPad]?.up
+        case .down: return profile.dpads[GCInputDirectionPad]?.down
+        case .left: return profile.dpads[GCInputDirectionPad]?.left
+        case .right: return profile.dpads[GCInputDirectionPad]?.right
+            
+        case .leftThumbstickUp: return profile.dpads[GCInputLeftThumbstick]?.up
+        case .leftThumbstickDown: return profile.dpads[GCInputLeftThumbstick]?.down
+        case .leftThumbstickLeft: return profile.dpads[GCInputLeftThumbstick]?.left
+        case .leftThumbstickRight: return profile.dpads[GCInputLeftThumbstick]?.right
+            
+        case .rightThumbstickUp: return profile.dpads[GCInputRightThumbstick]?.up
+        case .rightThumbstickDown: return profile.dpads[GCInputRightThumbstick]?.down
+        case .rightThumbstickLeft: return profile.dpads[GCInputRightThumbstick]?.left
+        case .rightThumbstickRight: return profile.dpads[GCInputRightThumbstick]?.right
+            
+        case .leftShoulder: return profile.buttons[GCInputLeftShoulder]
+        case .leftTrigger: return profile.buttons[GCInputLeftTrigger]
+        case .rightShoulder: return profile.buttons[GCInputRightShoulder]
+        case .rightTrigger: return profile.buttons[GCInputRightTrigger]
+            
+        case .menu: return profile.buttons[GCInputButtonMenu]
+        case .start: return nil
+        case .select: return profile.buttons[GCInputButtonOptions] // And this  -> GCInputButtonShare
+        }
+    }
+}
+
+// TODO: think about how to use this in init, so we're not replicating logic/structure that could become fragile later

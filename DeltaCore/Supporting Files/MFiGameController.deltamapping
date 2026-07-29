@@ -41,6 +41,13 @@
 			<key>type</key>
 			<string>standard</string>
 		</dict>
+        <key>leftThumbstickButton</key>
+        <dict>
+            <key>identifier</key>
+            <string>l3</string>
+            <key>type</key>
+            <string>standard</string>
+        </dict>
 		<key>leftThumbstickDown</key>
 		<dict>
 			<key>identifier</key>
@@ -97,6 +104,13 @@
 			<key>type</key>
 			<string>standard</string>
 		</dict>
+        <key>rightThumbstickButton</key>
+        <dict>
+            <key>identifier</key>
+            <string>r3</string>
+            <key>type</key>
+            <string>standard</string>
+        </dict>
 		<key>rightThumbstickDown</key>
 		<dict>
 			<key>identifier</key>

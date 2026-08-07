@@ -39,7 +39,8 @@ class ButtonsInputView: UIView
     
     private let imageView = UIImageView(frame: .zero)
     
-    private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private let lightFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    private let mediumFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
     
     private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
     private var previousTouchInputs = Set<AnyInput>()
@@ -59,7 +60,8 @@ class ButtonsInputView: UIView
         
         self.isMultipleTouchEnabled = true
         
-        self.feedbackGenerator.prepare()
+        self.lightFeedbackGenerator.prepare()
+        self.mediumFeedbackGenerator.prepare()
         
         self.imageView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(self.imageView)
@@ -242,15 +244,25 @@ private extension ButtonsInputView
             {
                 switch UIDevice.current.feedbackSupportLevel
                 {
-                case .feedbackGenerator: self.feedbackGenerator.impactOccurred()
+                case .feedbackGenerator: self.mediumFeedbackGenerator.impactOccurred()
                 case .basic, .unsupported: UIDevice.current.vibrate()
                 }
             }
         }
         
+        // Just like with thumbstick, have a haptic on release
         if !deactivatedInputs.isEmpty
         {
             self.deactivateInputsHandler?(deactivatedInputs)
+            
+            if self.isHapticFeedbackEnabled
+            {
+                switch UIDevice.current.feedbackSupportLevel
+                {
+                case .feedbackGenerator: self.lightFeedbackGenerator.impactOccurred()
+                case .basic, .unsupported: UIDevice.current.vibrate()
+                }
+            }
         }
         
         if !activatedItems.isEmpty

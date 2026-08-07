@@ -9,31 +9,6 @@
 import UIKit
 import simd
 
-extension ThumbstickInputView
-{
-    private enum Direction
-    {
-        case up
-        case down
-        case left
-        case right
-        
-        init?(xAxis: Double, yAxis: Double, threshold: Double)
-        {
-            let deadzone = -threshold...threshold
-            switch (xAxis, yAxis)
-            {
-            case (deadzone, deadzone): return nil
-            case (...0, deadzone): self = .left
-            case (0..., deadzone): self = .right
-            case (deadzone, ...0): self = .down
-            case (deadzone, 0...): self = .up
-            default: return nil
-            }
-        }
-    }
-}
-
 class ThumbstickInputView: UIView
 {
     var isHapticFeedbackEnabled = true
@@ -55,13 +30,15 @@ class ThumbstickInputView: UIView
     private let imageView = UIImageView(image: nil)
     private let panGestureRecognizer = ImmediatePanGestureRecognizer(target: nil, action: nil)
     
-    private let lightFeedbackGenerator = UISelectionFeedbackGenerator()
-    private let mediumFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private let lightFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    private let rigidFeedbackGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    private let softFeedbackGenerator = UIImpactFeedbackGenerator(style: .soft)
     
-    private var isActivated = false
+    private var wasActivated = false
+    private var wasAtEdge = false
     
     private var trackingOrigin: CGPoint?
-    private var previousDirection: Direction?
+    private var previousOctant: Int?
     
     private var isTracking: Bool {
         return self.trackingOrigin != nil
@@ -107,7 +84,8 @@ private extension ThumbstickInputView
             if self.isHapticFeedbackEnabled
             {
                 self.lightFeedbackGenerator.prepare()
-                self.mediumFeedbackGenerator.prepare()
+                self.rigidFeedbackGenerator.prepare()
+                self.softFeedbackGenerator.prepare()
             }
             
             self.update()
@@ -154,14 +132,14 @@ private extension ThumbstickInputView
             
             if self.isHapticFeedbackEnabled
             {
-                self.mediumFeedbackGenerator.impactOccurred()
+                self.lightFeedbackGenerator.impactOccurred()
             }
             
             self.update()
             
             self.trackingOrigin = nil
-            self.isActivated = false
-            self.previousDirection = nil
+            self.wasActivated = false
+            self.previousOctant = nil
             
         default: break
         }
@@ -199,59 +177,106 @@ private extension ThumbstickInputView
         var adjustedY = distance * sin(angle)
         adjustedY += center.y
         
-        let insetSideLength = maximumDistance / sqrt(2)
-        let insetFrame = CGRect(x: center.x - insetSideLength / 2,
-                                y: center.y - insetSideLength / 2,
-                                width: insetSideLength,
-                                height: insetSideLength)
+        let innerDeadzone = 0.1
+        let outerDeadzone = 0.99
         
-        let threshold = 0.1
+        // Invert Y coordinate
+        var xAxis = (adjustedX / maximumDistance) - 1
+        var yAxis = ((adjustedY / maximumDistance) - 1) * -1
         
-        var xAxis = Double((CGFloat(adjustedX) - insetFrame.minX) / insetFrame.width)
-        xAxis = max(xAxis, 0)
-        xAxis = min(xAxis, 1)
-        xAxis = (xAxis * 2) - 1 // Convert range from [0, 1] to [-1, 1].
+        // Keep within the bounds
+        xAxis = getBoundedValue(xAxis)
+        yAxis = getBoundedValue(yAxis)
         
-        if abs(xAxis) < threshold
+        var magnitude = sqrt(xAxis * xAxis + yAxis * yAxis)
+        
+        // This should really always be bounded, but just in case
+        magnitude = getBoundedValue(magnitude)
+        
+        let isActivated = magnitude > innerDeadzone
+        let isAtEdge = magnitude > outerDeadzone
+        
+        // Compare against magnitude; inner deadzone should be a circle
+        if !isActivated
         {
             xAxis = 0
-        }
-        
-        var yAxis = Double((CGFloat(adjustedY) - insetFrame.minY) / insetFrame.height)
-        yAxis = max(yAxis, 0)
-        yAxis = min(yAxis, 1)
-        yAxis = -((yAxis * 2) - 1) // Convert range from [0, 1] to [-1, 1], then invert it (due to flipped coordinates).
-        
-        if abs(yAxis) < threshold
-        {
             yAxis = 0
         }
         
-        let magnitude = simd_length(SIMD2(xAxis, yAxis))
-        let isActivated = (magnitude > 0.1)
+        // Play haptics when:
+        // - Stick is moved away from the deadzone (soft)
+        // - Stick is returned to the deadzone (soft)
+        // - Stick is released after being outside the deadzone (light)
         
-        if let direction = Direction(xAxis: xAxis, yAxis: yAxis, threshold: threshold)
+        if (isActivated && !self.wasActivated)
         {
-            if self.previousDirection != direction && self.isHapticFeedbackEnabled
-            {
-                self.mediumFeedbackGenerator.impactOccurred()
-            }
-            
-            self.previousDirection = direction
-        }
-        else
-        {
-            if isActivated && !self.isActivated && self.isHapticFeedbackEnabled
-            {
-                self.lightFeedbackGenerator.selectionChanged()
-            }
-            
-            self.previousDirection = nil
+            self.softFeedbackGenerator.impactOccurred()
         }
         
-        self.isActivated = isActivated
+        if (!isActivated && self.wasActivated)
+        {
+            if (magnitude > 0.001)
+            {
+                self.softFeedbackGenerator.impactOccurred()
+            }
+            else
+            {
+                self.lightFeedbackGenerator.impactOccurred()
+            }
+        }
+        
+        // Must covert angle, otherwise the bump between from octants 7 and 0 will have no haptic
+        let theta = getTheta(angle)
+        let octant = isActivated ? getOctant(theta) : nil
+        let hasOctantChanged = self.previousOctant != nil && octant != nil && self.previousOctant != octant
+        
+        // Play haptics when:
+        // - Stick is at edge but was not previously (rigid)
+        // - Stick is "clicking" along the edge from one octant to another (rigid)
+        // - Stick is "clicking" inside the edge from one octant to another (soft)
+        
+        if (isAtEdge && !self.wasAtEdge)
+        {
+            self.rigidFeedbackGenerator.impactOccurred()
+        }
+        
+        if hasOctantChanged
+        {
+            if isAtEdge
+            {
+                self.rigidFeedbackGenerator.impactOccurred()
+            }
+            else
+            {
+                self.softFeedbackGenerator.impactOccurred()
+            }
+        }
+        
+        self.wasActivated = isActivated
+        self.wasAtEdge = isAtEdge
+        
+        self.previousOctant = octant
 
         self.imageView.center = CGPoint(x: adjustedX, y: adjustedY)
         self.valueChangedHandler?(xAxis, yAxis)
+    }
+    
+    // Bounds value from -1 to 1
+    private func getBoundedValue(_ value: Double) -> Double
+    {
+        var boundedValue = max(value, -1)
+        return min(boundedValue, 1)
+    }
+    
+    // Converts angle bounded from (-pi, pi) to (0, 2pi)
+    private func getTheta(_ angle: Double) -> Double
+    {
+        return angle < 0 ? angle + (2 * Double.pi) : angle
+    }
+    
+    // Get octant where (0, theta/4) is octant 0
+    private func getOctant(_ theta: Double) -> Int
+    {
+        return (Int) (4 / Double.pi * theta)
     }
 }

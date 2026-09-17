@@ -26,6 +26,7 @@ extension MFiGameController
         case switchPro = "Switch Pro Controller"
         case switchOnlineNES = "Switch NES Controller"
         case switchOnlineSNES = "Switch SNES Controller"
+        case switchOnlineN64 = "Switch N64 Controller"
     }
 }
 
@@ -64,6 +65,7 @@ extension MFiGameController
         case .switchPro: return .switchPro
         case .switchOnlineNES: return .switchOnlineNES
         case .switchOnlineSNES: return .switchOnlineSNES
+        case .switchOnlineN64: return .switchOnlineN64
         case .mfi, nil: return .generic
         }
     }
@@ -354,11 +356,26 @@ public extension MFiGameController
         guard let element = self.element(for: input), let name = element.unmappedLocalizedName else { return nil }
         return InputInfo(localizedName: name, symbolName: element.unmappedSfSymbolsName)
     }
+    
+    // Whether this controller can physically produce this input.
+    func supports(_ input: Input) -> Bool
+    {
+        return self.element(for: input) != nil
+    }
+
+    // The controller's own name for the input cluster containing this input,
+    // e.g. the right thumbstick that the N64 controller exposes as "C Buttons".
+    func clusterInfo(for input: Input) -> InputInfo?
+    {
+        guard let collection = self.element(for: input)?.collection, let name = collection.localizedName else { return nil }
+        return InputInfo(localizedName: name, symbolName: collection.sfSymbolsName)
+    }
 }
 
 private extension MFiGameController
 {
     // Mirrors the input wiring in init(controller:).
+    // Contract: returns nil ⟺ this input can never fire on this controller.
     func element(for input: Input) -> GCControllerElement?
     {
         let profile = self.controller.physicalInputProfile
@@ -367,13 +384,21 @@ private extension MFiGameController
         switch ProductCategory(rawValue: self.controller.productCategory)
         {
         case .joyConL, .joyConR:
-            // Single Joy-Con inputs are rotated 90º.
             switch input
             {
+            // Single Joy-Con inputs are rotated 90º.
             case .a: return profile.buttons[GCInputButtonX]
             case .b: return profile.buttons[GCInputButtonA]
             case .x: return profile.buttons[GCInputButtonY]
             case .y: return profile.buttons[GCInputButtonB]
+                
+            // The analog stick is exposed as the Direction Pad, which init remaps to the left thumbstick.
+            case .leftThumbstickUp: return profile.dpads[GCInputDirectionPad]?.up
+            case .leftThumbstickDown: return profile.dpads[GCInputDirectionPad]?.down
+            case .leftThumbstickLeft: return profile.dpads[GCInputDirectionPad]?.left
+            case .leftThumbstickRight: return profile.dpads[GCInputDirectionPad]?.right
+            case .up, .down, .left, .right: return nil
+                
             default: break
             }
             

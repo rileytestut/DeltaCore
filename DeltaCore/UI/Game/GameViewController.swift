@@ -601,7 +601,9 @@ private extension GameViewController
         controllerView.addReceiver(emulatorCore)
         
         let controllerSkin = ControllerSkin.standardControllerSkin(for: game.type)
+        controllerView.isCachingEnabled = false
         controllerView.controllerSkin = controllerSkin
+        controllerView.isCachingEnabled = true
         
         self.view.setNeedsUpdateConstraints()
     }

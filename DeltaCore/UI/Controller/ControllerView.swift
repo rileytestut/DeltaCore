@@ -99,6 +99,13 @@ public class ControllerView: UIView, GameController
         }
     }
     
+    public var isCachingEnabled: Bool = true {
+        didSet {
+            // This intentionally does NOT automatically clear the cache.
+            // Instead, it is used by clients to *temporarily* disable caching new images.
+        }
+    }
+    
     //MARK: - <GameControllerType>
     /// <GameControllerType>
     public var name: String {
@@ -482,6 +489,7 @@ public extension ControllerView
                         let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize)
                         
                         if
+                            self.isCachingEnabled,
                             let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
                             let cachedImage = cache.object(forKey: cacheKey as NSString)
                         {
@@ -492,7 +500,7 @@ public extension ControllerView
                             image = controllerSkin.image(for: traits, preferredSize: self.controllerSkinSize)
                         }
                         
-                        if let image = image
+                        if let image = image, self.isCachingEnabled
                         {
                             let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
                             cache.setObject(image, forKey: cacheKey as NSString)
@@ -507,6 +515,7 @@ public extension ControllerView
                         let cacheKey = String(describing: traits) + "-" + String(describing: self.controllerSkinSize) + "-" + "pressed"
                         
                         if
+                            self.isCachingEnabled,
                             let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString),
                             let cachedImage = cache.object(forKey: cacheKey as NSString)
                         {
@@ -517,7 +526,7 @@ public extension ControllerView
                             pressedImage = controllerSkin.pressedImage(for: traits, preferredSize: self.controllerSkinSize)
                         }
                         
-                        if let pressedImage
+                        if let pressedImage, self.isCachingEnabled
                         {
                             let cache = self.imageCache.object(forKey: controllerSkin.identifier as NSString) ?? NSCache<NSString, UIImage>()
                             cache.setObject(pressedImage, forKey: cacheKey as NSString)

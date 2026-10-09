@@ -259,7 +259,7 @@ public class ControllerView: UIView, GameController
             case .button, .dPad:
                 guard let imageView = self.buttonImageViews[item.id] else { continue }
                 
-                if imageView.image == nil, let (image, size) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                if imageView.image == nil, !self.bounds.height.isZero, let (image, size) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
                 {
                     imageView.image = image
                     

@@ -70,6 +70,7 @@
 		BFF703D41B4888100098561C /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF703D31B4888100098561C /* Input.swift */; };
 		BFF7C8C7257705FC00E55F36 /* TouchControllerSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */; };
 		BFF912D01AB08E7000AC07A1 /* EmulatorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */; };
+		D5367A50307D66D3009D11FC /* UIDevice+Duo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5367A4F307D66D3009D11FC /* UIDevice+Duo.swift */; };
 		D5537CFA2887558B00A66016 /* UIScene+KeyboardFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */; };
 		D5777512289882F5005E8B05 /* UIWindowScene+StageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */; };
 		D5E3AC952C48582900E17AE7 /* ProcessInfo+visionOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */; };
@@ -166,6 +167,7 @@
 		BFF703D31B4888100098561C /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
 		BFF7C8C6257705FC00E55F36 /* TouchControllerSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchControllerSkin.swift; sourceTree = "<group>"; };
 		BFF912CF1AB08E7000AC07A1 /* EmulatorCore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = EmulatorCore.swift; sourceTree = "<group>"; };
+		D5367A4F307D66D3009D11FC /* UIDevice+Duo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Duo.swift"; sourceTree = "<group>"; };
 		D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScene+KeyboardFocus.swift"; sourceTree = "<group>"; };
 		D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIWindowScene+StageManager.swift"; sourceTree = "<group>"; };
 		D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+visionOS.swift"; sourceTree = "<group>"; };
@@ -383,6 +385,7 @@
 				D5537CF92887558B00A66016 /* UIScene+KeyboardFocus.swift */,
 				D5777511289882F5005E8B05 /* UIWindowScene+StageManager.swift */,
 				D5E3AC932C48582900E17AE7 /* ProcessInfo+visionOS.swift */,
+				D5367A4F307D66D3009D11FC /* UIDevice+Duo.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -586,6 +589,7 @@
 				BF92794F1D2B2C25003084F3 /* UIScreen+ControllerSkin.swift in Sources */,
 				BF1FB1791C5EE4B7007E2494 /* SaveStateProtocol.swift in Sources */,
 				BF65E8651CEE5DA700CD3247 /* CheatProtocol.swift in Sources */,
+				D5367A50307D66D3009D11FC /* UIDevice+Duo.swift in Sources */,
 				BF425A7E1D23B15800F48ED9 /* DeltaCoreProtocol.swift in Sources */,
 				BF64CC641F267DB100CD99AD /* AnyInput.swift in Sources */,
 				BFD27EF71D261E9B00E081A3 /* DeltaTypes.m in Sources */,

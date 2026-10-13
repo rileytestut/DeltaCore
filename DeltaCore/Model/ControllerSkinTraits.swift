@@ -23,6 +23,27 @@ extension ControllerSkin
         case standard
         case edgeToEdge
         case splitView
+        
+        /* Duo */
+        case inner // Large inner display (primary)
+        case outer // Small outer display (secondary)
+        case cover // Cover after closing device
+        
+        public init?(rawValue: String)
+        {
+            switch rawValue
+            {
+            case "standard": self = .standard
+            case "edgeToEdge": self = .edgeToEdge
+            case "splitView": self = .splitView
+            case "cover": self = .cover
+                
+            // Support alternate "innie" and "outie" keywords (All Hail Kier)
+            case "inner", "innie": self = .inner
+            case "outer", "outie": self = .outer
+            default: return nil
+            }
+        }
     }
 
     public enum Orientation: String, CaseIterable
@@ -100,10 +121,45 @@ extension ControllerSkin
                 else
                 {
                     device = .iphone
-                    displayType = (window.safeAreaInsets.bottom != 0) ? .edgeToEdge : .standard
-                    orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                    
+                    if window.isKeyboardWindow && UIDevice.current.isDuo
+                    {
+                        displayType = .splitView
+                        
+                        // Screen bounds may be incorrect when entering background, but keyboard window bounds is full screen and always accurate, so use window bounds instead.
+                        orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                    }
+                    else if !window.bounds.equalTo(window.screen.bounds) && UIDevice.current.isDuo
+                    {
+                        displayType = .splitView
+                        
+                        // Use screen bounds because in split view window bounds might be portrait, but device is actually landscape (and we want landscape skin).
+                        orientation = (window.screen.bounds.width > window.screen.bounds.height) ? .landscape : .portrait
+                    }
+                    else
+                    {
+                        orientation = (window.bounds.width > window.bounds.height) ? .landscape : .portrait
+                        
+                        if UIDevice.current.isDuo
+                        {
+                            if window.traitCollection.horizontalSizeClass == .compact
+                            {
+                                // Compact width, so assume we're on outer display.
+                                displayType = .outer
+                            }
+                            else
+                            {
+                                // Unknown or regular width, so assume we're on inner display.
+                                displayType = .inner
+                            }
+                        }
+                        else
+                        {
+                            displayType = (window.safeAreaInsets.bottom != 0) ? .edgeToEdge : .standard
+                        }
+                    }
                 }
-            }            
+            }
             
             let traits = ControllerSkin.Traits(device: device, displayType: displayType, orientation: orientation)
             return traits

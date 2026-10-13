@@ -773,7 +773,11 @@ private extension ControllerSkin
             case (.iphone, .standard, .large): targetSize = CGSize(width: 414, height: 736)
                 
             case (.iphone, .edgeToEdge, _): targetSize = CGSize(width: 375, height: 812)
-            case (.iphone, .splitView, _): return nil
+            
+            // Duo
+            case (.iphone, .splitView, _): targetSize = CGSize(width: 626, height: 890)
+            case (.iphone, .inner, _): targetSize = CGSize(width: 626, height: 890)
+            case (.iphone, .outer, _), (.iphone, .cover, _): targetSize = CGSize(width: 466, height: 678)
                 
             case (.ipad, _,  .small): targetSize = CGSize(width: 768, height: 1024)
             case (.ipad, _, .medium): targetSize = CGSize(width: 834, height: 1112)
@@ -804,7 +808,9 @@ private extension ControllerSkin
             case (.iphone, .standard, .large): return 3.0
                 
             case (.iphone, .edgeToEdge, _): return 3.0
-            case (.iphone, .splitView, _): return nil
+                
+            // Duo
+            case (.iphone, .splitView, _), (.iphone, .inner, _), (.iphone, .outer, _), (.iphone, .cover, _): return 3.0
                 
             case (.ipad, _, _): return 2.0
                 

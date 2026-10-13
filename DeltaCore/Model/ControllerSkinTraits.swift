@@ -62,7 +62,7 @@ extension ControllerSkin
             let displayType: DisplayType
             let orientation: Orientation
             
-            if let scene = window.windowScene, scene.session.role == .windowExternalDisplay
+            if let scene = window.windowScene, scene.session.role == .windowExternalDisplayNonInteractive
             {
                 //TODO: Support .portrait TV skins
                 device = .tv

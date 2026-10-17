@@ -37,6 +37,14 @@ public enum SamplerMode
 public class GameView: UIView
 {
     public var isEnabled: Bool = true
+
+    #if os(tvOS)
+    /// Opt-in display rendering size. Core render buffers remain unchanged.
+    public var preferredDrawableSize: CGSize? {
+        didSet { self.setNeedsLayout() }
+    }
+    public var inputImageSizeDidChange: ((CGSize) -> Void)?
+    #endif
     
     // Set to limit rendering to just a specific VideoManager.
     public weak var exclusiveVideoManager: VideoManager?
@@ -47,6 +55,9 @@ public class GameView: UIView
             {
                 DispatchQueue.main.async {
                     self.setNeedsLayout()
+                    #if os(tvOS)
+                    self.inputImageSizeDidChange?(self.inputImage?.extent.size ?? .zero)
+                    #endif
                 }
             }
             
@@ -180,6 +191,9 @@ public class GameView: UIView
         if let window = self.window
         {
             self.glkView.contentScaleFactor = window.screen.scale
+            #if os(tvOS)
+            self.setNeedsLayout()
+            #endif
             self.update()
         }
     }
@@ -187,7 +201,18 @@ public class GameView: UIView
     public override func layoutSubviews()
     {
         super.layoutSubviews()
-        
+
+        #if os(tvOS)
+        if let size = self.preferredDrawableSize, self.bounds.width > 0, size.width > 0, size.height > 0 {
+            self.glkView.contentScaleFactor = size.width / self.bounds.width
+            self.mtkView.autoResizeDrawable = false
+            if self.mtkView.drawableSize != size { self.mtkView.drawableSize = size }
+        } else {
+            self.glkView.contentScaleFactor = self.window?.screen.scale ?? self.traitCollection.displayScale
+            self.mtkView.autoResizeDrawable = true
+        }
+        #endif
+
         if self.outputImage != nil
         {
             if self.isUsingMetal

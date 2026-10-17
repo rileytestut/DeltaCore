@@ -6,8 +6,9 @@
 //  Copyright © 2024 Riley Testut. All rights reserved.
 //
 
-import Foundation
+#if canImport(LocalAuthentication)
 import LocalAuthentication
+#endif
 
 public extension ProcessInfo
 {
@@ -17,15 +18,15 @@ public extension ProcessInfo
     
     // Somewhat expensive to calculate, which can result in dropped touch screen inputs unless we cache value.
     private static let _isRunningOnVisionPro: Bool = {
-        // Returns true even when running on iOS :/
-        // guard #available(visionOS 1, *) else { return false }
-        // return true
-        
+        #if canImport(LocalAuthentication)
         let context = LAContext()
         _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) // Sets .biometryType when called.
         
         // Can't reference `.opticID` due to bug with #available, so check if .biometryType isn't one of the other types instead.
         let isRunningOnVisionPro = (context.biometryType != .faceID && context.biometryType != .touchID && context.biometryType != .none)
         return isRunningOnVisionPro
+        #else
+        return false
+        #endif
     }()
 }

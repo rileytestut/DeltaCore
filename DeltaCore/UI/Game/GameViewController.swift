@@ -123,9 +123,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
     private weak var delayCheckKeyboardFocusTimer: Timer?
     
     /// UIViewController
+    #if !os(tvOS)
     open override var prefersStatusBarHidden: Bool {
         return true
     }
+    #endif
     
     public required init()
     {
@@ -143,9 +145,11 @@ open class GameViewController: UIViewController, GameControllerReceiver
     
     private func initialize()
     {
+        #if !os(tvOS)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillShow(with:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillChangeFrame(with:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(GameViewController.keyboardWillHide(with:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        #endif
         
         if #available(iOS 13, *)
         {
@@ -174,11 +178,13 @@ open class GameViewController: UIViewController, GameControllerReceiver
     /// UIViewController
     // These would normally be overridden in a public extension, but overriding these methods in subclasses of GameViewController segfaults compiler if so
     
+    #if !os(tvOS)
     open override var prefersHomeIndicatorAutoHidden: Bool
     {
         let prefersHomeIndicatorAutoHidden = self.view.bounds.width > self.view.bounds.height
         return prefersHomeIndicatorAutoHidden
     }
+    #endif
     
     open dynamic override func viewDidLoad()
     {
@@ -415,7 +421,9 @@ open class GameViewController: UIViewController, GameControllerReceiver
             emulatorCore.videoManager.render()
         }
         
+        #if !os(tvOS)
         self.setNeedsUpdateOfHomeIndicatorAutoHidden()
+        #endif
     }
     
     // MARK: - KVO -
@@ -743,6 +751,7 @@ private extension GameViewController
         }
     }
     
+    #if !os(tvOS)
     @objc func keyboardWillShow(with notification: Notification)
     {
         guard let window = self.view.window, let windowScene = window.windowScene,
@@ -817,6 +826,11 @@ private extension GameViewController
         
         self.updateGameViews()
     }
+    #else
+    @objc func keyboardWillShow(with notification: Notification) {}
+    @objc func keyboardWillChangeFrame(with notification: Notification) {}
+    @objc func keyboardWillHide(with notification: Notification) {}
+    #endif
     
     @available(iOS 13.0, *)
     @objc func sceneKeyboardFocusDidChange(_ notification: Notification)

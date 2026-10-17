@@ -19,6 +19,10 @@ private extension AVAudioSession
 {
     func setDeltaCategory(mixWithOthers: Bool = true) throws
     {
+        #if os(tvOS)
+        let options: AVAudioSession.CategoryOptions = mixWithOthers ? [.mixWithOthers] : []
+        try self.setCategory(.playback, mode: .default, options: options)
+        #else
         var options: AVAudioSession.CategoryOptions = [.allowBluetoothA2DP, .allowAirPlay]
 
         if mixWithOthers
@@ -27,6 +31,7 @@ private extension AVAudioSession
         }
 
         try self.setCategory(.playAndRecord, options: options)
+        #endif
     }
 }
 
@@ -166,14 +171,16 @@ public class AudioManager: NSObject, AudioRendering
         // Temporary. Will be replaced with more accurate RingBuffer in resetAudioEngine().
         self.audioBuffer = RingBuffer(preferredBufferSize: 4096)!
         
-        do
-        {
-            // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
-            try AVAudioSession.sharedInstance().setDeltaCategory()
-        }
-        catch
-        {
-            print(error)
+        DispatchQueue.global(qos: .userInitiated).async {
+            do
+            {
+                // Set category before configuring AVAudioEngine to prevent pausing any currently playing audio from another app.
+                try AVAudioSession.sharedInstance().setDeltaCategory()
+            }
+            catch
+            {
+                print(error)
+            }
         }
         
         self.audioEngine = AVAudioEngine()
@@ -203,31 +210,35 @@ public extension AudioManager
             self?.isMuted = isMuted
         }
         
-        do
-        {
-            // Interrupt other audio by activating a non-mixing session.
-            if self.shouldInterruptOtherAudio
+        DispatchQueue.global(qos: .userInitiated).async {
+            do
             {
-                // Explicitly say 'don't mix with others' to pause anything else that's playing
-                // Then change the category below to allow other audio to be resumed if mixing is on
-                try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: false)
+                // Interrupt other audio by activating a non-mixing session.
+                if self.shouldInterruptOtherAudio
+                {
+                    // Explicitly say 'don't mix with others' to pause anything else that's playing
+                    // Then change the category below to allow other audio to be resumed if mixing is on
+                    try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: false)
+                    try AVAudioSession.sharedInstance().setActive(true)
+                }
+
+                // Allow other audio if mixing is on, OR we're not interrupting other audio anyways.
+                try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: self.mixesWithOtherAudio || !self.shouldInterruptOtherAudio)
+                try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
+                
+                #if !os(tvOS)
+                if #available(iOS 13.0, *)
+                {
+                   try AVAudioSession.sharedInstance().setAllowHapticsAndSystemSoundsDuringRecording(true)
+                }
+                #endif
+                
                 try AVAudioSession.sharedInstance().setActive(true)
             }
-
-            // Allow other audio if mixing is on, OR we're not interrupting other audio anyways.
-            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: self.mixesWithOtherAudio || !self.shouldInterruptOtherAudio)
-            try AVAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
-            
-            if #available(iOS 13.0, *)
+            catch
             {
-               try AVAudioSession.sharedInstance().setAllowHapticsAndSystemSoundsDuringRecording(true)
+                print(error)
             }
-            
-            try AVAudioSession.sharedInstance().setActive(true)
-        }
-        catch
-        {
-            print(error)
         }
         
         self.resetAudioEngine()
@@ -252,14 +263,16 @@ public extension AudioManager
         
         self.audioBuffer.isEnabled = false
 
-        do
-        {
-            // Relinquish audio session so other apps can resume playback.
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
-        catch
-        {
-            print(error)
+        DispatchQueue.global(qos: .utility).async {
+            do
+            {
+                // Relinquish audio session so other apps can resume playback.
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
+            catch
+            {
+                print(error)
+            }
         }
     }
 }
@@ -398,11 +411,13 @@ private extension AudioManager
             
             do
             {
+                #if !os(tvOS)
                 // Explicitly set output port since .defaultToSpeaker option pauses external audio.
                 if AVAudioSession.sharedInstance().currentRoute.isOutputtingToReceiver
                 {
                     try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                 }
+                #endif
                 
                 try self.audioEngine.start()
                 
@@ -435,13 +450,15 @@ private extension AudioManager
         let currentlyMixing = AVAudioSession.sharedInstance().categoryOptions.contains(.mixWithOthers)
         guard allowMixing != currentlyMixing else { return }
 
-        do
-        {
-            try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: allowMixing)
-        }
-        catch
-        {
-            print(error)
+        DispatchQueue.global(qos: .userInitiated).async {
+            do
+            {
+                try AVAudioSession.sharedInstance().setDeltaCategory(mixWithOthers: allowMixing)
+            }
+            catch
+            {
+                print(error)
+            }
         }
     }
 

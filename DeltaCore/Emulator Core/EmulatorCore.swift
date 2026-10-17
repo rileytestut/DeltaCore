@@ -349,6 +349,12 @@ extension EmulatorCore: GameControllerReceiver
 {
     public func gameController(_ gameController: GameController, didActivate controllerInput: Input, value: Double)
     {
+        #if os(tvOS)
+        let playerIndex = gameController.playerIndex ?? 0
+        if gameController.playerIndex == nil {
+            gameController.playerIndex = 0
+        }
+        #else
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
         
@@ -357,6 +363,7 @@ extension EmulatorCore: GameControllerReceiver
             // Ignore unless there is a game screen in the active scene.
             guard self.gameViews.contains(where: { $0.window?.windowScene?.hasKeyboardFocus == true }) else { return }
         }
+        #endif
         
         self.gameControllers.add(gameController)
         
@@ -438,6 +445,9 @@ extension EmulatorCore: GameControllerReceiver
     
     public func gameController(_ gameController: GameController, didDeactivate input: Input)
     {
+        #if os(tvOS)
+        let playerIndex = gameController.playerIndex ?? 0
+        #else
         // Ignore controllers without assigned playerIndex.
         guard let playerIndex = gameController.playerIndex else { return }
         
@@ -446,6 +456,7 @@ extension EmulatorCore: GameControllerReceiver
             // Ignore unless there is a game screen in the active scene.
             guard self.gameViews.contains(where: { $0.window?.windowScene?.hasKeyboardFocus == true }) else { return }
         }
+        #endif
         
         guard let input = self.mappedInput(for: input), input.type == .game(self.gameType) else { return }
         

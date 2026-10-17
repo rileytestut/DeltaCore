@@ -50,8 +50,12 @@ public struct Delta
     }
     
     public static var coresDirectoryURL: URL = {
-        let documentsDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let coresDirectoryURL = documentsDirectoryURL.appendingPathComponent("Cores", isDirectory: true)
+        #if os(tvOS)
+        let baseURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        #else
+        let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        #endif
+        let coresDirectoryURL = baseURL.appendingPathComponent("Cores", isDirectory: true)
         
         try? FileManager.default.createDirectory(at: coresDirectoryURL, withIntermediateDirectories: true, attributes: nil)
         

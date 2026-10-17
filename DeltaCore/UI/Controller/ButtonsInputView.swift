@@ -39,7 +39,9 @@ class ButtonsInputView: UIView
     
     private let imageView = UIImageView(frame: .zero)
     
+#if !os(tvOS)
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+#endif
     
     private var touchInputsMappingDictionary: [UITouch: Set<AnyInput>] = [:]
     private var previousTouchInputs = Set<AnyInput>()
@@ -57,9 +59,10 @@ class ButtonsInputView: UIView
     {
         super.init(frame: frame)
         
+        #if !os(tvOS)
         self.isMultipleTouchEnabled = true
-        
         self.feedbackGenerator.prepare()
+        #endif
         
         self.imageView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(self.imageView)
@@ -238,6 +241,7 @@ private extension ButtonsInputView
         {
             self.activateInputsHandler?(activatedInputs)
             
+            #if !os(tvOS)
             if self.isHapticFeedbackEnabled
             {
                 switch UIDevice.current.feedbackSupportLevel
@@ -246,6 +250,7 @@ private extension ButtonsInputView
                 case .basic, .unsupported: UIDevice.current.vibrate()
                 }
             }
+            #endif
         }
         
         if !deactivatedInputs.isEmpty

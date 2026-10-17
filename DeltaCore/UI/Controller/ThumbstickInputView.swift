@@ -55,8 +55,10 @@ class ThumbstickInputView: UIView
     private let imageView = UIImageView(image: nil)
     private let panGestureRecognizer = ImmediatePanGestureRecognizer(target: nil, action: nil)
     
+#if !os(tvOS)
     private let lightFeedbackGenerator = UISelectionFeedbackGenerator()
     private let mediumFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+#endif
     
     private var isActivated = false
     
@@ -104,11 +106,13 @@ private extension ThumbstickInputView
             let location = gestureRecognizer.location(in: self)
             self.trackingOrigin = location
             
+            #if !os(tvOS)
             if self.isHapticFeedbackEnabled
             {
                 self.lightFeedbackGenerator.prepare()
                 self.mediumFeedbackGenerator.prepare()
             }
+            #endif
             
             self.update()
             
@@ -152,10 +156,12 @@ private extension ThumbstickInputView
             
         case .ended, .cancelled:
             
+            #if !os(tvOS)
             if self.isHapticFeedbackEnabled
             {
                 self.mediumFeedbackGenerator.impactOccurred()
             }
+            #endif
             
             self.update()
             
@@ -232,19 +238,23 @@ private extension ThumbstickInputView
         
         if let direction = Direction(xAxis: xAxis, yAxis: yAxis, threshold: threshold)
         {
+            #if !os(tvOS)
             if self.previousDirection != direction && self.isHapticFeedbackEnabled
             {
                 self.mediumFeedbackGenerator.impactOccurred()
             }
+            #endif
             
             self.previousDirection = direction
         }
         else
         {
+            #if !os(tvOS)
             if isActivated && !self.isActivated && self.isHapticFeedbackEnabled
             {
                 self.lightFeedbackGenerator.selectionChanged()
             }
+            #endif
             
             self.previousDirection = nil
         }

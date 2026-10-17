@@ -185,11 +185,19 @@ public class MFiGameController: NSObject, GameController
         
         // Menu = Primary menu button (Start/+/Menu)
         let menuButton = profile.buttons[GCInputButtonMenu]
+        #if os(tvOS)
+        menuButton?.preferredSystemGestureState = .disabled
+        menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.start, pressed) }
+        #else
         menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
+        #endif
         
         // Options = Secondary menu button (Select/-)
         if let optionsButton = profile.buttons[GCInputButtonOptions]
         {
+            #if os(tvOS)
+            optionsButton.preferredSystemGestureState = .disabled
+            #endif
             optionsButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.select, pressed) }
             
             // .alwaysReceive == asking permission to record screen every time button is pressed as of iOS 16.3 (annoying).
@@ -281,10 +289,15 @@ public class MFiGameController: NSObject, GameController
             
             // If controller has Home button, and isn't MFi controller, treat it as Menu button instead.
             // e.g. Switch Pro, PlayStation, and Xbox controllers
+            #if os(tvOS)
+            homeButton.preferredSystemGestureState = .disabled
+            homeButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
+            #else
             homeButton.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.menu, pressed) }
             
             // Disable "Show Game Center" gesture
             homeButton.preferredSystemGestureState = .disabled
+            #endif
             
             // Re-map Menu button to Start
             menuButton?.pressedChangedHandler = { (button, value, pressed) in inputChangedHandler(.start, pressed) }

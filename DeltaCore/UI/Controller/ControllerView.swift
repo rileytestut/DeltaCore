@@ -266,13 +266,14 @@ public class ControllerView: UIView, GameController
             case .button, .dPad:
                 guard let imageView = self.buttonImageViews[item.id] else { continue }
                 
-                if imageView.image == nil, !self.bounds.height.isZero, let (image, size) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
+                if imageView.image == nil, !self.bounds.height.isZero, let (image, _) = controllerSkin.image(for: item, traits: traits, preferredSize: self.controllerSkinSize)
                 {
                     imageView.image = image
-                    
-                    let imageSize = CGSize(width: size.width * self.bounds.width, height: size.height * self.bounds.height)
-                    imageView.bounds.size = imageSize
                 }
+                
+                // Bounds may change after image is loaded (e.g. mid-rotation), so always update size.
+                let imageSize = item.normalizedImageSize
+                imageView.bounds.size = CGSize(width: imageSize.width * self.bounds.width, height: imageSize.height * self.bounds.height)
                 
                 let itemFrame = item.frame.applying(.identity.scaledBy(x: self.bounds.width, y: self.bounds.height))
                 imageView.center = CGPoint(x: itemFrame.midX, y: itemFrame.midY)

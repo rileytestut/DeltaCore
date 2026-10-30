@@ -224,8 +224,7 @@ public extension ControllerSkin
         guard let imageName = item.imageName else { return nil }
         guard let entry = self.archive[imageName] else { return nil }
         
-        // Use explicit imageSize if provided, then fallback to item's size.
-        let size = item.imageSize ?? CGSize(width: item.frame.width, height: item.frame.height)
+        let size = item.normalizedImageSize
         
         let cacheKey = imageName + self.cacheKey(for: traits, size: preferredSize, isPressed: false)
         
@@ -488,6 +487,11 @@ extension ControllerSkin
         
         internal var imageName: String?
         fileprivate var imageSize: CGSize?
+        
+        // Use explicit imageSize if provided, then fall back to item's size.
+        internal var normalizedImageSize: CGSize {
+            return self.imageSize ?? CGSize(width: self.frame.width, height: self.frame.height)
+        }
         
         fileprivate init?(id: String, dictionary: [String: AnyObject], extendedEdges: ExtendedEdges, mappingSize: CGSize)
         {

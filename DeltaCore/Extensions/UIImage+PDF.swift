@@ -12,7 +12,7 @@ import UIKit
 import CoreGraphics
 import AVFoundation
 
-internal extension UIImage
+public extension UIImage
 {
     class func image(withPDFData data: Data, targetSize: CGSize) -> UIImage?
     {
